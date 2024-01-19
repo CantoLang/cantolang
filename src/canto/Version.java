@@ -2,11 +2,11 @@
  * 
  * Version.java
  *
- * Copyright (c) 2019-2022 by cantolang.org
+ * Copyright (c) 2019-2024 by cantolang.org
  * All rights reserved.
  */
 
-package canto.runtime;
+package canto;
 
 /**
  * Canto version.
@@ -15,7 +15,11 @@ package canto.runtime;
  */
 
 public class Version {
-    public static final String MAJOR_VERSION = "1.0";
-    public static final String MINOR_VERSION = "1";
+    public static final String MAJOR_VERSION = "1.1";
+    public static final String MINOR_VERSION = "0";
     public static final String VERSION = MAJOR_VERSION + "." + MINOR_VERSION;
+
+    public static String getVersion() {
+        return VERSION;
+    }
 }

@@ -1,6 +1,6 @@
 /* Canto Compiler and Runtime Engine
  * 
- * Expression.java
+ * ExpressionDefinition.java
  *
  * Copyright (c) 2024 by cantolang.org
  * All rights reserved.
@@ -8,20 +8,24 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
-
 /**
  * 
  */
-public abstract class Expression extends Construction {
+public class ExpressionDefinition extends ConstructiveDefinition {
 
     /**
-     * @param source
+     * @param name
+     * @param construction
      */
-    public Expression() {
-        super();
+    public ExpressionDefinition(Name name, Construction construction) {
+        super(name, construction);
     }
 
+    @Override
+    public boolean isElementDefinition() {
+        return true;
+    }
+    
     @Override
     public int getNumChildren() {
         return 0;
@@ -39,15 +43,7 @@ public abstract class Expression extends Construction {
 
     @Override
     public boolean isDynamic() {
-        return true;
-    }
-
-    @Override
-    public boolean isDefinition() {
         return false;
     }
 
 }
-
-
-

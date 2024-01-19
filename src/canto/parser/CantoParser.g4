@@ -20,6 +20,18 @@ options {
     package canto.parser;
 }
 
+cosmosDefinition
+    : COSMOS siteBlock
+    ;
+
+globeDefinition
+    : GLOBE siteBlock
+    ;
+
+cantoFileDefintion
+    : (IDENTIFIER (DOT IDENTIFIER)*) cantoFile
+    ;
+
 cantoFile
     : siteDefinition
     | coreDefinition
@@ -28,7 +40,7 @@ cantoFile
     ;
 
 siteDefinition
-    : SITE name siteBlock
+    : SITE identifier siteBlock
     ;
 
 coreDefinition
@@ -36,7 +48,7 @@ coreDefinition
     ;
 
 domainDefinition
-    : name name siteBlock
+    : identifier identifier siteBlock
     ;
     
 defaultSiteDefinition
@@ -50,7 +62,7 @@ siteBlock
 
 directive
     : doc = DOC_COMMENT?
-    ( EXTERN name nameRange
+    ( EXTERN identifier nameRange
     | ADOPT nameRange
     | IMPORT nameRange (AS name)?
     )
@@ -187,11 +199,11 @@ iterator
     ;
 
 collectionIterator
-    : name IN expression (where = WHERE expression)? (until = UNTIL expression)?
+    : simpleType? identifier IN expression (where = WHERE expression)? (until = UNTIL expression)?
     ;
 
 stepIterator
-    : name FROM expression (TO expression)? (BY expression)?
+    : simpleType? identifier FROM expression (TO expression)? (BY expression)?
     ;
 
 collectionSuffix
@@ -203,25 +215,26 @@ paramSuffix
     ;
 
 multiParamSuffix
-    : params (COMMA params)*
+    : params (COMMA params)+
     ;
 
 collectionDefName
-    : collectionType name paramSuffix?
-    | simpleType? name paramSuffix? collectionSuffix
+    : collectionType identifier paramSuffix?
+    | simpleType? identifier paramSuffix? collectionSuffix
     ;
     
 elementDefName
-    : simpleType? name paramSuffix? 
+    : simpleType? identifier paramSuffix? 
     ;
 
 blockDefName
-    : multiType name multiParamSuffix?
-    | simpleType? name multiParamSuffix?
+    : multiType identifier (paramSuffix | multiParamSuffix)?
+    | simpleType? identifier (paramSuffix | multiParamSuffix)?
     ;
 
 simpleType
     : qualifiedName
+    | identifier
     | BOOLEAN
     | BYTE
     | CHAR
@@ -242,7 +255,7 @@ collectionType
     ;
 
 param
-    : simpleType? name 
+    : simpleType? identifier 
     ;
 
 params
@@ -289,15 +302,21 @@ specialName
     ;
 
 name
+   : specialName
+   | qualifiedName
+   | identifier
+   ;
+
+identifier
    : IDENTIFIER
    ;
 
 qualifiedName
-    : name (DOT name)*
+    : IDENTIFIER (DOT IDENTIFIER)+
     ;
     
 nameRange
-    : name ('.' (name | STAR))* ('.' STARSTAR)?
+    : IDENTIFIER (DOT (IDENTIFIER | STAR))* (DOT STARSTAR)?
     ;
 
 args
@@ -326,9 +345,12 @@ floatLiteral
     
 primary
     : LPAREN expression RPAREN
-    | specialName
-    | qualifiedName (index)* (args)?
+    | instantiation
     | literal
+    ;
+
+instantiation
+    : name (index)* (args)?
     ;
 
 expression
@@ -346,7 +368,7 @@ expression
     | expression bop = BITOR expression
     | expression bop = ANDAND expression
     | expression bop = OROR expression
-    | <assoc = right> expression bop = (QMARK | QQ) expression SEMICOLON expression
+    | <assoc = right> expression top = (QMARK | QQ) expression SEMICOLON expression
     ;
 
     

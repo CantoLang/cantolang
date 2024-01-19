@@ -8,7 +8,7 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
+import java.util.List;
 
 /**
  * A construction is a Canto statement which generates data.
@@ -16,17 +16,21 @@ import canto.runtime.Context;
  * @author Michael St. Hippolyte
  */
 
-public abstract class Construction extends Node {
+public abstract class Construction extends CantoNode {
 
-    protected Construction(String source) {
-        super(source);
+    protected Construction() {
+        super();
     }
 
-    protected Construction(String source, String docComment) {
-        super(source);
+    protected Construction(CantoNode child) {
+        super(child);
     }
 
-    public abstract Object construct(Context context);
+    protected Construction(List<CantoNode> children) {
+        super(children);
+    }
+
+    public abstract Value construct(Context context);
     
     @Override
     public boolean isDefinition() {

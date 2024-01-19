@@ -1,6 +1,6 @@
 /* Canto Compiler and Runtime Engine
  * 
- * Expression.java
+ * BlockDefinition.java
  *
  * Copyright (c) 2024 by cantolang.org
  * All rights reserved.
@@ -8,46 +8,39 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
-
 /**
  * 
  */
-public abstract class Expression extends Construction {
+public class BlockDefinition extends ConstructiveDefinition {
 
-    /**
-     * @param source
-     */
-    public Expression() {
-        super();
+    private Block block;
+    
+    protected BlockDefinition(Name name, Block block) {
+        super(name, block);
+        this.block = block;
     }
 
     @Override
     public int getNumChildren() {
-        return 0;
+        return block.getNumChildren();
     }
-
+        
     @Override
     public boolean isPrimitive() {
+        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isStatic() {
+        // TODO Auto-generated method stub
         return false;
     }
 
     @Override
     public boolean isDynamic() {
-        return true;
-    }
-
-    @Override
-    public boolean isDefinition() {
+        // TODO Auto-generated method stub
         return false;
     }
 
 }
-
-
-

@@ -14,7 +14,7 @@ import java.util.Iterator;
 /**
  * 
  */
-abstract public class Directive extends Node {
+abstract public class Directive extends CantoNode {
 
     private NameRange nameRange;
 
@@ -32,18 +32,13 @@ abstract public class Directive extends Node {
 
     
     protected Directive(String source, NameRange nameRange) {
-        super(source);
-        this.nameRange = nameRange;
-    }
-
-    protected Directive(String source, String docComment, NameRange nameRange) {
-        super(source, docComment);
+        super();
         this.nameRange = nameRange;
     }
 
     public NameRange getNameRange() {
         return nameRange;
-    };
+    }
     
     public boolean isAdopt() {
         return false;

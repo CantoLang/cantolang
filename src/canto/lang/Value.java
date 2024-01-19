@@ -131,4 +131,24 @@ public class Value {
             return 1;
         }
     }
+    
+    public Object getObject() {
+        return value;
+    }
+
+    public Value append(Value val) {
+        if (value == null) {
+            value = val.getObject();
+        } else if (val != null) {
+            if (value instanceof StringBuffer) {
+                ((StringBuffer) value).append(val.getString());
+            } else {
+                StringBuffer sb = new StringBuffer(value.toString());
+                sb.append(val.getString());
+                value = sb.toString();
+            }
+        }
+        return this;
+    }
+    
 }

@@ -8,10 +8,14 @@
 
 package canto.lang;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * 
  */
-abstract public class Definition extends Node {
+abstract public class Definition extends CantoNode {
 
     // The modifier values are such that for groups of definitions, the lowest value
     // governs.  For example, if a group of five definitions includes one dynamic one,
@@ -20,41 +24,20 @@ abstract public class Definition extends Node {
     // a definition group.
 
 
-    // access modifiers
+    /** access modifiers */
+    public enum Access {
+        LOCAL, SITE, PUBLIC
+    }
 
-    /** Corresponds to the <code>local</code> keyword. */
-    public final static int LOCAL_ACCESS = 0;
-
-    /** Corresponds to no access modifer keyword. */
-    public final static int SITE_ACCESS = 1;
-
-    /** Corresponds to the <code>public</code> keyword. */
-    public final static int PUBLIC_ACCESS = 2;
-
-
-    // durability modifiers
-
-    /** Instances of this definition should be reconstructed every time they are referenced.
-     *  Corresponds to the <code>dynamic</code> keyword.
-     */
-    public final static int DYNAMIC = 0;
-
-    /** Instances of this definition should be retrieved from the cache when possible, else
-     *  reconstructed.  Corresponds to no durability modifer keyword.
-     */
-    public final static int IN_CONTEXT = 1;
-
-    /** Instances of this definition should only be constructed if they have not been
-     *  constructed before or construction is forced via a dynamic instantiation.
-     *  Corresponds to the <code>global</code> keyword.
-     */
-    public final static int GLOBAL = 2;
-
-    /** Instances of this definition should only be constructed once.  Corresponds to 
-     *  the <code>static</code> keyword.
-     */
-    public final static int STATIC = 3;
-    
+    /** durability modifiers */
+    public enum Durability {
+        DYNAMIC,       // corresponds to the dynamic keyword 
+        IN_CONTEXT,    // corresponds to no durability modifier keyword
+        GLOBAL,        // corresponds to the global keyword
+        COSMIC,        // corresponds to the cosmic keyword
+        STATIC         // corresponds to the static keyword
+    }
+  
 
     // signature-matching scores
 
@@ -76,19 +59,42 @@ abstract public class Definition extends Node {
     /** An argument is missing */
     public final static int ARG_MISSING = 16384;
 
-    private Construction construction;
+    protected Name name;
+    
+    /** The owner of this definition, or null if this is the root. */
+    protected Definition owner;
 
+    /** The children of this definition. */
+    protected Definition[] childDefs;
 
-    protected Definition(Name name, Construction construction) {
-        super(name.toString() + " " + construction.getSource());
-        this.construction = construction;
+    /** The contents of this definition. */
+    protected CantoNode contents;
+
+    protected Definition(CantoNode parent, Name name, CantoNode contents) {
+        super(parent);
+        this.name = name;
+        this.contents = contents;
+        List<Definition> defs = extractDefinitions(contents);
+        this.childDefs = defs.toArray(new Definition[0]);
+    }
+    
+    public Name getName() {
+        return name;
     }
 
-    protected Definition(Name name, Construction construction, String docComment) {
-        super(name.toString() + " " + construction.getSource(), docComment);
-        this.construction = construction;
+    private List<Definition> extractDefinitions(CantoNode contents) {
+        List<Definition> defs = new ArrayList<Definition>();
+        if (contents.getNumChildren() > 0) {
+            Iterator<CantoNode> it = contents.getChildren();
+            while (it.hasNext()) {
+                CantoNode child = it.next();
+                if (child instanceof Definition) {
+                    defs.add((Definition) child);
+                }
+            }
+        }
+        return defs;
     }
-
 
     public boolean isElementDefinition() {
         return false;
@@ -98,41 +104,16 @@ abstract public class Definition extends Node {
         return false;
     }
     
+    public boolean isParameterDefinition() {
+        return false;
+    }
+    
     @Override
     public boolean isDefinition() {
         return true;
     }
-}
 
-class ExpressionDefinition extends Definition {
+    public abstract Value instantiate(Context context);
 
-    protected ExpressionDefinition(Name name, Expression expression) {
-        super(name, expression);
-    }
-
-    @Override
-    public int getNumChildren() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public boolean isPrimitive() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isStatic() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isDynamic() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-    
 }
 
