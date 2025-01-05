@@ -9,14 +9,9 @@
 package canto.runtime;
 
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.server.handler.*;
 import org.eclipse.jetty.util.*;
 import org.eclipse.jetty.util.thread.*;
 
-import canto.lang.*;
-
-import java.io.*;
-import java.util.*;
 
 /**
  * Canto server based on the Jetty HTTP server.
@@ -24,26 +19,19 @@ import java.util.*;
  * @author Michael St. Hippolyte
  */
 
-public class CantoJettyServer extends CantoServer {
+public class CantoJettyServer extends Server implements CantoStandaloneServer {
 
-    private Server server;
-    
 	public CantoJettyServer() {
-	    // Create and configure a ThreadPool.
-	    QueuedThreadPool threadPool = new QueuedThreadPool();
-	    threadPool.setName("server");
-
-	    // Create a Server instance.
-	    server = new Server(threadPool);
+	    super(new QueuedThreadPool());
 
 	    // Create a ServerConnector to accept connections from clients.
-	    Connector connector = new ServerConnector(server);
+	    Connector connector = new ServerConnector(this);
 
 	    // Add the Connector to the Server
-	    server.addConnector(connector);
+	    addConnector(connector);
 
 	    // Set a simple Handler to handle requests/responses.
-	    server.setHandler(new Handler.Abstract()
+	    setHandler(new Handler.Abstract()
 	    {
 	        @Override
 	        public boolean handle(Request request, Response response, Callback callback)
@@ -56,12 +44,14 @@ public class CantoJettyServer extends CantoServer {
 	    });
 	}
 	
-    public void start() throws Exception {
-        server.start();
+    @Override
+    public void startServer() throws Exception {
+        start();
     }
 
-    public void stop() throws Exception {
-        server.stop();
+    @Override
+    public void stopServer() throws Exception {
+        stop();
     }
-    
+
 }

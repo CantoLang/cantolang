@@ -2,7 +2,7 @@
  * 
  * Lexer for Canto
  *
- * Copyright (c) 2023 by cantolang.org
+ * Copyright (c) 2023-2024 by cantolang.org
  * All rights reserved.
  */
 
@@ -92,6 +92,7 @@ STRING_LITERAL:
 ;
 
 NULL_LITERAL: 'null';
+
 
 // Dimensions
 EMPTY_ARRAY  : '[]';

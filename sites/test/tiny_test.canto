@@ -1,0 +1,72 @@
+site tiny_site {
+/------
+    public hello = "Hello!"
+    
+    simple_text_block_def [| text_block |]
+
+    text_block_def_embedded_code [| well {= hello; =} there |]
+
+    tricky_test_1 [| text with orphan | {= hello; =} more text { |]
+-    
+    suprtype [/]
+    
+    suprtype subtype [/]
+    
+    empty_array[] = []
+    
+    subtype[] typed_empty_array = []
+    
+    empty_table{} = {}
+    
+    subtype{} typed_empty_table = {}
+    
+----/
+
+    /* function with parameters */
+    simple_w_params(int x, y, z) {
+        [| x: /]
+        x;
+        
+        "y: ";
+        y;
+        
+        [`` and z: ``]
+        z;
+
+        [/   ...z again: {= z; =} |]
+    }
+
+
+     with_multi_params(int x),(y, z) {
+         with x {
+             x;
+         } else [|
+             {= y; =} and {= z; =}
+         |]
+     }
+ 
+    simple_with_children {
+        a [| A |]
+        b(x) = x
+        c { "c"; }
+        
+        a;
+        b;
+        c;
+    }
+
+    simple_loop {
+        strs[] = [ "Well", " hello ", "there!" ]
+        
+        for int i from 0 to 3 {
+            strs[i];
+        }
+
+        for str in strs {
+            str;
+        } 
+    }
+  
+
+}  
+

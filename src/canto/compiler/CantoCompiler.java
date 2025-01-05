@@ -14,9 +14,11 @@ import java.io.FileWriter;
 import java.io.PrintStream;
 import java.util.Date;
 
+import canto.Version;
 import canto.lang.Definition;
 import canto.runtime.Context;
 import canto.runtime.Log;
+import canto.runtime.SiteBuilder;
 
 /**
  * canto compiler.
@@ -96,12 +98,12 @@ public class CantoCompiler {
         outDirName = outDirName.replace( '\\', File.separatorChar );
         File outDir = new File( outDirName );
         if ( !outDir.exists() ) {
-            log( "Creating output directory " + outDir.getAbsolutePath() );
+            logger.info( "Creating output directory " + outDir.getAbsolutePath() );
             outDir.mkdirs();
         }
 
         if ( !outDir.isDirectory() ) {
-            log( "Output path " + outDir.getAbsolutePath() + " is not a directory." );
+            logger.info( "Output path " + outDir.getAbsolutePath() + " is not a directory." );
             return null;
         } else {
             return outDir;
@@ -121,7 +123,7 @@ public class CantoCompiler {
         boolean multiThreaded = false;
         boolean autoLoadCore = true;
 
-        System.out.println("\ncantoc compiler for Canto version " + cantoc.Version.getVersion());
+        System.out.println("\ncantoc compiler for Canto version " + Version.getVersion());
         System.out.println("Copyright (c) 2018-2024 by cantolang.org\n");
         for ( int i = 0; i < args.length; i++ ) {
             if ( args[ i ].charAt( 0 ) == '-' && args[ i ].length() > 1 ) {
@@ -170,115 +172,8 @@ public class CantoCompiler {
             System.out.println( "No path specified, exiting." );
             return;
         }
-       Core core = new Core();
 
-        SiteLoader.LoadOptions options = SiteLoader.getDefaultLoadOptions();
-        options.multiThreaded = multiThreaded;
-        options.autoLoadCore = autoLoadCore;
-        options.configurable = false;
-        options.allowUnresolvedInstances = false;
-
-        SiteLoader loader = new SiteLoader(core, "", cantoPath, inFilter, recursive, options);
-        loader.load();
-        long parseTime = System.currentTimeMillis() - startTime;
-
-        // all done; log results
-        Object[] sources = loader.getSources();
-        Exception[] exceptions = loader.getExceptions();
-
-        for ( int i = 0; i < sources.length; i++ ) {
-            Object source = sources[ i ];
-            String name = ( source instanceof File ? ( (File)source ).getAbsolutePath() : source.toString() );
-            Exception e = exceptions[ i ];
-            if ( e != null ) {
-                log( "Unable to load " + name + ": " + e );
-                e.printStackTrace();
-            } else {
-                log( name + " loaded successfully." );
-            }
-
-        }
-
-        Definition[] pages = core.getDefinitions( "page" );
-
-        int numPages = pages.length;
-        if ( numPages > 0 ) {
-            // now spit out pages
-            int count = 0; // count of pages successfully written
-            try {
-
-                Context context = new Context( core );
-                for ( int i = 0; i < numPages; i++ ) {
-
-                    if ( pageName != null && !pageName.equals( pages[ i ].getName() ) ) {
-                        continue;
-                    }
-
-                    Definition page = pages[ i ];
-                    Instantiation instance = new Instantiation( page );
-                    if ( !isOutputAllowed( context, page, instance )) {
-                        log( page.getFullName() + " does not generate output; skipping" );
-                        continue;
-                    }
-                    String pageText = null;
-                    try {
-                        pageText = instance.getText( context );
-                    } catch ( Redirection r ) {
-                        log( "Page " + pageName + " redirects to " + r.getLocation() + "; skipping" );
-                        continue;
-                    }
-                    if ( pageText != null && pageText.length() > 0 ) {
-                        File outDir = createOutputDirectory( page, instance );
-                        if ( outDir != null ) {
-                            String fileName = createFileName( page, instance );
-                            if ( fileName != null ) {
-                                log( "Page " + count + " is " + fileName );
-                                File pageFile = new File( outDir, fileName );
-                                if ( !pageFile.exists() ) {
-                                    File parent = pageFile.getParentFile();
-                                    if ( !parent.exists() ) {
-                                        if ( !parent.mkdirs() ) {
-                                            log( "Unable to create parent directory " + parent.getAbsolutePath() );
-                                            continue;
-                                        }
-                                    }
-                                    pageFile.createNewFile();
-                                }
-
-                                if ( !pageFile.canWrite() ) {
-                                    log( "Unable to write to file " + pageFile.getAbsolutePath() );
-                                    continue;
-                                }
-
-                                log( "Writing " + pageFile.getAbsolutePath() + "..." );
-                                FileWriter writer = new FileWriter( pageFile );
-                                writer.write( pageText );
-                                writer.close();
-                                count++;
-                            }
-                        }
-
-                    } else {
-                        log( "Page " + page.getFullName() + " has no content, skipping." );
-                    }
-                }
-                log( "Done." );
-
-                long totalTime = System.currentTimeMillis() - startTime;
-                long perPageTime = ( count > 0 ? ( totalTime / count ) : 0L );
-                log( count + " page" + ( count == 1 ? "" : "s" ) + " generated in " + durString( totalTime ) + " ("
-                        + durString( perPageTime ) + " per page)" );
-                log( "(parse time " + durString( parseTime ) + ")" );
-
-            } catch ( Exception e ) {
-                log( "Exception generating pages: " + e );
-                e.printStackTrace();
-            } catch ( Redirection r ) {
-                log( "Redirection thrown creating context: " + r );
-            }
-        } else {
-            log( "No pages in input." );
-        }
+        SiteBuilder siteBuilder = new SiteBuilder(cantoPath, inFilter, recursive);
     }
 
 }
