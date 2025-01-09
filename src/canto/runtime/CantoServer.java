@@ -9,6 +9,7 @@
 package canto.runtime;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.Date;
 import java.util.HashMap;
@@ -343,6 +344,66 @@ public class CantoServer {
             return false;
         }
         return true;
+    }
+
+    protected void initGlobalSettings(Map<String, String> initParams) throws Exception {
+
+        String param;
+        
+        param = initParams.get("verbose");
+        if ("true".equalsIgnoreCase(param)) {
+            SiteBuilder.verbosity = SiteBuilder.VERBOSE;
+        }
+
+        siteName = initParams.get("site");
+        if (siteName == null) {
+            siteName = canto.lang.Name.DEFAULT;
+        }
+
+        address = initParams.get("address");
+        port = initParams.get("port");
+        String timeout = initParams.get("timeout");
+        if (timeout != null) {
+            asyncTimeout = Long.parseLong(timeout);
+        } else {
+            asyncTimeout = 0L;
+        }
+        
+        stateFileName = initParams.get("statefile");
+        
+        logFileName = initParams.get("log");
+        String appendLog = initParams.get("log.append");
+        appendToLog = isTrue(appendLog);
+        if (logFileName != null) {
+            SiteBuilder.setLogFile(logFileName, appendToLog);
+        }
+
+        cantoPath = initParams.get("cantopath");
+        if (cantoPath == null) {
+            cantoPath = ".";
+        }
+
+        debuggingEnabled = isTrue(initParams.get("debug"));
+    }
+
+    /** Returns true if the passed string is a valid parameter representation
+     *  of true.
+     */
+    private static boolean isTrue(String param) {
+        return ("true".equalsIgnoreCase(param) || "yes".equalsIgnoreCase(param) || "1".equalsIgnoreCase(param));
+    }
+
+    public void recordState(String state) {
+        if (stateFileName != null) {
+            try {
+                PrintStream ps = new PrintStream(new FileOutputStream(stateFileName, false));
+                Date now = new Date();
+                ps.println(state + " " + now.toString());
+                ps.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     protected void loadSite() throws Exception {    
