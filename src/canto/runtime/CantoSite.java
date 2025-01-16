@@ -528,7 +528,7 @@ public class CantoSite extends CantoDomain {
         try {
             Object runData = get(request);
             if (runData == null) {
-                log("Request " + request + " returns null.");
+                log("CantoRequest " + request + " returns null.");
                 return;
             }
             String str = getStringForData(runData);

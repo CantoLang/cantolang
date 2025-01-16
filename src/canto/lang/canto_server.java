@@ -79,10 +79,10 @@ public interface canto_server extends canto_processor {
     public canto_server get_server(String name);
 
     
-    /** Request data from the server. **/
+    /** CantoRequest data from the server. **/
     public String get(Context context, String requestName, Map<String, String> requestParams) throws Redirection;
     
-    /** Request data from the server. **/
+    /** CantoRequest data from the server. **/
     public String get(Context context, String requestName) throws Redirection;
     
 }

@@ -25,4 +25,6 @@ public interface CantoStandaloneServer {
     public boolean isRunning();
 
     public void join() throws InterruptedException;
+
+    public void setVirtualHost(String virtualHost);
 }

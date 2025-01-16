@@ -2,15 +2,23 @@
  * 
  * CantoJettyServer.java
  *
- * Copyright (c) 2018-2024 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
 package canto.runtime;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.*;
-import org.eclipse.jetty.util.thread.*;
 
 
 /**
@@ -21,8 +29,12 @@ import org.eclipse.jetty.util.thread.*;
 
 public class CantoJettyServer extends Server implements CantoStandaloneServer {
 
-	public CantoJettyServer() {
-	    super(new QueuedThreadPool());
+    private String virtualHost = null;
+    private CantoServer cantoServer = null;
+    
+	public CantoJettyServer(InetSocketAddress addr, CantoServer server) {
+	    super(addr);
+	    this.cantoServer = server;
 
 	    // Create a ServerConnector to accept connections from clients.
 	    Connector connector = new ServerConnector(this);
@@ -34,8 +46,13 @@ public class CantoJettyServer extends Server implements CantoStandaloneServer {
 	    setHandler(new Handler.Abstract()
 	    {
 	        @Override
-	        public boolean handle(Request request, Response response, Callback callback)
+	        public boolean handle(CantoRequest request, Response response, Callback callback)
 	        {
+                try {
+                    server.handle(request, response, callback);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 	            // Succeed the callback to signal that the
 	            // request/response processing is complete.
 	            callback.succeeded();
@@ -52,6 +69,11 @@ public class CantoJettyServer extends Server implements CantoStandaloneServer {
     @Override
     public void stopServer() throws Exception {
         stop();
+    }
+
+    @Override
+    public void setVirtualHost(String virtualHost) {
+        this.virtualHost = virtualHost;
     }
 
 }

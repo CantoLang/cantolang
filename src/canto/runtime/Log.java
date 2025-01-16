@@ -8,20 +8,19 @@
 
 package canto.runtime;
 
-import java.util.ResourceBundle;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
 public class Log implements Logger {
 
-    public static Log getLogger(Class clazz) {return new Log(clazz);
+    public static Log getLogger(Class<?> clazz) {
+        return new Log(clazz);
     }
     
     private Logger logger;
     
-    private Log(Class clazz) {
+    private Log(Class<?> clazz) {
         logger = LoggerFactory.getLogger(clazz);
     }
 
@@ -328,6 +327,11 @@ public class Log implements Logger {
     @Override
     public void error(Marker marker, String msg, Throwable t) {
         logger.error(marker, msg, t);
+    }
+
+    public static void setLogFile(String logFileName, boolean appendToLog) {
+        // TODO configure underlying logger programmatically
+        
     }
 
 }

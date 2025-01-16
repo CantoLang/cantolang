@@ -10,31 +10,32 @@ package canto.runtime;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetSocketAddress;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
-import canto.lang.Core;
-import canto.lang.site_config;
+import canto.lang.Redirection;
+import canto.lang.canto_domain;
 import canto.runtime.CantoStandaloneServer;
-import canto.runtime.CantoServer.site_config_wrapper;
 import canto.runtime.Log;
+import canto.runtime.CantoServer.RequestState;
 
 import org.antlr.v4.runtime.RuntimeMetaData;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
 
 /**
  * 
  */
 public class CantoServer {
-    private static final long serialVersionUID = 1L;
-
     private static final Log LOG = Log.getLogger(CantoServer.class);
-   
     
     public static final String NAME = "CantoServer";
     public static final String VERSION = Version.VERSION;
@@ -50,7 +51,9 @@ public class CantoServer {
     public static final int NOT_FOUND = 404;
     public static final int SERVER_ERROR = 500;
     public static final int TIMEOUT = 504;
-    
+
+    /** Default port for the server */
+    public static final int DEFAULT_PORT = 8080;
     
     /** This enum signifies the stage in the lifecycle of the request 
      *  containing it.
@@ -68,7 +71,7 @@ public class CantoServer {
     public static final String SERVER_STARTED = "STARTED";
     public static final String SERVER_STOPPED = "STOPPED";
     public static final String SERVER_FAILED = "FAILED";
-    
+
     protected Exception exception = null;
     protected CantoSite mainSite = null;
     protected Map<String, CantoSite> sites = new HashMap<String, CantoSite>();
@@ -76,24 +79,21 @@ public class CantoServer {
     private String siteName = null;
     private String virtualHost = null;
     private String address = null;
-    private String port = null;
+    private int port = DEFAULT_PORT;
     private boolean initedOk = false;
     private String stateFileName = null;
     private String logFileName = null;
     private boolean appendToLog = true;
-    private PrintStream log = null;
     private String cantoPath = ".";
     private boolean debuggingEnabled = false;
-    private HashMap<String, Object> properties = new HashMap<String, Object>();
+    private boolean verbose = false;
     protected String fileHandlerName = null;
     private String contextPath = "";
     private long asyncTimeout = 0l;
-    private String baseUrl = null;
 
     private CantoStandaloneServer standaloneServer = null;
     private HashMap<String, CantoServer> serverMap = new HashMap<String, CantoServer>();
-    private List<CantoServerRunner> pendingServerRunners = null;
-    
+
 
     /** Main entry point, if CantoServer is run as a standalone application.  The following
      *  flags are recognized (in any order).  All flags are optional.
@@ -163,8 +163,8 @@ public class CantoServer {
             System.out.println("                               hosts are handled.\n");
             System.out.println("-t, --timeout <millisecs>      Sets the length of time the server must process");
             System.out.println("                               a request by before returning a timeout error.");
-            System.out.println("                               A zero or negative value means the request will");
-            System.out.println("                               never time out.  The default value is zero.\n");
+            System.out.println("                               A zero or -1 means the request will never time");
+            System.out.println("                               out.  The default value is zero.\n");
             System.out.println("-cp, --cantopath <pathnames>   Sets the initial cantopath, which is a string");
             System.out.println("                               of pathnames separated by the platform-specific");
             System.out.println("                               path separator character (e.g., colon on Unix");
@@ -204,20 +204,17 @@ public class CantoServer {
             try {
                 loadSite();
 
-                standaloneServer = new CantoJettyServer();
-                
-                standaloneServer.setServer(this);
+                InetSocketAddress addr = address == null ? new InetSocketAddress(port) : new InetSocketAddress(address, port);
+                standaloneServer = new CantoJettyServer(addr, this);
                 standaloneServer.setVirtualHost(virtualHost);
-                baseUrl = ((CantoJettyServer) standaloneServer).getAddress();
 
             } catch (Exception e) {
                 recordState("FAILED");
-
-                System.err.println("Exception starting CantoServer: " + e);
                 exception = e;
+                LOG.error("Exception starting CantoServer: " + e);
+                System.err.println("Exception starting CantoServer: " + e);
                 e.printStackTrace(System.err);
             }
-            
         }
     }
 
@@ -253,6 +250,10 @@ public class CantoServer {
                     numProblems++;
                     String msg = "port not provided";
                     initParams.put("problem" + numProblems, msg);
+                } else if (!isPositiveNumber(nextArg)) {
+                    numProblems++;
+                    String msg = "port must be a positive number";
+                    initParams.put("problem" + numProblems, msg);
                 } else {
                     initParams.put("port", nextArg);
                     i++;
@@ -272,6 +273,10 @@ public class CantoServer {
                 if (noNextArg) {
                     numProblems++;
                     String msg = "timeout value not provided";
+                    initParams.put("problem" + numProblems, msg);
+                } else if (!isMinusOneOrAbove(nextArg)) {
+                    numProblems++;
+                    String msg = "timeout must be -1, 0, or a positive number";
                     initParams.put("problem" + numProblems, msg);
                 } else {
                     initParams.put("timeout", nextArg);
@@ -336,6 +341,24 @@ public class CantoServer {
         return initParams;
     }
        
+    private static boolean isPositiveNumber(String str)
+    {
+        for (char c : str.toCharArray()) {
+            if (!Character.isDigit(c)) return false;
+        }
+        return true;
+    }
+
+    private static boolean isMinusOneOrAbove(String str)
+    {
+        try {
+            long n = Long.parseLong(str);
+            return n >= -1L;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     private boolean init(Map<String, String> initParams) {
         try {    
             initGlobalSettings(initParams);
@@ -352,7 +375,7 @@ public class CantoServer {
         
         param = initParams.get("verbose");
         if ("true".equalsIgnoreCase(param)) {
-            SiteBuilder.verbosity = SiteBuilder.VERBOSE;
+            verbose  = true;
         }
 
         siteName = initParams.get("site");
@@ -361,7 +384,7 @@ public class CantoServer {
         }
 
         address = initParams.get("address");
-        port = initParams.get("port");
+        port = Integer.parseInt(initParams.get("port"));
         String timeout = initParams.get("timeout");
         if (timeout != null) {
             asyncTimeout = Long.parseLong(timeout);
@@ -375,7 +398,7 @@ public class CantoServer {
         String appendLog = initParams.get("log.append");
         appendToLog = isTrue(appendLog);
         if (logFileName != null) {
-            SiteBuilder.setLogFile(logFileName, appendToLog);
+            Log.setLogFile(logFileName, appendToLog);
         }
 
         cantoPath = initParams.get("cantopath");
@@ -386,6 +409,174 @@ public class CantoServer {
         debuggingEnabled = isTrue(initParams.get("debug"));
     }
 
+    /** Compile the Canto source files found at the locations specified in <code>cantopath</code>
+     *  and return a CantoDomain object.  If a location is a directory, scan subdirectories
+     *  recursively for Canto source files.  If the core definitions required by the system 
+     *  cannot be found in the files specified in <code>cantopath</code>, the processor will
+     *  attempt to load the core definitions automatically from a known source (e.g. from the
+     *  same jar file that the processor was loaded from).
+     */
+    public canto_domain compile(String siteName, String cantopath) {
+        CantoSite site = new CantoSite(siteName, this);
+        site.load(cantopath, "*.canto");
+        return site;
+    }
+
+    /** Compile Canto source code passed in as a string and return a canto_domain object.  If
+     *  <code>autoloadCore</code> is true, and the core definitions required by the system cannot
+     *  be found in the files specified in <code>cantopath</code>, the processor will attempt to
+     *  load the core definitions automatically from a known source (e.g. from the same jar file
+     *  that the processor was loaded from).
+     */
+    public canto_domain compile(String siteName, String cantotext, boolean autoloadCore) {
+        return null;
+    }
+
+    /** Compile Canto source code passed in as a string and merge the result into the specified
+     *  canto_domain.  If there is a fatal error in the code, the result is not merged and
+     *  a Redirection is thrown.
+     */
+    public void compile_into(canto_domain domain, String cantotext) throws Redirection {
+        ;
+    }
+
+    /** Load the site files */
+    public CantoSite load(String sitename, String cantoPath) throws Exception {
+        CantoSite site = null;
+
+        LOG.info(NAME_AND_VERSION);
+        LOG.info("Loading site " + (sitename == null ? "(no name yet)" : sitename));
+        site = (CantoSite) compile(sitename, cantoPath);
+        Exception e = site.getException();
+        if (e != null) {
+            LOG.error("Exception loading site " + site.getName() + ": " + e);
+            throw e;
+        }
+        return site;
+    }
+
+    public String getCantoPath() {
+        return cantoPath;
+    }
+    
+    /** Returns true if this server was successfully started and has not yet been stopped. */
+    public boolean is_running() {
+        return (standaloneServer != null && standaloneServer.isRunning());
+    }
+    
+
+    public void handle(Request request, Response response, Callback callback) throws IOException {
+        String contextPath = Request.getContextPath(request);
+        String ru = request.getHttpURI().asString();
+        
+        RequestState state = (RequestState) request.getAttribute(REQUEST_STATE_ATTRIBUTE);
+        if (state != null && state == RequestState.EXPIRED) {
+            Response.writeError(request, response, callback, 408, "Unable to process request in a timely manner");
+            return;
+        }
+        request.setAttribute(REQUEST_STATE_ATTRIBUTE, RequestState.STARTING);
+
+        if (contextPath != null && ru != null && ru.startsWith(contextPath)) {
+            ru = ru.substring(contextPath.length());
+        }
+
+        if (ru == null || ru.length() == 0) {
+            Response.sendRedirect(request, response, callback, "index.html");
+            return;
+        }
+
+        CantoSite site = mainSite; 
+        if (sites != null) {
+            int ix = ru.indexOf('/');
+            while (ix == 0) {
+                ru = ru.substring(1);
+                ix = ru.indexOf('/');
+            }
+            if (ix < 0) {
+                if (sites.containsKey(ru)) {
+                    site = (CantoSite) sites.get(ru);
+                }
+            } else if (ix > 0) {
+                String siteName = ru.substring(0, ix);
+                if (sites.containsKey(siteName)) {
+                    site = (CantoSite) sites.get(siteName);
+                }
+            }
+        }
+        
+        continueResponse(site, request, response, callback);
+    }
+        
+    /**
+     * @throws IOException
+     */
+    private void continueResponse(final CantoSite site, final Request request, final Response response, final Callback callback) throws IOException {
+        String pageName = site.getPageName(contextPath);
+        if (site.canRespond(pageName)) {
+            try {
+                respond(site, request, response, contextPath);
+            } catch (Exception e) {
+                LOG.error("Exception handling request: " + e.toString());
+                callback.failed(e);
+            }
+        } else {
+            LOG.error("Cannot respond to " + contextPath);
+            Response.writeError(request, response, callback, 404, contextPath + " is undefined");
+            return;
+        }
+        callback.succeeded();
+    }
+
+    public int respond(CantoSite site, Request httpRequest, Response response, ServletContext servletContext) throws IOException {
+        // contexts are stored under a name that is not a legal name
+        // in Canto, so that it won't collide with cached Canto values.
+        String pageName = getPageName(site, httpRequest);
+        Request request = new Request(httpRequest);
+        CantoSession session = new CantoSession(httpRequest.getSession());
+
+        String mimeType = servletContext.getMimeType(pageName);
+        if (mimeType == null) {
+            mimeType = servletContext.getMimeType(pageName.toLowerCase());
+            if (mimeType == null) {
+                mimeType = "text/html";
+            }
+        }
+        response.setContentType(mimeType);
+
+        int status = 0;
+        try {
+            status = respond(site, pageName, request, session, response.getWriter());
+        } catch (Redirection r) {
+            status = r.getStatus();
+            String location = r.getLocation();
+            String message = r.getMessage();
+            if (location != null) {
+                if (isStatusCode(location)) {
+                    status = Integer.parseInt(location);
+                }
+                if (status >= 400) {
+                    if (message != null) {
+                        response.sendError(status, message);
+                    } else {
+                        response.sendError(status);
+                    }
+                } else {
+                    if (message != null) {
+                        location = location + "?message=" + message; 
+                    }
+                    String newLocation = response.encodeRedirectURL(location);
+                    response.sendRedirect(newLocation);
+                }
+            }
+        }
+
+        handlePendingServerRunners();
+        
+        return status;
+    }
+    
+    
+    
     /** Returns true if the passed string is a valid parameter representation
      *  of true.
      */
@@ -424,20 +615,20 @@ public class CantoServer {
             String newFileBase = mainSite.getProperty("file_base", "");
             if (!fileBase.equals(newFileBase)) {
                 fileBase = newFileBase;
-                slog("file_base set by site to " + fileBase);
+                LOG.info("file_base set by site to " + fileBase);
             }
         } else {
-            slog("file_base not set by site.");
+            LOG.info("file_base not set by site.");
             mainSite.addExternalObject(fileBase, "file_base", null);
         }
         if (mainSite.isDefined("files_first")) {
             boolean newFilesFirst = mainSite.getBooleanProperty("files_first");
             if (newFilesFirst ^ filesFirst) {
                 filesFirst = newFilesFirst;
-                slog("files_first set by site to " + filesFirst);
+                LOG.info("files_first set by site to " + filesFirst);
             }
         } else {
-            slog("files_first not set by site.");
+            LOG.info("files_first not set by site.");
             mainSite.addExternalObject(new Boolean(filesFirst), "files_first", "boolean");
         }
         if (mainSite.isDefined("share_core")) {
@@ -478,22 +669,22 @@ public class CantoServer {
         }
 
         String showAddress = getNominalAddress();
-        slog("             site = " + (siteName == null ? "(no name)" : siteName));
-        slog("             cantopath = " + cantoPath);
-        slog("             recursive = " + recursive);
-        slog("             state file = " + (stateFileName == null ? "(none)" : stateFileName));
-        slog("             log file = " + CantoLogger.getLogFile());
-        slog("             multithreaded = " + multithreaded);
-        slog("             autoloadcore = " + !customCore);
-        slog("             sharecore = " + shareCore);
-        slog("             current directory = " + (new File(".")).getAbsolutePath());
-        slog("             files_first = " + filesFirst);
-        slog("             file_base = " + fileBase);
-        slog("             address = " + showAddress + (port == null ? "" : (":" + port)));
-        slog("             timeout = " + (asyncTimeout > 0 ? Long.toString(asyncTimeout) : "none"));
-        slog("             verbosity = " + Integer.toString(CantoLogger.verbosity));
-        slog("             debuggingEnabled = " + debuggingEnabled);
-        slog("Site " + siteName + " launched at " + (new Date()).toString());
+        LOG.info("             site = " + (siteName == null ? "(no name)" : siteName));
+        LOG.info("             cantopath = " + cantoPath);
+        LOG.info("             recursive = " + recursive);
+        LOG.info("             state file = " + (stateFileName == null ? "(none)" : stateFileName));
+        LOG.info("             log file = " + CantoLogger.getLogFile());
+        LOG.info("             multithreaded = " + multithreaded);
+        LOG.info("             autoloadcore = " + !customCore);
+        LOG.info("             sharecore = " + shareCore);
+        LOG.info("             current directory = " + (new File(".")).getAbsolutePath());
+        LOG.info("             files_first = " + filesFirst);
+        LOG.info("             file_base = " + fileBase);
+        LOG.info("             address = " + showAddress + (port == null ? "" : (":" + port)));
+        LOG.info("             timeout = " + (asyncTimeout > 0 ? Long.toString(asyncTimeout) : "none"));
+        LOG.info("             verbosity = " + Integer.toString(CantoLogger.verbosity));
+        LOG.info("             debuggingEnabled = " + debuggingEnabled);
+        LOG.info("Site " + siteName + " launched at " + (new Date()).toString());
     }
     
     public static class CantoServerRunner {
@@ -514,7 +705,7 @@ public class CantoServer {
                         try {
                             server.startServer();
                         } catch (Exception e) {
-                            LOG("Exception running CantoServer: " + e.toString());
+                            LOG.error("Exception running CantoServer: " + e.toString());
                             e.printStackTrace();
                         }
                     }
@@ -522,6 +713,10 @@ public class CantoServer {
             t.start();
         }            
                 
+    }
+
+    public CantoSite getMainSite() {
+        return mainSite;
     }
 
 }
