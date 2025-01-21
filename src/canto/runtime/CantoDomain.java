@@ -2,7 +2,7 @@
  * 
  * CantoDomain.java
  *
- * Copyright (c) 2018-2021 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -18,7 +18,6 @@ import java.util.Map;
 
 import canto.lang.*;
 import canto.parser.CantoParser;
-import canto.parser.Node;
 
 /**
  * This interface extends the canto_domain interface, which corresponds to the canto_domain
@@ -44,10 +43,9 @@ public class CantoDomain implements canto_domain {
     private String domainName;
     private String domainType;
     private canto_processor cantoProcessor;
+    private canto_server cantoServer;
     private Map<String, CantoDomain> childDomains = null;
 
-    private SiteLoader.LoadOptions loadOptions = null;
-    
     protected String domainPath = null;
     protected Exception[] exceptions;
     protected Object[] sources;
@@ -65,12 +63,13 @@ public class CantoDomain implements canto_domain {
      *  in which case the name of the site is obtained from the main_site object,
      *  loaded from the default site.
      */
-    public CantoDomain(String name, canto_processor processor) {
+    public CantoDomain(String name, canto_processor processor, canto_server server) {
         if ("core".equals(name)) {
             throw new IllegalArgumentException("The name \"core\" is reserved.");
         }
         mainSite = this;
         cantoProcessor = processor;
+        cantoServer = server;
         domainName = name;
         domainType = processor.domain_type();
     }
@@ -94,6 +93,7 @@ public class CantoDomain implements canto_domain {
         this.mainSite = mainSite;
         this.childDomains = mainSite.childDomains;
         this.cantoProcessor = mainSite.cantoProcessor;
+        this.cantoServer = mainSite.cantoServer;
         this.domainName = name;
         this.domainType = domainType;
         this.core = new Core();
@@ -207,12 +207,11 @@ public class CantoDomain implements canto_domain {
     }
 
    
-    public boolean load(String src, boolean isUrl, Core sharedCore, SiteLoader.LoadOptions options) {
+    public boolean load(String src, boolean isUrl, Core sharedCore) {
         if (sharedCore == null) {
             sharedCore = new Core();
         }
         this.core = sharedCore;
-        this.loadOptions = options;
         SiteLoader loader = new SiteLoader(core, domainName, src, isUrl);
 
         if (reload(loader, sharedCore)) {
@@ -222,13 +221,12 @@ public class CantoDomain implements canto_domain {
         }
     }
 
-    public boolean load(String domainPath, String filter, boolean recursive, Core sharedCore, SiteLoader.LoadOptions options) {
+    public boolean load(String domainPath, String filter, Core sharedCore) {
         if (sharedCore == null) {
             sharedCore = new Core(true);
         }
         this.core = sharedCore;
-        this.loadOptions = options;
-        SiteLoader loader = new SiteLoader(core, domainName, domainPath, filter, recursive, options);
+        SiteLoader loader = new SiteLoader(sharedCore, domainName, domainPath, filter);
 
         if (reload(loader, sharedCore)) {
             return true;
@@ -270,7 +268,6 @@ public class CantoDomain implements canto_domain {
         if (defaultSite != null) {
             try {
                 defaultContext = new Context(defaultSite);
-                defaultContext.setErrorThreshhold(loadOptions.errorThreshhold);
             } catch (Redirection r) {
                 log("Unable to instantiate default site context: " + r.getMessage());
                 loadError = true;
@@ -292,35 +289,26 @@ public class CantoDomain implements canto_domain {
             site = core.getSite(domainName);
             // give site a non-null value if necessary
             if (site == null) {
-                log("No data for site " + domainName + " in cantopath; creating empty site");
+                LOG.warn("No data for site " + domainName + " in cantopath; creating empty site");
                 site = new Site(domainName);
                 core.addSite(site);
             }
             site.setSiteConfig(loader.getSiteConfig());
 
         } else if (defaultSite == null) {
-            log("No data for site in cantopath.");
+            LOG.warn("No data for site in cantopath.");
         }
 
         globalInit();
         
         // initialize values used by the runtime system that are defined
         // by the site itself
-        log("Initializing site values");
-
-        int v = getIntProperty("verbosity", -1);
-        if (v >= 0) {
-            CantoLogger.verbosity = v;
-            log("    site verbosity level is " + CantoLogger.verbosity);
-        } else {
-            log("    no value provided for verbosity level; using externally defined value (" + CantoLogger.verbosity + ")");
-        }
+        LOG.info("Initializing site values");
 
         if (!loadError) {
             if (site != null) {
                 try {
                     siteContext = new Context(site);
-                    siteContext.setErrorThreshhold(loadOptions.errorThreshhold);
                 } catch (Redirection r) {
                     log("Unable to instantiate site context: " + r.getMessage());
                     loadError = true;
@@ -668,13 +656,13 @@ public class CantoDomain implements canto_domain {
     void globalInit() {
         if (!globallyInitialized) {
             // initialize externally defined standard objects required by the site
-            log("Initializing standard objects");
+            LOG.info("Initializing standard objects");
             addExternalObject(this, "this_domain", "canto_domain");
             addExternalObject(cantoProcessor, "this_processor", "canto_processor");
             addExternalObject(cantoProcessor, "this_server", "canto_server");
             globallyInitialized = true;
         } else {
-            log("unneeded globalInit() call; domain already globally initialized");
+            LOG.info("unneeded globalInit() call; domain already globally initialized");
         }
     }
     

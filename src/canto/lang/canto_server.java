@@ -2,7 +2,7 @@
  * 
  * canto_server.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -13,10 +13,9 @@ import java.util.Map;
 import canto.runtime.Context;
 
 /**
- * This interface corresponds to the Canto canto_server object, which extends canto_processor
- * and represents a Canto server.
+ * This interface corresponds to the Canto canto_server object, which represents a Canto server.
  */
-public interface canto_server extends canto_processor {
+public interface canto_server {
 
     /** Returns the URL prefix that this server uses to filter requests.  This allows
      *  an HTTP server to dispatch requests among multiple Canto servers, using the
@@ -25,20 +24,6 @@ public interface canto_server extends canto_processor {
      *  If null, this server accepts all requests.
      */
     public String base_url();
-
-
-    /** Returns the base directory on the local system where this server accesses data
-     *  files.  File names in requests are relative to this directory.
-     */
-    public String file_base();
-
-
-    /** Gets the setting of the files first option.  If true, the server looks for
-     *  files before canto objects to satisfy a request.  If false, the server looks
-     *  for canto objects first, and looks for files only when no suitable object by the
-     *  requested name exists.
-     */
-    public boolean files_first();
 
 
     /** Returns a table associating paths in the request to specific sites.  By default, a

@@ -17,7 +17,7 @@ import canto.runtime.Context;
 *
 * @author Michael St. Hippolyte
 */
-public class Site extends MultiBlockDefinition {
+public class Site extends Definition {
 
     public static int defaultExternalAccess = PUBLIC_ACCESS;
     public static int defaultExternalDurability = DYNAMIC;
@@ -722,6 +722,31 @@ public class Site extends MultiBlockDefinition {
             }
             return def;
         }
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        return false;
+    }
+
+    @Override
+    public boolean isStatic() {
+        return false;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        return false;
+    }
+
+    @Override
+    public boolean isDefinition() {
+        return true;
+    }
+
+    @Override
+    public Value instantiate(canto.lang.Context context) {
+        throw new UnsupportedOperationException("Cannot instantiate a site");
     }
 }
 

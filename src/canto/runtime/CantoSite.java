@@ -2,7 +2,7 @@
  * 
  * CantoSite.java
  *
- * Copyright (c) 2018-2021 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -22,38 +22,30 @@ import canto.runtime.debugger.SimpleDebugger;
 
 public class CantoSite extends CantoDomain {
 
-    private static void log(String string) {
-        CantoLogger.log(string);
-    }
-
-    private static void vlog(String string) {
-        CantoLogger.vlog(string);
-    }
+    private static final Log LOG = Log.getLogger(CantoSite.class);
 
     private static boolean LOG_MEMORY = false;
     private static String currentSiteName = "(unknown)";
     private static PrintStream mps = null;
     private static void mlog(String string) {
-        CantoLogger.mlog(string);
         if (LOG_MEMORY) {
-        if (mps == null) {
-            try {
-                mps = new PrintStream(new FileOutputStream("canto_mem.log", true));
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                mps = System.err;
+            if (mps == null) {
+                try {
+                    mps = new PrintStream(new FileOutputStream("canto_mem.log", true));
+                } catch (FileNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                    mps = System.err;
+                }
+                Date now = new Date();
+                mps.println("\n=========== begin logging for site " + currentSiteName + " on " + now.toString() + " ============");
             }
-            Date now = new Date();
-            mps.println("\n=========== begin logging for site " + currentSiteName + " on " + now.toString() + " ============");
-        }
-        mps.println(string);
+            mps.println(string);
         }
     }
 
     private long startingConsumedMemory;
     private long loadedConsumedMemory;
-
 
     private String siteName;
     private String cantoPath = null;
@@ -78,8 +70,8 @@ public class CantoSite extends CantoDomain {
      *  in which case the name of the site is obtained from the main_site Canto object,
      *  loaded from the default site.
      */
-    public CantoSite(String name, canto_processor processor) {
-        super(name, processor);
+    public CantoSite(String name, canto_processor processor, canto_server server) {
+        super(name, processor, server);
 
         siteName = name;
         currentSiteName = siteName;
@@ -101,20 +93,18 @@ public class CantoSite extends CantoDomain {
     }
     
 
-    public boolean load(String cantoPath, String inFilter, boolean recursive, boolean multiThreaded, boolean autoLoadCore, Core sharedCore) {
+    public boolean load(String cantoPath, String inFilter, Core sharedCore) {
         this.cantoPath = cantoPath;
         
         SiteLoader.LoadOptions options = SiteLoader.getDefaultLoadOptions();
-        options.multiThreaded = multiThreaded;
-        options.autoLoadCore = autoLoadCore;
 
         clearStats();
-        if (load(cantoPath, inFilter, recursive, sharedCore, options)) {
+        if (load(cantoPath, inFilter, sharedCore, options)) {
             loadTime = System.currentTimeMillis();
             Runtime runtime = Runtime.getRuntime();
             runtime.gc();
             loadedConsumedMemory = runtime.totalMemory() - runtime.freeMemory();
-            log("Loading site consumed " + (loadedConsumedMemory - startingConsumedMemory) + " bytes.");
+            LOG.info("Loading site consumed " + (loadedConsumedMemory - startingConsumedMemory) + " bytes.");
             return true;
         } else {
             return false;
@@ -366,7 +356,7 @@ public class CantoSite extends CantoDomain {
                     instance = getGeneralResponseInstance(argLists, context);
                 }
                 if (instance == null) {
-                    log("Object " + pageName + " is undefined.");
+                    LOG.info("Object " + pageName + " is undefined.");
                     return CantoServer.NOT_FOUND;
                 }
                 // record the page name (which has the $ prefix) rather than the
@@ -382,7 +372,7 @@ public class CantoSite extends CantoDomain {
                     
                     Definition instanceDef = instance.getDefinition(context);
                     if (instanceDef == null || instanceDef.getAccess() != Definition.PUBLIC_ACCESS) {
-                        log("Object " + pageName + " is not public.");
+                        LOG.info("Object " + pageName + " is not public.");
                         return CantoServer.NOT_FOUND;
                     }
                     
@@ -424,18 +414,18 @@ public class CantoSite extends CantoDomain {
                     }
                     if (data == null) {
                         Type type = instance.getType(context, false);
-                        log(type.getName() + " " + (pageName.charAt(0) == '$' ? pageName.substring(1) : pageName) + " is empty.");
+                        LOG.info(type.getName() + " " + (pageName.charAt(0) == '$' ? pageName.substring(1) : pageName) + " is empty.");
                         return CantoServer.NO_CONTENT;
                     }
                     String str = getStringForData(data);
                     out.println(str);
                     currentSiteName = siteName; //for logging
-                    mlog("----------------- requested object: " + pageName + " ------------------");
-                    mlog("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
-                    mlog("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
-                    mlog("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
+                    mLOG.info("----------------- requested object: " + pageName + " ------------------");
+                    mLOG.info("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
+                    mLOG.info("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
+                    mLOG.info("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
                     long consumedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - loadedConsumedMemory;
-                    mlog(consumedMemory + " additional bytes of memory consumed since site was loaded.");
+                    mLOG.info(consumedMemory + " additional bytes of memory consumed since site was loaded.");
 
                 } catch (Redirection r) {
                     String location = r.getLocation();
@@ -469,10 +459,10 @@ public class CantoSite extends CantoDomain {
             Object pageData = null;
             Definition pageDef = page.getDefinition(context);
             if (pageDef == null) {
-                log("Page " + pageName + " is undefined.");
+                LOG.info("Page " + pageName + " is undefined.");
                 return CantoServer.NOT_FOUND;
             } else if (pageDef.getAccess() != Definition.PUBLIC_ACCESS) {
-                log("Page " + pageName + " is not public.");
+                LOG.info("Page " + pageName + " is not public.");
                 return CantoServer.NOT_FOUND;
             }
             Site pageSite = pageDef.getSite();
@@ -484,7 +474,7 @@ public class CantoSite extends CantoDomain {
                 pageData = page.instantiate(context, pageDef);
             }
             if (pageData == null) {
-                log("Page " + pageName + " is empty.");
+                LOG.info("Page " + pageName + " is empty.");
                 return CantoServer.NO_CONTENT;
             }
             String str = getStringForData(pageData);
@@ -497,12 +487,12 @@ public class CantoSite extends CantoDomain {
                 out.println(str);
             }
             currentSiteName = siteName; //for logging
-            mlog("----------------- requested page: " + pageName + " ------------------");
-            mlog("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
-            mlog("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
-            mlog("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
+            mLOG.info("----------------- requested page: " + pageName + " ------------------");
+            mLOG.info("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
+            mLOG.info("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
+            mLOG.info("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
             long consumedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - loadedConsumedMemory;
-            mlog(consumedMemory + " bytes of memory consumed since site was loaded.");
+            mLOG.info(consumedMemory + " bytes of memory consumed since site was loaded.");
 
         } catch (Redirection r) {
             String location = r.getLocation();
@@ -528,7 +518,7 @@ public class CantoSite extends CantoDomain {
         try {
             Object runData = get(request);
             if (runData == null) {
-                log("CantoRequest " + request + " returns null.");
+                LOG.info("CantoRequest " + request + " returns null.");
                 return;
             }
             String str = getStringForData(runData);
@@ -663,7 +653,7 @@ public class CantoSite extends CantoDomain {
     
     private static final Integer ONE = new Integer(1);
     private void recordRequest(String name, Map<String, Integer> tracker) {
-        vlog("------------------------------------------------------------\nRequesting: " + name);
+        LOG.debug("------------------------------------------------------------\nRequesting: " + name);
         Integer hitCount = (Integer) tracker.get(name);
         if (hitCount != null) {
             int n = hitCount.intValue();

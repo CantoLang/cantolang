@@ -12,12 +12,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.*;
 
 
@@ -46,16 +41,17 @@ public class CantoJettyServer extends Server implements CantoStandaloneServer {
 	    setHandler(new Handler.Abstract()
 	    {
 	        @Override
-	        public boolean handle(CantoRequest request, Response response, Callback callback)
+	        public boolean handle(Request request, Response response, Callback callback)
 	        {
                 try {
                     server.handle(request, response, callback);
+                    // Succeed the callback to signal that the
+                    // request/response processing is complete.
+                    callback.succeeded();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    callback.failed(e);
                 }
-	            // Succeed the callback to signal that the
-	            // request/response processing is complete.
-	            callback.succeeded();
 	            return true;
 	        }
 	    });

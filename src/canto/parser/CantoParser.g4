@@ -28,11 +28,11 @@ globeDefinition
     : GLOBE siteBlock
     ;
 
-cantoFileDefintion
-    : (IDENTIFIER (DOT IDENTIFIER)*) cantoFile
+cantoSourceFile
+    : cantoSourceFileDefinition*
     ;
 
-cantoFile
+cantoSourceFileDefinition
     : siteDefinition
     | coreDefinition
     | domainDefinition

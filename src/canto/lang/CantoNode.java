@@ -2,7 +2,7 @@
  * 
  * CantoNode.java
  *
- * Copyright (c) 2018-2024 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -13,12 +13,12 @@ import canto.util.*;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 /**
  * Base class for canto nodes. Every statement in a canto program is a node.
  *
- * @author Michael St. Hippolyte
  */
 abstract public class CantoNode {
 
@@ -40,23 +40,20 @@ abstract public class CantoNode {
     /** The parent of this node, or null if this is the root. */
     protected CantoNode parent;
 
-    /** The source code for this node. */
-    private String source;
+    /** The children of this node. */
+    protected CantoNode[] children;
 
     /** The documenting comment for this node. */
     private String docComment;
 
     /** Constructs a node. */
-    protected CantoNode(CantoNode parent) {
-        this.parent = parent;
-    }
+    protected CantoNode() {}
 
-    public void setSource(String source) {
-        this.source = source;
-    }
-    
-    public String getSource() {
-        return source;
+    /** Gets the name of this node.  The default name is just the class name, but nodes types that have
+     *  meaningful names should override this to return the name.
+     */
+    public String getName() {
+        return '[' + getClass().getName() + ']';
     }
 
     public void setDocComment(String docComment) {
@@ -75,6 +72,14 @@ abstract public class CantoNode {
         return owner;
     }
 
+    public void setParent(CantoNode parent) {
+        this.parent = parent;
+    }
+
+    public CantoNode getParent() {
+        return parent;
+    }
+
     /** If true, this node cannot have children. */
     abstract public boolean isPrimitive();
 
@@ -87,21 +92,98 @@ abstract public class CantoNode {
     /** If true, this chunk is a definition. */
     abstract public boolean isDefinition();
     
+    /** Clone this node.  Cloning is shallow, in that the child nodes are not
+     *  cloned, and a cloned node contains the exact same child nodes as the
+     *  original.  However, the array containing those nodes is cloned, not
+     *  copied, so that child nodes may be added to or removed from a cloned node
+     *  without affecting the original node.
+     */
+    public Object clone() {
+        try {
+            CantoNode copy = (CantoNode) super.clone();
+            if (children != null) {
+                copy.children = (CantoNode[]) children.clone();
+            }
+            return copy;
+        } catch (CloneNotSupportedException e) {
+            // this is purely to avoid a "throws CloneNotSupportedException" clause
+            throw new InternalError("Unexpected CloneNotSupportedException; Java version may be incompatible");
+        }
+    }
+
+    public boolean isEmpty() {
+        return children == null || children.length == 0;
+    }
+
+    protected void setChild(int n, CantoNode child) {
+        if (children == null) {
+            children = new CantoNode[n + 1];
+        } else if (n >= children.length) {
+            CantoNode[] newChildren = new CantoNode[n + 1];
+            System.arraycopy(children, 0, newChildren, 0, children.length);
+            children = newChildren;
+        }
+        children[n] = child;
+    }
+
+    void addChildren(CantoNode node) {
+        int currentLen = (children == null ? 0 : children.length);
+        int newLen = currentLen + (node.children == null ? 0 : node.children.length);
+        if (newLen > currentLen) {
+            CantoNode c[] = new CantoNode[newLen];
+            if (children != null) {
+                System.arraycopy(children, 0, c, 0, currentLen);
+            }
+            System.arraycopy(node.children, 0, c, currentLen, node.children.length);
+            children = c;
+        }
+    }
+
+    void copyChildren(CantoNode node) {
+        copyChildren(node, 0, node.getNumChildren());
+    }
+    
+    void copyChildren(CantoNode node, int start, int len) {
+        int newLen = Math.min(node.getNumChildren(), start + len) - start;
+        if (newLen < 0) newLen = 0;
+        CantoNode c[] = new CantoNode[newLen];
+        for (int i = start; i < start + newLen; i++) {
+            c[i - start] = (CantoNode) node.getChild(i).clone();
+            c[i - start].parent = this;
+        }
+        children = c;
+    }
+
 
     public CantoNode getChild(int n) {
-        throw new IndexOutOfBoundsException("This node has no children.");
+        return children[n];
     }
 
     public Iterator<CantoNode> getChildren() {
-        return new NullIterator<CantoNode>();
+        if (children == null || children.length == 0) {
+            return new NullIterator<CantoNode>();
+        } else {
+            return Arrays.asList((CantoNode[]) children).iterator();
+        }
+    }
+
+    public List<CantoNode> getChildList() {
+        if (children == null || children.length == 0) {
+            return new EmptyList<CantoNode>();
+        } else {
+            return Arrays.asList((CantoNode[]) children);
+        }
+    }
+    
+    
+    private static class NullIterator<E> implements Iterator<E> {
+        public boolean hasNext() { return false; }
+        public E next() { throw new NoSuchElementException("this is a NullIterator"); }
+        public void remove() { throw new UnsupportedOperationException("NullIterator does not support remove()"); }
     }
 
     public int getNumChildren() {
-        return 0;
-    }
-
-    public CantoNode getParent() {
-        return parent;
+        return (children == null) ? 0 : children.length;
     }
 
     public String toString() {

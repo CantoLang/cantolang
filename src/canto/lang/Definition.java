@@ -2,7 +2,7 @@
  * 
  * Definition.java
  *
- * Copyright (c) 2018-2024 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -65,26 +65,30 @@ abstract public class Definition extends CantoNode {
     protected Definition owner;
 
     /** The children of this definition. */
-    protected Definition[] childDefs;
+    protected Definition[] childDefs = null;
 
     /** The contents of this definition. */
-    protected CantoNode contents;
+    protected CantoNode contents = null;
 
-    protected Definition(CantoNode parent, Name name, CantoNode contents) {
-        super(parent);
+    protected Definition(Name name, CantoNode contents) {
+        super();
         this.name = name;
+        setContents(contents);
+    }
+    
+    public void setContents(CantoNode contents) {
         this.contents = contents;
         List<Definition> defs = extractDefinitions(contents);
         this.childDefs = defs.toArray(new Definition[0]);
     }
     
-    public Name getName() {
-        return name;
+    public String getName() {
+        return name.getName();
     }
 
     private List<Definition> extractDefinitions(CantoNode contents) {
         List<Definition> defs = new ArrayList<Definition>();
-        if (contents.getNumChildren() > 0) {
+        if (contents != null && contents.getNumChildren() > 0) {
             Iterator<CantoNode> it = contents.getChildren();
             while (it.hasNext()) {
                 CantoNode child = it.next();

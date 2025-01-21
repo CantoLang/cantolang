@@ -2,19 +2,32 @@
  * 
  * SiteBuilder.java
  *
- * Copyright (c) 2024 by cantolang.org
+ * Copyright (c) 2024-2025 by cantolang.org
  * All rights reserved.
  */
 
 package canto.runtime;
+
+import canto.lang.Core;
 
 /**
  * 
  */
 public class SiteBuilder {
 
-    public SiteBuilder(String cantoPath, String inFilter, boolean recursive) {
-        // TODO Auto-generated constructor stub
+    private static final Log LOG = Log.getLogger(SiteLoader.class);
+    
+    private Exception exception = null;
+    protected Core core;
+
+
+    public SiteBuilder(Core core) {
+        this.core = core;
     }
+
+    public Exception getException() {
+        return exception;
+    }
+
 
 }

@@ -2,7 +2,7 @@
  * 
  * CantoCompiler.java
  *
- * Copyright (c) 2018-2021 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -16,6 +16,7 @@ import java.util.Date;
 
 import canto.Version;
 import canto.lang.Definition;
+import canto.runtime.CantoServer;
 import canto.runtime.Context;
 import canto.runtime.Log;
 import canto.runtime.SiteBuilder;
@@ -31,7 +32,7 @@ public class CantoCompiler {
 
     public static boolean verbose = true;
 
-    private static final Log logger = Log.getLogger(CantoCompiler.class.getName());
+    private static final Log LOG = Log.getLogger(CantoCompiler.class);
 
     public static void main( String args[] ) {
         if ( args.length == 0 ) {
@@ -98,12 +99,12 @@ public class CantoCompiler {
         outDirName = outDirName.replace( '\\', File.separatorChar );
         File outDir = new File( outDirName );
         if ( !outDir.exists() ) {
-            logger.info( "Creating output directory " + outDir.getAbsolutePath() );
+            LOG.info( "Creating output directory " + outDir.getAbsolutePath() );
             outDir.mkdirs();
         }
 
         if ( !outDir.isDirectory() ) {
-            logger.info( "Output path " + outDir.getAbsolutePath() + " is not a directory." );
+            LOG.info( "Output path " + outDir.getAbsolutePath() + " is not a directory." );
             return null;
         } else {
             return outDir;
