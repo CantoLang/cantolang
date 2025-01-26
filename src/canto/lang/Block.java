@@ -12,22 +12,31 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import canto.util.EmptyList;
+
 /**
  * 
  */
-public abstract class Block extends Construction {
+public class Block extends Construction {
 
     private List<Construction> constructions;
     
-    protected Block(List<Construction> constructions) {
-        super();
-        CantoNode[] nodes = new CantoNode[constructions.size()];
-        this.children = constructions.toArray(nodes);
-        this.constructions = constructions;
+    protected Block() {
+        super(new EmptyList<CantoNode>());
+        this.constructions = new EmptyList<Construction>();
+    }
+    
+    protected Block(List<CantoNode> children) {
+        super(children);
+        this.constructions = ExtractConstructions(children);
     }
 
-    @Override
-    public Value construct(Context context) {
+    private static List<Construction> ExtractConstructions(List<CantoNode> children) {
+        List<Construction> constructions = children.stream().filter(c -> c instanceof Construction).map(c -> (Construction) c).collect(Collectors.toList());        
+        return constructions;
+    }
+
+    public Object generateData(Context context, Definition def) {
         Value val = null;
         StringBuffer sb = null;
         Iterator<Construction> it = constructions.iterator();

@@ -2,7 +2,7 @@
  * 
  * Context.java
  *
- * Copyright (c) 2018-2024 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -51,7 +51,7 @@ public class Context {
         rootContext = this;
     }
 
-    public Context(SiteDefinition site) {
+    public Context(CompilationUnit site) {
         instanceCount++;
         rootContext = this;
         scopeStack.push(new Scope(site, null, null));        

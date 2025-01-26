@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import canto.lang.ArgumentList;
-import canto.lang.ComplexName;
 import canto.lang.Construction;
+import canto.lang.Context;
 import canto.lang.Definition;
 import canto.lang.Instantiation;
 import canto.lang.NameNode;
@@ -47,14 +47,14 @@ public class CantoContext implements canto_context {
     
     public CantoContext(CantoContext cantoContext) {
         site = cantoContext.site;
-        context = new Context(cantoContext.context, false);
+        context = new Context(cantoContext.context);
         context.setTop(context.getRootEntry());
         initialized = true;
     }
     
     private void init() {
         initialized = true;
-        context = new Context(context, false);
+        context = new Context(context);
     }
     
     public boolean isInUse() {

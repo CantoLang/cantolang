@@ -22,6 +22,7 @@ import java.util.Map;
 
 import canto.lang.CantoNode;
 import canto.lang.Construction;
+import canto.lang.Context;
 import canto.lang.Definition;
 import canto.lang.ExternalDefinition;
 import canto.lang.Instantiation;
@@ -426,21 +427,11 @@ public class CantoServer implements canto_server {
      */
     public canto_domain compile(String siteName, String cantopath) {
         CantoSite site = new CantoSite(siteName, this);
-        site.load(cantopath, "*.canto");
+        site.load(cantopath, "*.canto", null);
         return site;
     }
 
-    /** Compile Canto source code passed in as a string and return a canto_domain object.  If
-     *  <code>autoloadCore</code> is true, and the core definitions required by the system cannot
-     *  be found in the files specified in <code>cantopath</code>, the processor will attempt to
-     *  load the core definitions automatically from a known source (e.g. from the same jar file
-     *  that the processor was loaded from).
-     */
-    public canto_domain compile(String siteName, String cantotext, boolean autoloadCore) {
-        return null;
-    }
-
-    /** Compile Canto source code passed in as a string and merge the result into the specified
+     /** Compile Canto source code passed in as a string and merge the result into the specified
      *  canto_domain.  If there is a fatal error in the code, the result is not merged and
      *  a Redirection is thrown.
      */
@@ -449,11 +440,11 @@ public class CantoServer implements canto_server {
     }
 
     /** Load the site files */
-    public CantoSite load(String sitename, String cantoPath) throws Exception {
+    private CantoSite loadPath(String sitename, String cantoPath) throws Exception {
         CantoSite site = null;
 
         LOG.info(NAME_AND_VERSION);
-        LOG.info("Loading site " + (sitename == null ? "(no name yet)" : sitename));
+        LOG.info("Loading site " + (sitename == null ? "(no name yet)" : sitename) + " from path " + cantoPath);
         site = (CantoSite) compile(sitename, cantoPath);
         Exception e = site.getException();
         if (e != null) {
@@ -688,7 +679,7 @@ public class CantoServer implements canto_server {
 
     protected void loadSite() throws Exception {    
         // Load and compile the canto code
-        mainSite = load(siteName, cantoPath);
+        mainSite = loadPath(siteName, cantoPath);
         if (mainSite == null) {
             System.err.println("Unable to load site " + siteName + "; CantoServer not started.");
             return;
@@ -714,7 +705,7 @@ public class CantoServer implements canto_server {
                 if (cp == null || cp.length() == 0) {
                     cp = sc.cantopath();
                 }
-                CantoSite s = load(nm, cp);
+                CantoSite s = loadPath(nm, cp);
                 sites.put(nm, s);
             }
         }    
@@ -803,6 +794,18 @@ public class CantoServer implements canto_server {
 
     @Override
     public canto_server get_server(String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String get(Context context, String requestName, Map<String, String> requestParams) throws Redirection {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String get(Context context, String requestName) throws Redirection {
         // TODO Auto-generated method stub
         return null;
     }

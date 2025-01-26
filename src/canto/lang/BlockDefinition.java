@@ -2,7 +2,7 @@
  * 
  * BlockDefinition.java
  *
- * Copyright (c) 2024 by cantolang.org
+ * Copyright (c) 2024-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,7 +11,7 @@ package canto.lang;
 /**
  * 
  */
-public class BlockDefinition extends ConstructiveDefinition {
+public abstract class BlockDefinition extends Definition {
 
     private Block block;
     

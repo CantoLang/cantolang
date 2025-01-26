@@ -19,6 +19,17 @@ import java.util.Map;
  */
 public interface canto_domain {
 
+    /** Returns the name of this domain.
+     **/
+    public String name();
+
+    /** Returns the domain type.  The default for the primary domain is "site".
+     */
+    public String domain_type();
+
+    /** Properties associated with this domain. **/
+    public Map<String, Object> props();
+
     /** Sites in this domain (keyed on site name). **/
     public Map<String, Site> sites();
 
@@ -26,8 +37,6 @@ public interface canto_domain {
      *  does not explicitly specify a site (followed by the default site and core).
      **/
     public String main_site();
-    
-    public String name();
 
     /** Returns the definition table associated with this domain. **/
     public Map<String, Definition> defs();
@@ -38,19 +47,52 @@ public interface canto_domain {
      */
     public canto_context context();
 
-    
+    /** Retrieve data from this domain */
     public Object get(String expr) throws Redirection;
     public Definition get_definition(String expr) throws Redirection;
     public Object get_instance(String expr) throws Redirection;
     public Object[] get_array(String expr) throws Redirection;
     public Map<String, Object> get_table(String expr) throws Redirection;
-
+    
     /** Returns the existing child domain with a given name, or null if it does not exist. **/
     public canto_domain child_domain(String name);
     
     /** Creates a new domain which is a child of this domain. **/
     public canto_domain child_domain(String name, String type, String src, boolean isUrl);
     public canto_domain child_domain(String name, String type, String path, String filter, boolean recursive);
+
+    /** Compile the Canto source files found at the locations specified in <code>cantopath</code>
+     *  and return a canto_domain object.  If a location is a directory and <code>recursive</code>
+     *  is true, scan subdirectories recursively for Canto source files.  If <code>autoloadCore</code>
+     *  is true, and the core definitions required by the system cannot be found in the files
+     *  specified in <code>cantopath</code>, the processor will attempt to load the core
+     *  definitions automatically from a known source (e.g. from the same jar file that the
+     *  processor was loaded from).
+     *
+     *  <code>siteName</code> is the name of the main site; it may be null, in which case the
+     *  default site must contain a definition for <code>main_site</code>, which must yield the
+     *  name of the main site.
+     */
+    public canto_domain compile(String siteName, String cantopath, boolean recursive, boolean autoloadCore);
+
+    /** Compile Canto source code passed in as a string and return a canto_domain object.  If
+     *  <code>autoloadCore</code> is true, and the core definitions required by the system cannot
+     *  be found in the passed text, the processor will attempt to load the core definitions
+     *  automatically from a known source (e.g. from the same jar file that the processor was
+     *  loaded from).
+     *
+     *  <code>siteName</code> is the name of the main site; it may be null, in which case the
+     *  default site must contain a definition for <code>main_site</code>, which must yield the
+     *  name of the main site.
+     */
+    public canto_domain compile(String siteName, String cantotext, boolean autoloadCore);
+
+    /** Compile Canto source code passed in as a string and merge the result into the specified
+     *  canto_domain.  If there is a fatal error in the code, the result is not merged and
+     *  a Redirection is thrown.
+     */
+    public void compile_into(canto_domain domain, String cantotext) throws Redirection;
+    
 }
 
 

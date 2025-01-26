@@ -125,6 +125,15 @@ abstract public class CantoNode {
         }
         children[n] = child;
     }
+    
+    protected void setChildren(List<CantoNode> childList) {
+        if (childList != null) {
+            children = new CantoNode[childList.size()];
+            childList.toArray(children);
+        } else {
+            children = null;
+        }
+    }
 
     void addChildren(CantoNode node) {
         int currentLen = (children == null ? 0 : children.length);

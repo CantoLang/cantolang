@@ -71,11 +71,15 @@ abstract public class Definition extends CantoNode {
     protected CantoNode contents = null;
 
     protected Definition(Name name, CantoNode contents) {
-        super();
-        this.name = name;
+        this(name);
         setContents(contents);
     }
     
+    protected Definition(Name name) {
+        super();
+        this.name = name;
+    }
+
     public void setContents(CantoNode contents) {
         this.contents = contents;
         List<Definition> defs = extractDefinitions(contents);

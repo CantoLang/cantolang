@@ -42,7 +42,6 @@ public class CantoDomain implements canto_domain {
     private CantoDomain mainSite;
     private String domainName;
     private String domainType;
-    private canto_processor cantoProcessor;
     private canto_server cantoServer;
     private Map<String, CantoDomain> childDomains = null;
 
@@ -63,12 +62,11 @@ public class CantoDomain implements canto_domain {
      *  in which case the name of the site is obtained from the main_site object,
      *  loaded from the default site.
      */
-    public CantoDomain(String name, canto_processor processor, canto_server server) {
+    public CantoDomain(String name, canto_server server) {
         if ("core".equals(name)) {
             throw new IllegalArgumentException("The name \"core\" is reserved.");
         }
         mainSite = this;
-        cantoProcessor = processor;
         cantoServer = server;
         domainName = name;
         domainType = processor.domain_type();
@@ -658,7 +656,6 @@ public class CantoDomain implements canto_domain {
             // initialize externally defined standard objects required by the site
             LOG.info("Initializing standard objects");
             addExternalObject(this, "this_domain", "canto_domain");
-            addExternalObject(cantoProcessor, "this_processor", "canto_processor");
             addExternalObject(cantoProcessor, "this_server", "canto_server");
             globallyInitialized = true;
         } else {
@@ -786,6 +783,38 @@ public class CantoDomain implements canto_domain {
      */
     public canto_context context() {
         return new CantoContext(this);
+    }
+
+
+    /** Compile the Canto source files found at the locations specified in <code>cantopath</code>
+     *  and return a CantoDomain object.  If a location is a directory, scan subdirectories
+     *  recursively for Canto source files.  If the core definitions required by the system 
+     *  cannot be found in the files specified in <code>cantopath</code>, the processor will
+     *  attempt to load the core definitions automatically from a known source (e.g. from the
+     *  same jar file that the processor was loaded from).
+     */
+    public canto_domain compile(String siteName, String cantopath) {
+        CantoSite site = new CantoSite(siteName, this);
+        site.load(cantopath, "*.canto");
+        return site;
+    }
+
+    /** Compile Canto source code passed in as a string and return a canto_domain object.  If
+     *  <code>autoloadCore</code> is true, and the core definitions required by the system cannot
+     *  be found in the files specified in <code>cantopath</code>, the processor will attempt to
+     *  load the core definitions automatically from a known source (e.g. from the same jar file
+     *  that the processor was loaded from).
+     */
+    public canto_domain compile(String siteName, String cantotext, boolean autoloadCore) {
+        return null;
+    }
+
+    /** Compile Canto source code passed in as a string and merge the result into the specified
+     *  canto_domain.  If there is a fatal error in the code, the result is not merged and
+     *  a Redirection is thrown.
+     */
+    public void compile_into(canto_domain domain, String cantotext) throws Redirection {
+        ;
     }
 
 

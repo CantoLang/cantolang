@@ -62,10 +62,23 @@ siteBlock
 
 directive
     : doc = DOC_COMMENT?
-    ( EXTERN identifier nameRange
-    | ADOPT nameRange
-    | IMPORT nameRange (AS name)?
+    ( externDirective
+    | adoptDirective
+    | importDirective
     )
+    ;
+
+
+externDirective
+    : EXTERN identifier nameRange
+    ;
+    
+adoptDirective
+    : ADOPT nameRange
+    ;
+
+importDirective
+    : IMPORT nameRange (AS name)?
     ;
 
 block
@@ -182,11 +195,11 @@ conditional
     ;
 
 elseIfPart
-    : ELSE condType = (IF | WITH | WITHOUT) expression block
+    : doc = DOC_COMMENT? ELSE condType = (IF | WITH | WITHOUT) expression block
     ;
 
 elsePart
-    : ELSE block
+    : doc = DOC_COMMENT? ELSE block
     ; 
 
 loop

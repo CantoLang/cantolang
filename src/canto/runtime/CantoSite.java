@@ -17,7 +17,6 @@ import canto.parser.Token;
 import canto.runtime.debugger.SimpleDebugger;
 
 /**
- * @author Michael St. Hippolyte
  */
 
 public class CantoSite extends CantoDomain {
@@ -70,8 +69,8 @@ public class CantoSite extends CantoDomain {
      *  in which case the name of the site is obtained from the main_site Canto object,
      *  loaded from the default site.
      */
-    public CantoSite(String name, canto_processor processor, canto_server server) {
-        super(name, processor, server);
+    public CantoSite(String name, canto_server server) {
+        super(name, server);
 
         siteName = name;
         currentSiteName = siteName;

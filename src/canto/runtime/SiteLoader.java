@@ -21,13 +21,13 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import canto.lang.CantoNode;
+import canto.lang.Context;
 import canto.lang.Core;
 import canto.lang.Name;
 import canto.lang.Site;
 import canto.lang.site_config;
 import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
-import canto.runtime.Context;
 import canto.runtime.CantoServer;
 import canto.runtime.SiteBuilder;
 import cantocore.CoreSource;
@@ -449,18 +449,18 @@ public class SiteLoader {
                 int last = files.length - 1;
                 for (int i = 0; i < last; i++) {
                     if (files[i].isDirectory()) {
-                        loadFile(files[i], filter, loaders);
+                        loadFile(files[i], filter, loaders, wait);
                     } else if (matches(files[i], filter)) {
-                        loadFile(files[i], filter, loaders);
+                        loadFile(files[i], filter, loaders, wait);
                     } else {
                         LOG.info("Skipping " + files[i].getAbsolutePath());
                     }
                 }
                 if (last >= 0 ) {
                     if (files[last].isDirectory()) {
-                        loadFile(files[last], filter, loaders);
+                        loadFile(files[last], filter, loaders, wait);
                     } else if (matches(files[last], filter)) {
-                        loadFile(files[last], filter, loaders);
+                        loadFile(files[last], filter, loaders, wait);
                     } else {
                         LOG.info("Skipping " + files[last].getAbsolutePath());
                     }
@@ -542,7 +542,7 @@ public class SiteLoader {
     private void link(List<CantoSourceLoader> loaders) {
         for (int i = 0; i < loaders.size(); i++) {
             CantoSourceLoader loader = loaders.get(i);
-            Node parseResult = loader.getParseResult();
+            CantoNode parseResult = loader.getParseResult();
             if (parseResult != null) {
                 LOG.info("--- LINK PASS ---");
                 parseResult.jjtAccept(new Linker(), null);

@@ -17,7 +17,7 @@ import canto.runtime.Context;
 *
 * @author Michael St. Hippolyte
 */
-public class Site extends Definition {
+public class Site extends CantoSourceObject implements Definition {
 
     public static int defaultExternalAccess = PUBLIC_ACCESS;
     public static int defaultExternalDurability = DYNAMIC;
@@ -35,8 +35,7 @@ public class Site extends Definition {
     }
 
     public Site(String name) {
-        super();
-        setName(new NameNode(name));
+        super(new NameNode(name));
         setType(createType());
     }
 
