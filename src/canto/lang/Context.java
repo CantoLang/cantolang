@@ -51,7 +51,7 @@ public class Context {
         rootContext = this;
     }
 
-    public Context(CompilationUnit site) {
+    public Context(Site site) {
         instanceCount++;
         rootContext = this;
         scopeStack.push(new Scope(site, null, null));        

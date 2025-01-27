@@ -10,17 +10,15 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
-
 /**
 * A Site is a namespace and a collection of related definitions.
 *
 * @author Michael St. Hippolyte
 */
-public class Site extends CantoSourceObject implements Definition {
+public class Site extends MultiUnitDefinition {
 
-    public static int defaultExternalAccess = PUBLIC_ACCESS;
-    public static int defaultExternalDurability = DYNAMIC;
+    public static Access defaultExternalAccess = Access.PUBLIC;
+    public static Durability defaultExternalDurability = Durability.DYNAMIC;
 
     protected String domainName = Name.SITE;
     protected String sitePrefix = "";
@@ -30,19 +28,12 @@ public class Site extends CantoSourceObject implements Definition {
     protected site_config siteConfig = null;
     protected Map<String, Object> globalKeep = null;
 
-    public Site() {
-        super();
-    }
-
     public Site(String name) {
         super(new NameNode(name));
-        setType(createType());
     }
 
     public Site(String domain, String name) {
-        super();
-        setName(new NameNode(name));
-        setType(createType());
+        super(new NameNode(name));
         setDomainName(domain);
     }
 
@@ -62,7 +53,7 @@ public class Site extends CantoSourceObject implements Definition {
     }
         
     protected void setName(NameNode name) {
-        super.setName(name);
+        this.name = name;
         sitePrefix = getFullName();
         if (sitePrefix.length() > 0) {
             sitePrefix = sitePrefix + '.';

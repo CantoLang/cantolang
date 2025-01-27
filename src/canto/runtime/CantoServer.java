@@ -555,7 +555,9 @@ public class CantoServer implements canto_server {
         Session session = request.getSession(true);
         Construction cantoRequest = createRequestArg(site, new CantoRequest(request));
         Construction cantoSession = createSessionArg(site, new CantoSession(session));
-        Construction requestParams = createParamsArg(site, request.params());
+        Map<String, String> params = new HashMap<String, String>();
+        Request.getParameters(request).stream().forEach(p -> params.put(p.getName(), p.getValue()));
+        Construction requestParams = createParamsArg(site, params);
 
         // contexts are stored under a name that is not a legal name
         // in Canto, so that it won't collide with cached Canto values.

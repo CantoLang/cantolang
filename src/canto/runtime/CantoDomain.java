@@ -69,7 +69,8 @@ public class CantoDomain implements canto_domain {
         mainSite = this;
         cantoServer = server;
         domainName = name;
-        domainType = processor.domain_type();
+        domainType = Name.SITE;
+        core = new Core();
     }
 
     /** Constructs a child CantoDomain. 
@@ -90,13 +91,16 @@ public class CantoDomain implements canto_domain {
 
         this.mainSite = mainSite;
         this.childDomains = mainSite.childDomains;
-        this.cantoProcessor = mainSite.cantoProcessor;
         this.cantoServer = mainSite.cantoServer;
         this.domainName = name;
         this.domainType = domainType;
         this.core = new Core();
     }
 
+    public String domain_type() {
+        return domainType;
+    }
+    
     public CantoDomain getChildDomain(String name, String type) {
         CantoDomain child = null;
 
@@ -151,10 +155,6 @@ public class CantoDomain implements canto_domain {
         return domainName;
     }
 
-    public Node[] getParseResults() {
-        return parseResults;
-    }
-
     public Exception getException() {
         Exception e = null;
         for (int i = 0; i < exceptions.length; i++) {
@@ -205,35 +205,27 @@ public class CantoDomain implements canto_domain {
     }
 
    
-    public boolean load(String src, boolean isUrl, Core sharedCore) {
-        if (sharedCore == null) {
-            sharedCore = new Core();
-        }
-        this.core = sharedCore;
+    public boolean load(String src, boolean isUrl) {
         SiteLoader loader = new SiteLoader(core, domainName, src, isUrl);
 
-        if (reload(loader, sharedCore)) {
+        if (reload(loader)) {
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean load(String domainPath, String filter, Core sharedCore) {
-        if (sharedCore == null) {
-            sharedCore = new Core(true);
-        }
-        this.core = sharedCore;
-        SiteLoader loader = new SiteLoader(sharedCore, domainName, domainPath, filter);
+    public boolean load(String domainPath, String filter) {
+        SiteLoader loader = new SiteLoader(core, domainName, domainPath, filter);
 
-        if (reload(loader, sharedCore)) {
+        if (reload(loader)) {
             return true;
         } else {
             return false;
         }
     }
 
-    private synchronized boolean reload(SiteLoader loader, Core core) {
+    private synchronized boolean reload(SiteLoader loader) {
         loaded = false;
         loadError = false;
         defaultSite = null;
@@ -245,7 +237,6 @@ public class CantoDomain implements canto_domain {
         loaded = true;
         sources = loader.getSources();
         exceptions = loader.getExceptions();
-        parseResults = loader.getParseResults();
         
         for (int i = 0; i < exceptions.length; i++) {
             if (exceptions[i] != null) {

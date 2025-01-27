@@ -2,7 +2,7 @@
  * 
  * Parser for Canto
  *
- * Copyright (c) 2023 by cantolang.org
+ * Copyright (c) 2023-2025 by cantolang.org
  * All rights reserved.
  */
 

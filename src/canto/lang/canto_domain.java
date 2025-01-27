@@ -2,7 +2,7 @@
  * 
  * canto_domain.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -26,9 +26,6 @@ public interface canto_domain {
     /** Returns the domain type.  The default for the primary domain is "site".
      */
     public String domain_type();
-
-    /** Properties associated with this domain. **/
-    public Map<String, Object> props();
 
     /** Sites in this domain (keyed on site name). **/
     public Map<String, Site> sites();

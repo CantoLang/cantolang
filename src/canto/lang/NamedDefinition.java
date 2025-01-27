@@ -10,9 +10,8 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
 import canto.runtime.CantoObjectWrapper;
-import canto.runtime.Holder;
+import canto.util.Holder;
 
 /**
 * NamedDefinition is a definition which can be looked up by name, allowing it to be
@@ -2201,6 +2200,30 @@ public class NamedDefinition extends Definition {
      */
     public Object get(Context context) throws Redirection {
         return get(context, null);
+    }
+
+    @Override
+    public Value instantiate(canto.lang.Context context) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isStatic() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        // TODO Auto-generated method stub
+        return false;
     }
     
 }

@@ -12,9 +12,6 @@ import java.io.*;
 import java.util.*;
 
 import canto.lang.*;
-import canto.parser.CantoParserConstants;
-import canto.parser.Token;
-import canto.runtime.debugger.SimpleDebugger;
 
 /**
  */
@@ -49,8 +46,6 @@ public class CantoSite extends CantoDomain {
     private String siteName;
     private String cantoPath = null;
 
-    private int errorThreshhold = Context.EVERYTHING;
-
     private Map<String, Integer> pageTracker;
     private Map<String, Integer> fileTracker;
     private Map<String, Integer> redirectTracker;
@@ -58,8 +53,6 @@ public class CantoSite extends CantoDomain {
     private boolean hasGeneralResponse = false;
     private Set<String> ignoreExtensions = null;
     private Set<String> handleAsObjectExtensions = null;
-
-    private boolean debuggingEnabled = false;
 
     /** Constructs a new CantoSite object, which can load and compile Canto source code
      *  defining a group of related site objects and respond to queries.
@@ -95,8 +88,6 @@ public class CantoSite extends CantoDomain {
     public boolean load(String cantoPath, String inFilter, Core sharedCore) {
         this.cantoPath = cantoPath;
         
-        SiteLoader.LoadOptions options = SiteLoader.getDefaultLoadOptions();
-
         clearStats();
         if (load(cantoPath, inFilter, sharedCore, options)) {
             loadTime = System.currentTimeMillis();
@@ -302,7 +293,7 @@ public class CantoSite extends CantoDomain {
     }
     
     
-    public int respond(String pageName, Construction paramsArg, Construction requestArg, Construction sessionArg, Context context, PrintWriter out) throws Redirection {
+    public int respond(String pageName, Construction paramsArg, Construction requestArg, Construction sessionArg, Context context, OutputStream out) throws Redirection {
         ArgumentList[] argLists = getArgumentLists(paramsArg, requestArg, sessionArg);
         Instantiation page = getPageInstance(cleanForCanto(pageName), argLists, context);
         boolean respondWithPage = true;
@@ -446,11 +437,7 @@ public class CantoSite extends CantoDomain {
         return CantoServer.OK;
     }
 
-    private CantoDebugger createDebugger() {
-        return new SimpleDebugger();
-    }
-
-    public int respond(Instantiation page, Context context, PrintWriter out) throws Redirection {
+    public int respond(Instantiation page, Context context, OutputStream out) throws Redirection {
         
         String pageName = page.getName();
         recordRequest(pageName, pageTracker);

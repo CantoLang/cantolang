@@ -61,8 +61,11 @@ abstract public class Definition extends CantoNode {
 
     protected Name name;
     
-    /** The owner of this definition, or null if this is the root. */
-    protected Definition owner;
+    /** Access level. */
+    private Access access = Access.SITE;
+
+    /** Durability. */
+    private Durability dur = Durability.IN_CONTEXT;
 
     /** The children of this definition. */
     protected Definition[] childDefs = null;
@@ -84,6 +87,40 @@ abstract public class Definition extends CantoNode {
         this.contents = contents;
         List<Definition> defs = extractDefinitions(contents);
         this.childDefs = defs.toArray(new Definition[0]);
+    }
+
+    public CantoNode getContents() {
+        return contents;
+    }
+    
+    protected void setAccess(Access access) {
+        this.access = access;
+    }
+
+    public Access getAccess() {
+        return access;
+    }
+
+    /** Convenience method; returns true if this is a local definition
+     *  (i.e., access is LOCAL).
+     */
+    public boolean isLocal() {
+        return (access == Access.LOCAL);
+    }
+
+    protected void setDurability(Durability dur) {
+        this.dur = dur;
+    }
+
+    public Durability getDurability() {
+        return dur;
+    }
+
+    /** Convenience method; returns true if the definition is
+     *  global or static (i.e., durability is GLOBAL, COSMIC, or STATIC).
+     */
+    public boolean isGlobal() {
+        return (dur == Durability.GLOBAL || dur == Durability.COSMIC || dur == Durability.STATIC);
     }
     
     public String getName() {
@@ -122,6 +159,14 @@ abstract public class Definition extends CantoNode {
     }
 
     public abstract Value instantiate(Context context);
+
+    public String getFullName() {
+        if (owner == null) {
+            return name.getName();
+        } else {
+            return owner.getFullName() + "." + name.getName();
+        }
+    }
 
 }
 
