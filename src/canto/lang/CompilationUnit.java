@@ -17,5 +17,11 @@ public class CompilationUnit extends BlockDefinition {
         super(name, block);
     }
 
+    @Override
+    public Value instantiate(Context context) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 
 }

@@ -2,7 +2,7 @@
  * 
  * ComplexName.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,8 +10,12 @@ package canto.lang;
 
 import java.util.*;
 
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.TokenStream;
+
+import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
-import canto.parser.Initializable;
 
 import java.io.StringReader;
 
@@ -31,7 +35,7 @@ public class ComplexName extends NameNode implements Name, Initializable {
     public ComplexName(NameNode node, int start, int end) {
         super();
         int len = end - start;
-        children = new AbstractNode[len];
+        children = new CantoNode[len];
         for (int i = 0; i < len; i++) {
             children[i] = node.getPart(start + i);
             children[i].parent = this;
@@ -45,22 +49,22 @@ public class ComplexName extends NameNode implements Name, Initializable {
         int plen = (prefix instanceof ComplexName ? prefix.children.length : 1);
         int slen = (suffix instanceof ComplexName ? suffix.children.length : 1);
 
-        children = new AbstractNode[plen + slen];
+        children = new CantoNode[plen + slen];
 
         if (prefix instanceof ComplexName) {
             for (int i = 0; i < plen; i++) {
-                children[i] = (AbstractNode) prefix.children[i].clone();
+                children[i] = (CantoNode) prefix.children[i].clone();
             }
         } else {
-            children[0] = (AbstractNode) prefix.clone();
+            children[0] = (CantoNode) prefix.clone();
         }
 
         if (suffix instanceof ComplexName) {
             for (int i = 0; i < slen; i++) {
-                children[plen + i] = (AbstractNode) suffix.children[i].clone();
+                children[plen + i] = (CantoNode) suffix.children[i].clone();
             }
         } else {
-            children[plen] = (AbstractNode) suffix.clone();
+            children[plen] = (CantoNode) suffix.clone();
         }
         
         super.setName(computeName());
@@ -71,7 +75,7 @@ public class ComplexName extends NameNode implements Name, Initializable {
         if (node instanceof ComplexName) {
             copyChildren(node);
         } else {
-            setChild(0, (AbstractNode) node.clone());
+            setChild(0, (CantoNode) node.clone());
         }
         super.setName(node.getName());
     }
@@ -93,12 +97,14 @@ public class ComplexName extends NameNode implements Name, Initializable {
 
     private void parseName(String name) {
         try {
-            CantoParser parser = new CantoParser(new StringReader(name));
+            CantoLexer lexer = new CantoLexer(CharStreams.fromString(name));
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            CantoParser parser = new CantoParser(tokens);
             ComplexName generatedName = parser.parseComplexName();
             copyChildren(generatedName);
         } catch (Exception e) {
             System.out.println("Exception parsing name in ComplexName: " + e);
-            children = new AbstractNode[1];
+            children = new CantoNode[1];
             name = '(' + name + ')';
             children[0] = new NameNode(name);
             children[0].parent = this;

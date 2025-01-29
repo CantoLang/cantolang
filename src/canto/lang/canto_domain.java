@@ -55,8 +55,8 @@ public interface canto_domain {
     public canto_domain child_domain(String name);
     
     /** Creates a new domain which is a child of this domain. **/
-    public canto_domain child_domain(String name, String type, String src, boolean isUrl);
-    public canto_domain child_domain(String name, String type, String path, String filter, boolean recursive);
+    public canto_domain child_domain(String name, String type, String src);
+    public canto_domain child_domain(String name, String type, String path, String filter);
 
     /** Compile the Canto source files found at the locations specified in <code>cantopath</code>
      *  and return a canto_domain object.  If a location is a directory and <code>recursive</code>
@@ -70,7 +70,7 @@ public interface canto_domain {
      *  default site must contain a definition for <code>main_site</code>, which must yield the
      *  name of the main site.
      */
-    public canto_domain compile(String siteName, String cantopath, boolean recursive, boolean autoloadCore);
+    public canto_domain compile(String siteName, String cantopath, String filter);
 
     /** Compile Canto source code passed in as a string and return a canto_domain object.  If
      *  <code>autoloadCore</code> is true, and the core definitions required by the system cannot
@@ -82,7 +82,7 @@ public interface canto_domain {
      *  default site must contain a definition for <code>main_site</code>, which must yield the
      *  name of the main site.
      */
-    public canto_domain compile(String siteName, String cantotext, boolean autoloadCore);
+    public canto_domain compile(String siteName, String cantotext);
 
     /** Compile Canto source code passed in as a string and merge the result into the specified
      *  canto_domain.  If there is a fatal error in the code, the result is not merged and

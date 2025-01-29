@@ -48,7 +48,7 @@ public class CantoDomain implements canto_domain {
     protected String domainPath = null;
     protected Exception[] exceptions;
     protected Object[] sources;
-    protected Node[] parseResults;
+    protected CompilationUnit[] parseResults;
 
     protected boolean debuggingEnabled = false;
 
@@ -205,8 +205,8 @@ public class CantoDomain implements canto_domain {
     }
 
    
-    public boolean load(String src, boolean isUrl) {
-        SiteLoader loader = new SiteLoader(core, domainName, src, isUrl);
+    public boolean load(String src) {
+        SiteLoader loader = new SiteLoader(core, domainName, src);
 
         if (reload(loader)) {
             return true;
@@ -244,23 +244,12 @@ public class CantoDomain implements canto_domain {
                 break;
             }
         }
-        try {
-            coreContext = new Context(core);
-            coreContext.setErrorThreshhold(loadOptions.errorThreshhold);
-            
-        } catch (Redirection r) {
-            log("Unable to instantiate core context: " + r.getMessage());
-            loadError = true;
-        }
 
+        coreContext = new Context(core);
+            
         defaultSite = core.getSite(Name.DEFAULT);
         if (defaultSite != null) {
-            try {
-                defaultContext = new Context(defaultSite);
-            } catch (Redirection r) {
-                log("Unable to instantiate default site context: " + r.getMessage());
-                loadError = true;
-            }
+            defaultContext = new Context(defaultSite);
         }
 
         // getProperty will only see definitions in the default site at
@@ -296,17 +285,12 @@ public class CantoDomain implements canto_domain {
 
         if (!loadError) {
             if (site != null) {
-                try {
-                    siteContext = new Context(site);
-                } catch (Redirection r) {
-                    log("Unable to instantiate site context: " + r.getMessage());
-                    loadError = true;
-                }
+                siteContext = new Context(site);
             }
             try {
                 init();
             } catch (Redirection r) {
-                log("Unable to initialize site: " + r.getMessage());
+                LOG.error("Unable to initialize site: " + r.getMessage());
                 loadError = true;
             }
         }
@@ -647,7 +631,7 @@ public class CantoDomain implements canto_domain {
             // initialize externally defined standard objects required by the site
             LOG.info("Initializing standard objects");
             addExternalObject(this, "this_domain", "canto_domain");
-            addExternalObject(cantoProcessor, "this_server", "canto_server");
+            addExternalObject(cantoServer, "this_server", "canto_server");
             globallyInitialized = true;
         } else {
             LOG.info("unneeded globalInit() call; domain already globally initialized");
@@ -784,8 +768,8 @@ public class CantoDomain implements canto_domain {
      *  attempt to load the core definitions automatically from a known source (e.g. from the
      *  same jar file that the processor was loaded from).
      */
-    public canto_domain compile(String siteName, String cantopath) {
-        CantoSite site = new CantoSite(siteName, this);
+    public canto_domain compile(String siteName, String cantopath, String filter) {
+        CantoSite site = new CantoSite(siteName, cantoServer);
         site.load(cantopath, "*.canto");
         return site;
     }
@@ -796,7 +780,7 @@ public class CantoDomain implements canto_domain {
      *  load the core definitions automatically from a known source (e.g. from the same jar file
      *  that the processor was loaded from).
      */
-    public canto_domain compile(String siteName, String cantotext, boolean autoloadCore) {
+    public canto_domain compile(String siteName, String cantotext) {
         return null;
     }
 
@@ -813,24 +797,19 @@ public class CantoDomain implements canto_domain {
         return getChildDomain(name, null);
     }
     
-    public canto_domain child_domain(String name, String type, String src, boolean isUrl) {
+    public canto_domain child_domain(String name, String type, String src) {
         CantoDomain child = createChildDomain(name, type);
         if (!child.isLoaded()) {
-            Core childCore = new Core();
-            child.load(src, isUrl, childCore, SiteLoader.getDefaultLoadOptions());
+            child.load(src);
         }
 
         return child;
     }
 
-    public canto_domain child_domain(String name, String type, String path, String filter, boolean recursive) {
+    public canto_domain child_domain(String name, String type, String path, String filter) {
         CantoDomain child = createChildDomain(name, type);
         if (!child.isLoaded()) {
-            SiteLoader.LoadOptions options = SiteLoader.getDefaultLoadOptions();
-            options.configurable = false;
-            
-            Core childCore = getChildCore();
-            child.load(path, filter, recursive, childCore, options);
+            child.load(path, filter);
         }
 
         return child;

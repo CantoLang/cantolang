@@ -757,9 +757,53 @@ public class CantoServer implements canto_server {
                 });
             t.start();
         }            
-                
     }
 
+    /** Class to provide Java access to Canto site_config object. **/
+    public static class site_config_wrapper implements site_config {
+        CantoObjectWrapper site_config;
+        
+        public site_config_wrapper(CantoObjectWrapper site_config) {
+            this.site_config = site_config;
+        }
+
+        /** Returns the name of the site. **/
+        public String name() {
+            return site_config.getChildText("name");
+        }
+        
+        /** The directories and/or files containing the Canto source
+         *  code for this site.
+         **/
+        public String cantopath() {
+            return site_config.getChildText("cantopath");
+            
+        }
+
+        /** The directories and/or files containing the Canto source
+         *  code for core.
+         **/
+        public String corepath() {
+            return site_config.getChildText("corepath");
+        }
+        
+        /** The directories and/or files containing the Canto source
+         *  code specific to this site (not including core).
+         **/
+        public String sitepath() {
+            return site_config.getChildText("sitepath");
+            
+        }
+        
+        /** The external interfaces (address and port) that the server should
+         *  respond to for this site.  If null the globally defined value is used.
+         **/
+        public Object[] listen_to() {
+            return site_config.getChildArray("listen_to");
+        };    
+    }
+    
+    
     public CantoSite getMainSite() {
         return mainSite;
     }

@@ -19,11 +19,15 @@ import java.util.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
 
 import canto.lang.CantoNode;
+import canto.lang.CompilationUnit;
 import canto.lang.Context;
 import canto.lang.Core;
+import canto.lang.DuplicateDefinitionException;
 import canto.lang.Name;
+import canto.lang.Redirection;
 import canto.lang.Site;
 import canto.lang.site_config;
 import canto.parser.CantoLexer;
@@ -168,105 +172,97 @@ public class SiteLoader {
 
         LOG.info("site name is " + (siteName == null ? "null; running default site" : siteName));
         
-        internalRecursive = recursive;
-        if (configurable) {
-            internalPath = null;
-            try {
-                Context context = null;
-                if (siteName != null && siteName.length() > 0 && !siteName.equals(Name.DEFAULT)) {
+        internalPath = null;
+        try {
+            Context context = null;
+            if (siteName != null && siteName.length() > 0 && !siteName.equals(Name.DEFAULT)) {
+                Site thisSite = core.getSite(siteName);
+                if (thisSite != null) {
+                    site = thisSite;
+                    context = new Context(site);
+                }
+            } else {
+                context = new Context(site);
+                String name = getProperty("sitename", site, context);
+                if (name != null && name.length() > 0 && !name.equals(Name.DEFAULT)) {
+                	siteName = name;
                     Site thisSite = core.getSite(siteName);
                     if (thisSite != null) {
                         site = thisSite;
                         context = new Context(site);
                     }
-                } else {
-                    context = new Context(site);
-                    String name = getProperty("sitename", site, context);
-                    if (name != null && name.length() > 0 && !name.equals(Name.DEFAULT)) {
-                    	siteName = name;
-                        Site thisSite = core.getSite(siteName);
-                        if (thisSite != null) {
-                            site = thisSite;
-                            context = new Context(site);
-                        }
-                    }
                 }
-                if (context == null) {
-                    context = new Context(site);
-                }
-                
-            	CantoObjectWrapper mainSite = getPropertyObject("main_site", site, context);
-                Object[] sites = (Object[]) getPropertyArray("all_sites", site, context);
-                
-                if (sites == null || sites.length == 0) {
-                	if (mainSite == null) {
-                        throw new Redirection(Redirection.STANDARD_ERROR, "No definition for main_site or all_sites");
-                	}
-                	site_config sc = new CantoServer.site_config_wrapper(mainSite);
+            }
+            if (context == null) {
+                context = new Context(site);
+            }
+            
+        	CantoObjectWrapper mainSite = getPropertyObject("main_site", site, context);
+            Object[] sites = (Object[]) getPropertyArray("all_sites", site, context);
+            
+            if (sites == null || sites.length == 0) {
+            	if (mainSite == null) {
+                    throw new Redirection(Redirection.STANDARD_ERROR, "No definition for main_site or all_sites");
+            	}
+            	site_config sc = new CantoServer.site_config_wrapper(mainSite);
+            	String name = sc.name();
+            	if (siteName.equals(name)) {
+            		siteConfig = sc;
+            		internalPath = sc.cantopath();
+            	}
+            	site.setSiteConfig(sc);
+            } else {
+                for (Object siteObj: sites) {
+                	CantoObjectWrapper obj = (CantoObjectWrapper) siteObj;
+                	site_config sc = new CantoServer.site_config_wrapper(obj);
                 	String name = sc.name();
                 	if (siteName.equals(name)) {
                 		siteConfig = sc;
                 		internalPath = sc.cantopath();
-                        internalRecursive = sc.recursive();
+                		break;
                 	}
-                	site.setSiteConfig(sc);
-                } else {
-                    for (Object siteObj: sites) {
-                    	CantoObjectWrapper obj = (CantoObjectWrapper) siteObj;
-                    	site_config sc = new CantoServer.site_config_wrapper(obj);
-                    	String name = sc.name();
-                    	if (siteName.equals(name)) {
-                    		siteConfig = sc;
-                    		internalPath = sc.cantopath();
-                    		internalRecursive = sc.recursive();
-                    		break;
-                    	}
-                    }
                 }
-                
-                
-            } catch (Redirection r) {
-                log("Problem loading site: unable to determine site properties: " + r.getMessage());
-                throw new RuntimeException(r.getMessage());
             }
-
-            if (internalPath != null && internalPath.length() > 0 && !internalPath.equals(externalPath)) {
-                String[] paths = parsePath(internalPath);
-                for (int i = 0; i < paths.length; i++) {
-                    loadFile(new File(paths[i]), filter, loaders, internalRecursive, true);
-                }
-
-                int secondStepSize = loaders.size() - firstStepSize;
-
-                // wait for the loader threads added in the second step
-                waitForLoaders(firstStepSize, secondStepSize);
-            }
+        
+        } catch (Redirection r) {
+            LOG.error("Problem loading site: unable to determine site properties: " + r.getMessage());
+            throw new RuntimeException(r.getMessage());
         }
-        
-
-
-        // everything is loaded, now link
-        link(loaders);
-        
-        synchronized (loadedFiles) {
-            int size = loaders.size();
-            sources = new Object[size];
-            parseResults = new Node[size];
-            exceptions = new Exception[size];
-
-            for (int i = 0; i < size; i++) {
-                CantoSourceLoader loader = loaders.get(i);
-                Object source = loader.getSource();
-                String sourceId = (source instanceof File ? ((File) source).getAbsolutePath() : source.toString());
-                Exception e = loader.getException();
-                if (e != null) {
-                    loadedFiles.put(sourceId, "Exception: " + e.toString());
-                } else {
-                    loadedFiles.put(sourceId, "OK");
+    
+        if (internalPath != null && internalPath.length() > 0 && !internalPath.equals(externalPath)) {
+            String[] paths = parsePath(internalPath);
+            for (int i = 0; i < paths.length; i++) {
+                loadFile(new File(paths[i]), filter, loaders, true);
+            }
+    
+            int secondStepSize = loaders.size() - firstStepSize;
+    
+            // wait for the loader threads added in the second step
+            waitForLoaders(firstStepSize, secondStepSize);
+    
+            // everything is loaded, now link
+            link(loaders);
+            
+            synchronized (loadedFiles) {
+                int size = loaders.size();
+                sources = new Object[size];
+                parseResults = new Node[size];
+                exceptions = new Exception[size];
+    
+                for (int i = 0; i < size; i++) {
+                    CantoSourceLoader loader = loaders.get(i);
+                    Object source = loader.getSource();
+                    String sourceId = (source instanceof File ? ((File) source).getAbsolutePath() : source.toString());
+                    Exception e = loader.getException();
+                    if (e != null) {
+                        loadedFiles.put(sourceId, "Exception: " + e.toString());
+                    } else {
+                        loadedFiles.put(sourceId, "OK");
+                    }
+                    sources[i] = source;
+                    parseResults[i] = loader.getParseResult(); 
+                    exceptions[i] = e;
                 }
-                sources[i] = source;
-                parseResults[i] = loader.getParseResult(); 
-                exceptions[i] = e;
             }
         }
     }
@@ -677,22 +673,19 @@ public class SiteLoader {
     }
 
 
-
     private class CantoSourceLoader implements Runnable {
 
-        private CantoNode parseResult = null;
+        private CompilationUnit parseResult = null;
         private Exception exception = null;
         private Object source;
         private Thread loaderThread = null;
         private Object semaphore = new Object();
-        private int actions;
 
-        public CantoSourceLoader(Object source, int actions) {
+        public CantoSourceLoader(Object source) {
             this.source = source;
-            this.actions = actions;
         }
 
-        public Node getParseResult() {
+        public CompilationUnit getParseResult() {
             return parseResult;
         }
         
@@ -703,6 +696,10 @@ public class SiteLoader {
         public String getSourceName() {
             if (source instanceof File || source instanceof URL) {
                 return source.toString();
+            } else if (source instanceof InputStream) {
+                return "input stream";
+            } else if (source instanceof Reader) {
+                return "reader";
             } else {
                 return "passed source code";
             }
@@ -759,7 +756,6 @@ public class SiteLoader {
             }
         }
 
-
         /**
          * Loader thread.
          */
@@ -768,30 +764,23 @@ public class SiteLoader {
             SiteBuilder siteBuilder = new SiteBuilder(core);
             try {
                 CantoParser parser = getCantoParser();
-                Node parseResult = parser.parse(getSourceName());
-                siteBuilder.build(parseResult, actions);
+                CompilationUnit parseResult = siteBuilder.build(parser);
                 exception = siteBuilder.getException();
                 this.parseResult = parseResult;
 
-            } catch (ParseException pe) {
-                CantoLogger.log("...syntax error in " + getSourceName() + ": " + pe.getMessage());
-                exception = pe;
+            } catch (RecognitionException re) {
+                LOG.error("...syntax error in " + getSourceName() + ": " + re.getMessage());
+                exception = re;
 
             } catch (DuplicateDefinitionException dde) {
-                CantoLogger.log("...duplicate definition in " + getSourceName() + ": " + dde.getMessage());
+                LOG.error("...duplicate definition in " + getSourceName() + ": " + dde.getMessage());
                 exception = dde;
 
             } catch (Exception e) {
                 exception = e;
-                CantoLogger.log("...exception loading " + getSourceName() + ": " + e);
+                LOG.error("...exception loading " + getSourceName() + ": " + e);
                 System.out.flush();
                 e.printStackTrace();
-
-            } catch (canto.parser.TokenMgrError error) {
-                exception = new ParseException(error.toString());
-                CantoLogger.log("...error loading " + getSourceName() + ": " + error);
-                System.out.flush();
-                error.printStackTrace();
 
             } finally {
                 loaderThread = null;

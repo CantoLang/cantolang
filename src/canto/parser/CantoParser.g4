@@ -28,15 +28,13 @@ globeDefinition
     : GLOBE siteBlock
     ;
 
-cantoSourceFile
-    : cantoSourceFileDefinition*
-    ;
-
-cantoSourceFileDefinition
-    : siteDefinition
+compilationUnit
+    :
+    ( siteDefinition
     | coreDefinition
     | domainDefinition
     | defaultSiteDefinition
+    )*
     ;
 
 siteDefinition
