@@ -59,7 +59,7 @@ public class SiteLoader {
     private String sourceString;
     private String filter;
     private Object[] sources = null;
-    private CantoNode[] parseResults = null;
+    private CompilationUnit[] parseResults = null;
     private Exception[] exceptions = null;
     private site_config siteConfig = null;
 
@@ -246,7 +246,7 @@ public class SiteLoader {
             synchronized (loadedFiles) {
                 int size = loaders.size();
                 sources = new Object[size];
-                parseResults = new Node[size];
+                parseResults = new CompilationUnit[size];
                 exceptions = new Exception[size];
     
                 for (int i = 0; i < size; i++) {
@@ -390,7 +390,7 @@ public class SiteLoader {
         return sources;
     }
 
-    public Node[] getParseResults() {
+    public CompilationUnit[] getParseResults() {
         return parseResults;
     }
 

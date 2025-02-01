@@ -427,7 +427,7 @@ public class CantoServer implements canto_server {
      */
     public canto_domain compile(String siteName, String cantopath) {
         CantoSite site = new CantoSite(siteName, this);
-        site.load(cantopath, "*.canto", null);
+        site.loadPath(cantopath, "*.canto");
         return site;
     }
 

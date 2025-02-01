@@ -85,11 +85,11 @@ public class CantoSite extends CantoDomain {
     }
     
 
-    public boolean load(String cantoPath, String inFilter, Core sharedCore) {
+    public boolean loadPath(String cantoPath, String inFilter) {
         this.cantoPath = cantoPath;
         
         clearStats();
-        if (load(cantoPath, inFilter, sharedCore, options)) {
+        if (load(cantoPath, inFilter)) {
             loadTime = System.currentTimeMillis();
             Runtime runtime = Runtime.getRuntime();
             runtime.gc();

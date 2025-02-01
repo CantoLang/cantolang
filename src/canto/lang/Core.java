@@ -201,4 +201,9 @@ public class Core extends Site {
 	public Map<String, Map<String, Object>> getGlobalKeepTable() {
         return globalKeepTable;
     }
+
+    public void addCompilationUnit(CompilationUnit unit) {
+        // TODO Auto-generated method stub
+        
+    }
 }

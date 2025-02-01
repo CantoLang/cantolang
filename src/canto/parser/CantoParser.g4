@@ -62,7 +62,6 @@ directive
     : doc = DOC_COMMENT?
     ( externDirective
     | adoptDirective
-    | importDirective
     )
     ;
 
@@ -73,10 +72,6 @@ externDirective
     
 adoptDirective
     : ADOPT nameRange
-    ;
-
-importDirective
-    : IMPORT nameRange (AS name)?
     ;
 
 block

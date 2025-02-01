@@ -41,7 +41,6 @@ GLOBE        : 'globe';
 HERE         : 'here';
 IF           : 'if';
 IN           : 'in';
-IMPORT       : 'import';
 INT          : 'int';
 ISA          : 'isa';
 KEEP         : 'keep';

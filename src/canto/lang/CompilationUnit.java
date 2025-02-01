@@ -13,7 +13,7 @@ package canto.lang;
  */
 public class CompilationUnit extends BlockDefinition {
 
-    protected CompilationUnit(Name name, Block block) {
+    public CompilationUnit(Name name, Block block) {
         super(name, block);
     }
 
