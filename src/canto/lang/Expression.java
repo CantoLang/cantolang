@@ -2,13 +2,12 @@
  * 
  * Expression.java
  *
- * Copyright (c) 2024 by cantolang.org
+ * Copyright (c) 2024-2025 by cantolang.org
  * All rights reserved.
  */
 
 package canto.lang;
 
-import canto.runtime.Context;
 
 /**
  * 

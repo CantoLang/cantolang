@@ -13,12 +13,14 @@ import java.util.List;
 
 import canto.lang.Block;
 import canto.lang.CantoNode;
+import canto.lang.CodeBlock;
 import canto.lang.CompilationUnit;
 import canto.lang.Core;
 import canto.lang.Name;
+import canto.lang.NameNode;
+import canto.lang.SiteBlock;
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
-import canto.parser.NotNull;
 
 /**
  * 
@@ -75,10 +77,29 @@ public class SiteBuilder extends CantoParserBaseVisitor<CantoNode> {
             elements.add(def.accept(this));
         }
         
-        Block block = new Block(elements);
+        Block block = new SiteBlock(elements);
         return block;
     }
     
-    
+    @Override
+    public CantoNode visitExternDirective(CantoParser.ExternDirectiveContext ctx) {
+        return ctx.accept(this);
+    }
 
+    @Override
+    public CantoNode visitAdoptDirective(CantoParser.AdoptDirectiveContext ctx) {
+        return ctx.accept(this);
+    }
+
+    @Override
+    public CantoNode visitTopDefinition(CantoParser.TopDefinitionContext ctx) {
+        return ctx.accept(this);
+    }
+
+    @Override
+    public CantoNode visitIdentifier(CantoParser.IdentifierContext ctx) {
+        String name = ctx.getText();
+        return new NameNode(name);
+    }
+  
 }

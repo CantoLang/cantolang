@@ -108,22 +108,33 @@ literalBlock
     ;
 
 topDefinition
-    : doc = DOC_COMMENT? (PUBLIC)? (durability)? definition
+    : doc = DOC_COMMENT? pub = PUBLIC? dur = topDurability?
+    ( def = collectionElementDefinition
+    | def = collectionDefinition
+    | def = elementDefinition
+    | def = blockDefinition
+    )
     ;
 
-deepDefinition
-    : doc = DOC_COMMENT? (LOCAL)? (durability)? definition
+definition
+    : doc = DOC_COMMENT? loc = LOCAL? dur = durability?
+    ( def = collectionElementDefinition
+    | def = collectionDefinition
+    | def = elementDefinition
+    | def = blockDefinition
+    )
     ;
 
-durability
+topDurability
     : COSMIC
     | GLOBAL
     | STATIC
     | DYNAMIC
     ;
 
-definition
-    : doc = DOC_COMMENT? (collectionElementDefinition | collectionDefinition | elementDefinition | blockDefinition)
+durability
+    : STATIC
+    | DYNAMIC
     ;
 
 collectionElementDefinition
@@ -362,10 +373,10 @@ instantiation
 expression
     : primary
     | prefix = (PLUS | MINUS | TILDE | BANG) expression
-    | LPAREN simpleType RPAREN expression
+    | LPAREN typ = simpleType RPAREN expression
     | expression bop = (STAR | SLASH | MOD) expression
     | expression bop = (PLUS | MINUS) expression
-    | expression (LSHIFT | RUSHIFT | RSHIFT) expression
+    | expression bop = (LSHIFT | RUSHIFT | RSHIFT) expression
     | expression bop = (LE | GE | LT | GT) expression
     | expression bop = ISA simpleType
     | expression bop = (EQ | NE) expression
@@ -374,7 +385,7 @@ expression
     | expression bop = BITOR expression
     | expression bop = ANDAND expression
     | expression bop = OROR expression
-    | <assoc = right> expression top = (QMARK | QQ) expression SEMICOLON expression
+    | <assoc = right> expression top = (QMARK | QQ) expression COLON expression
     ;
 
     

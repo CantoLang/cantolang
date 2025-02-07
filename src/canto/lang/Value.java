@@ -22,7 +22,7 @@ public interface Value extends ValueSource {
             }
 
             @Override
-            public Value getValue(canto.runtime.Context context) {
+            public Value getValue(Context context) {
                 return this;
             }
 

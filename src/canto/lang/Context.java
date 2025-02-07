@@ -10,6 +10,10 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.runtime.CantoLogger;
+import canto.runtime.Context;
+import canto.runtime.ContextMarker;
+
 /**
  * 
  */
@@ -65,5 +69,33 @@ public class Context {
             scopeStack.push(context.scopeStack.peek());
         }
         subscopeStack = new ArrayDeque<Scope>(context.subscopeStack);
+    }
+}
+
+class ContextMarker {
+    Context rootContext = null;
+    int stateCount = -1;
+    int loopIndex = -1;
+
+    public ContextMarker() {}
+
+    public ContextMarker(Context context) {
+        context.mark(this);
+    }
+
+    public boolean equals(Object object) {
+        if (object instanceof ContextMarker) {
+            ContextMarker marker = (ContextMarker) object;
+            if (loopIndex >= 0) {
+                CantoLogger.vlog("comparing context marker loop indices: " + loopIndex + " to " + marker.loopIndex);
+            }
+            return (marker.rootContext == rootContext && marker.stateCount == stateCount && marker.loopIndex == loopIndex);
+        } else {
+            return object.equals(this);
+        }
+    }
+    public int hashCode() {
+        int n = (rootContext.getRootEntry().hashCode() << 16) + stateCount;
+        return n;
     }
 }

@@ -11,10 +11,9 @@ package canto.util;
 import java.util.Map;
 
 import canto.lang.ArgumentList;
+import canto.lang.Context;
 import canto.lang.Definition;
 import canto.lang.ResolvedInstance;
-
-import canto.runtime.Context;
 
 /**
  *  A simple container for associating a definition with an instantiated

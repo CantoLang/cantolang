@@ -25,7 +25,7 @@ public class CodeBlock extends Block {
         this.defs = new EmptyList<Definition>();
     }
     
-    protected CodeBlock(List<CantoNode> children) {
+    public CodeBlock(List<CantoNode> children) {
         super(children);
         this.defs = ExtractDefinitions(children);
     }

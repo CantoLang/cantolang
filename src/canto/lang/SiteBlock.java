@@ -16,22 +16,22 @@ import canto.util.EmptyList;
 /**
  * 
  */
-public class SiteBlock extends Block {
+public class SiteBlock extends CodeBlock {
 
-    private List<Definition> defs;
+    private List<Directive> directives;
     
     protected SiteBlock() {
         super();
-        this.defs = new EmptyList<Definition>();
+        this.directives = new EmptyList<Directive>();
     }
     
-    protected SiteBlock(List<CantoNode> children) {
+    public SiteBlock(List<CantoNode> children) {
         super(children);
-        this.defs = ExtractDefinitions(children);
+        this.directives = ExtractDirectives(children);
     }
 
-    private static List<Definition> ExtractDefinitions(List<CantoNode> children) {
-        List<Definition> defs = children.stream().filter(c -> c instanceof Definition).map(c -> (Definition) c).collect(Collectors.toList());        
-        return defs;
+    private static List<Directive> ExtractDirectives(List<CantoNode> children) {
+        List<Directive> directives = children.stream().filter(c -> c instanceof Directive).map(c -> (Directive) c).collect(Collectors.toList());        
+        return directives;
     }
 }

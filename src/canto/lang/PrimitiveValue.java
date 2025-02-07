@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import canto.runtime.Context;
 import canto.runtime.Log;
 import canto.util.StringReference;
 import canto.runtime.CantoObjectWrapper;
@@ -190,7 +189,7 @@ public class PrimitiveValue extends Construction implements Value {
     }
 
     /** ValueSource interface method; returns this Value. **/
-    public Value getValue(Context context) throws Redirection {
+    public Value getValue(Context context) {
         return this;
     }
                  
@@ -610,8 +609,8 @@ public class PrimitiveValue extends Construction implements Value {
     }
 
     @Override
-    public Value construct(Context context) {
-        return this;
+    public Object generateData(Context context, Definition def) {
+        return getValue();
     }
 
 }
