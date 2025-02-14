@@ -2,7 +2,7 @@
  * 
  * ElementReference.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,16 +10,12 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
 
 /**
  * ElementReference represents an instance of an array or table element.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.48 $
  */
 
-public class ElementReference extends AnonymousDefinition {
+public class ElementReference extends Definition {
     private CollectionInstance collection;
     private Definition collectionDef;
     private List<Index> indexes;
@@ -347,6 +343,30 @@ public class ElementReference extends AnonymousDefinition {
 //        }
 
         return sb.toString();
+    }
+
+    @Override
+    public Value instantiate(canto.lang.Context context) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isStatic() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        // TODO Auto-generated method stub
+        return false;
     }
 
 }

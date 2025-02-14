@@ -148,8 +148,8 @@ public class ExternalDefinition extends ComplexDefinition {
     //    this(null, (CantoNode) owner, owner, superType, access, dur, object, args);
     //}
 
-    public ExternalDefinition(String internalName, CantoNode parent, Definition owner, Type superType, int access, int dur, Object object, ArgumentList args) {
-        this(createNameNode(internalName), parent, owner, superType, access, dur, object, args);
+    public ExternalDefinition(String internalName, CantoNode parent, Definition owner, Type superType, Access public1, Durability inContext, Object object, ArgumentList args) {
+        this(createNameNode(internalName), parent, owner, superType, public1, inContext, object, args);
     }
         
         

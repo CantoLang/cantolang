@@ -2,7 +2,7 @@
  * 
  * ElementDefinition.java
  *
- * Copyright (c) 2018-2022 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,17 +11,13 @@ package canto.lang;
 import java.util.List;
 import java.util.Map;
 
-import canto.runtime.Context;
 import canto.runtime.CantoObjectWrapper;
 
 /**
- * ElementDefinition defines an element in an array or table.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.46 $
+ * ElementDefinition is a definition whose content is a single objet.
  */
 
-public class ElementDefinition extends AnonymousDefinition {
+public class ElementDefinition extends Definition {
 
     /** Flag indicating whether the contents of the definition is
      *  a wrapped element (as opposed to the element itself).
@@ -44,7 +40,7 @@ public class ElementDefinition extends AnonymousDefinition {
             setContents(def.getContents());
             wrapped = def.wrapped;
         } else if (element instanceof ResolvedInstance) {
-            setContents((AbstractNode) element);
+            setContents((CantoNode) element);
         } else if (element instanceof Value) {
             Value value = (Value) element;
             Definition owner = getOwner();
@@ -58,10 +54,10 @@ public class ElementDefinition extends AnonymousDefinition {
                     }
                 }
             }
-            setContents((AbstractNode) element);
+            setContents((CantoNode) element);
             
         } else if (element instanceof Chunk || element instanceof Definition) {
-            setContents((AbstractNode) element);
+            setContents((CantoNode) element);
         } else {
             setContents(new PrimitiveValue(element));
             wrapped = true;
@@ -360,6 +356,30 @@ System.err.println("***** ElementDefinition getBaseDefinition null due to null o
         StringBuffer sb = new StringBuffer(prefix);
         sb.append(getContents().toString());
         return sb.toString();
+    }
+
+    @Override
+    public Value instantiate(canto.lang.Context context) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isStatic() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isDynamic() {
+        // TODO Auto-generated method stub
+        return false;
     }
     
 }

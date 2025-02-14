@@ -16,8 +16,6 @@ import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import canto.lang.CantoNode;
@@ -30,11 +28,7 @@ import canto.lang.Redirection;
 import canto.lang.canto_domain;
 import canto.lang.canto_server;
 import canto.lang.site_config;
-import canto.runtime.CantoStandaloneServer;
-import canto.runtime.Log;
-import canto.runtime.CantoServer.RequestState;
 
-import org.antlr.v4.runtime.RuntimeMetaData;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Session;
@@ -42,7 +36,7 @@ import org.eclipse.jetty.util.Callback;
 
 
 /**
- * 
+ * A web server that serves Canto data.  This class is a wrapper around a Jetty server.
  */
 public class CantoServer implements canto_server {
     private static final Log LOG = Log.getLogger(CantoServer.class);
@@ -96,7 +90,6 @@ public class CantoServer implements canto_server {
     private boolean appendToLog = true;
     private String cantoPath = ".";
     private boolean debuggingEnabled = false;
-    private boolean verbose = false;
     protected String fileHandlerName = null;
     private long asyncTimeout = 0l;
 
@@ -380,13 +373,6 @@ public class CantoServer implements canto_server {
 
     protected void initGlobalSettings(Map<String, String> initParams) throws Exception {
 
-        String param;
-        
-        param = initParams.get("verbose");
-        if ("true".equalsIgnoreCase(param)) {
-            verbose  = true;
-        }
-
         siteName = initParams.get("site");
         if (siteName == null) {
             siteName = canto.lang.Name.DEFAULT;
@@ -550,21 +536,22 @@ public class CantoServer implements canto_server {
         }
     }
 
-    public void respond(CantoSite site, String pageName, Request request, Response response, Callback callback) throws IOException {
-
-        Session session = request.getSession(true);
-        Construction cantoRequest = createRequestArg(site, new CantoRequest(request));
-        Construction cantoSession = createSessionArg(site, new CantoSession(session));
-        Map<String, String> params = new HashMap<String, String>();
-        Request.getParameters(request).stream().forEach(p -> params.put(p.getName(), p.getValue()));
-        Construction requestParams = createParamsArg(site, params);
-
-        // contexts are stored under a name that is not a legal name
-        // in Canto, so that it won't collide with cached Canto values.
-        CantoContext cantoContext = (CantoContext) session.getAttribute("@");
+    public void respond(CantoSite site, String pageName, Request request, Response response, Callback callback) {
 
         int status = 500;
+        CantoContext cantoContext = null;
         try {
+            Session session = request.getSession(true);
+            Construction cantoRequest = createRequestArg(site, new CantoRequest(request));
+            Construction cantoSession = createSessionArg(site, new CantoSession(session));
+            Map<String, String> params = new HashMap<String, String>();
+            Request.getParameters(request).stream().forEach(p -> params.put(p.getName(), p.getValue()));
+            Construction requestParams = createParamsArg(site, params);
+    
+            // contexts are stored under a name that is not a legal name
+            // in Canto, so that it won't collide with cached Canto values.
+            cantoContext = (CantoContext) session.getAttribute("@");
+
             OutputStream out = Response.asBufferedOutputStream(request, response);
             
             // if the CantoContext for this session is null, then it's a new
@@ -622,8 +609,10 @@ public class CantoServer implements canto_server {
             }
 
         } finally {
-            synchronized (cantoContext) {
-                cantoContext.setInUse(false);
+            if (cantoContext != null) {
+                synchronized (cantoContext) {
+                    cantoContext.setInUse(false);
+                }
             }
         }
     }
@@ -631,7 +620,7 @@ public class CantoServer implements canto_server {
     private static Construction createParamsArg(CantoSite site, Map<String, String> params) {
         Definition parent = site.getMainOwner();
         CantoNode owner = (CantoNode) parent;
-        ExternalDefinition def = new ExternalDefinition("params", owner, parent, null, Definition.PUBLIC_ACCESS, Definition.IN_CONTEXT, params, null);
+        ExternalDefinition def = new ExternalDefinition("params", owner, parent, null, Definition.Access.PUBLIC, Definition.Durability.IN_CONTEXT, params, null);
         return new Instantiation(def);
     }
     
@@ -666,6 +655,29 @@ public class CantoServer implements canto_server {
         return ("true".equalsIgnoreCase(param) || "yes".equalsIgnoreCase(param) || "1".equalsIgnoreCase(param));
     }
 
+    private static boolean isStatusCode(String str) {
+        if (str == null) {
+            return false;
+        }
+        int length = str.length();
+        if (length != 3) {
+            return false;
+        }
+        char c = str.charAt(0);
+        if (c < '1' || c > '5') {
+            return false;
+        }
+        c = str.charAt(1);
+        if (c < '0' || c > '9') {
+            return false;
+        }
+        c = str.charAt(2);
+        if (c < '0' || c > '9') {
+            return false;
+        }
+        return true;
+    }
+    
     public void recordState(String state) {
         if (stateFileName != null) {
             try {
@@ -693,8 +705,6 @@ public class CantoServer implements canto_server {
 
         mainSite.addExternalObject(cantoPath, "canto_path", null);
         
-        sharedCore = mainSite.getCore();
-
         Object[] all_sites = mainSite.getPropertyArray("all_sites");
         if (all_sites != null && all_sites.length > 0) {
             for (int i = 0; i < all_sites.length; i++) {
@@ -712,14 +722,14 @@ public class CantoServer implements canto_server {
             }
         }    
         // have to relink to catch intersite references and unresolved types
-        LOG.info("--- SUPERLINK PASS ---");
-        link(mainSite.getParseResults());
-        if (sites.size() > 0) {
-            Iterator<CantoSite> it = sites.values().iterator();
-            while (it.hasNext()) {
-                link(it.next().getParseResults());
-            }
-        }
+//        LOG.info("--- SUPERLINK PASS ---");
+//        link(mainSite.getParseResults());
+//        if (sites.size() > 0) {
+//            Iterator<CantoSite> it = sites.values().iterator();
+//            while (it.hasNext()) {
+//                link(it.next().getParseResults());
+//            }
+//        }
 
         String showAddress = getNominalAddress();
         LOG.info("             site = " + (siteName == null ? "(no name)" : siteName));
@@ -731,6 +741,12 @@ public class CantoServer implements canto_server {
         LOG.info("             debuggingEnabled = " + debuggingEnabled);
         LOG.info("Site " + siteName + " launched at " + (new Date()).toString());
     }
+
+//    static void link(CantoNode[] parseResults) {
+//        for (int i = 0; i < parseResults.length; i++) {
+//            parseResults[i].jjtAccept(new SiteLoader.Linker(true), null);
+//        }
+//    }
     
     public static class CantoServerRunner {
         
@@ -840,18 +856,6 @@ public class CantoServer implements canto_server {
 
     @Override
     public canto_server get_server(String name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String get(Context context, String requestName, Map<String, String> requestParams) throws Redirection {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String get(Context context, String requestName) throws Redirection {
         // TODO Auto-generated method stub
         return null;
     }

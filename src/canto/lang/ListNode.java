@@ -10,13 +10,9 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
 
 /**
  * An ListNode is a node which contains a list of nodes.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.11 $
  */
 public class ListNode<E> extends CantoNode implements List<E> {
 

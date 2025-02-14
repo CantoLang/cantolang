@@ -10,14 +10,15 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.CantoLogger;
-import canto.runtime.Context;
-import canto.runtime.ContextMarker;
+import canto.runtime.CantoServer;
+import canto.runtime.Log;
 
 /**
  * 
  */
 public class Context {
+    private static final Log LOG = Log.getLogger(Context.class);
+
     /** Anything bigger than this will be treated as runaway recursion.  The default value
      *  is DEFAULT_MAX_CONTEXT_SIZE.
      **/
@@ -73,6 +74,8 @@ public class Context {
 }
 
 class ContextMarker {
+    private static final Log LOG = Log.getLogger(ContextMarker.class);
+
     Context rootContext = null;
     int stateCount = -1;
     int loopIndex = -1;
@@ -87,7 +90,7 @@ class ContextMarker {
         if (object instanceof ContextMarker) {
             ContextMarker marker = (ContextMarker) object;
             if (loopIndex >= 0) {
-                CantoLogger.vlog("comparing context marker loop indices: " + loopIndex + " to " + marker.loopIndex);
+                LOG.debug("comparing context marker loop indices: " + loopIndex + " to " + marker.loopIndex);
             }
             return (marker.rootContext == rootContext && marker.stateCount == stateCount && marker.loopIndex == loopIndex);
         } else {

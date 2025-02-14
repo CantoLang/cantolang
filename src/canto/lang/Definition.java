@@ -12,10 +12,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import canto.runtime.Log;
+
 /**
  * 
  */
 abstract public class Definition extends CantoNode {
+    private static final Log LOG = Log.getLogger(Definition.class);
 
     // The modifier values are such that for groups of definitions, the lowest value
     // governs.  For example, if a group of five definitions includes one dynamic one,
@@ -125,6 +128,12 @@ abstract public class Definition extends CantoNode {
     
     public String getName() {
         return name.getName();
+    }
+
+    /** The default Type is DefaultType.TYPE.
+     */
+    public Type getType() {
+        return DefaultType.TYPE;
     }
 
     private List<Definition> extractDefinitions(CantoNode contents) {
