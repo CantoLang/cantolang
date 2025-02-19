@@ -307,7 +307,7 @@ public class CantoDomain implements canto_domain {
         Site owner = core;
         Definition superdef = (supertype == null ? null : getDefinition(supertype));
         Type st = (superdef == null ? null : superdef.getType());
-        Definition newDef = new ExternalDefinition(name, owner, owner, st, Definition.PUBLIC_ACCESS, Definition.GLOBAL, object, null);
+        Definition newDef = new ExternalDefinition(name, owner, owner, st, Definition.Access.PUBLIC, Definition.Durability.GLOBAL, object, null);
         owner.addDefinition(newDef, true);
     }
 

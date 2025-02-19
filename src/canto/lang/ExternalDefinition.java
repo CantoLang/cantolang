@@ -17,7 +17,8 @@ import canto.runtime.*;
 * Facade class to make a Java object available as a Canto definition.
 */
 public class ExternalDefinition extends ComplexDefinition {
-
+    private static final Log LOG = Log.getLogger(ExternalDefinition.class);
+    
     /**
      * Table to cache class lookups, to avoid all the exception
      * throwing with Class.forName calls.

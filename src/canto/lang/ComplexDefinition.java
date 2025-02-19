@@ -2,7 +2,7 @@
  * 
  * ComplexDefinition.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,16 +10,15 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
+import canto.runtime.Log;
+import canto.util.EmptyList;
 
 /**
 * ComplexDefinition is a named definition which may contain other named definitions.
-*
-* @author Michael St. Hippolyte
-* @version $Revision: 1.108 $
 */
 
 public class ComplexDefinition extends NamedDefinition {
+    private static final Log LOG = Log.getLogger(ComplexDefinition.class);
 
     public static ComplexDefinition getComplexOwner(Definition owner) {
         while (owner != null) {

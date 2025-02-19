@@ -8,10 +8,13 @@
 
 package canto.lang;
 
+import canto.runtime.Log;
+
 /**
  * 
  */
 public abstract class BlockDefinition extends Definition {
+    private static final Log LOG = Log.getLogger(BlockDefinition.class);
 
     private Block block;
     

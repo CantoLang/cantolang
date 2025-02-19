@@ -372,20 +372,40 @@ instantiation
 
 expression
     : primary
-    | prefix = (PLUS | MINUS | TILDE | BANG) expression
-    | LPAREN typ = simpleType RPAREN expression
-    | expression bop = (STAR | SLASH | MOD) expression
+    | unaryExpression
+    | castExpression
+    | isaExpression
+    | binaryExpression
+    | trinaryExpression
+    ;
+
+unaryExpression    
+    : prefix = (PLUS | MINUS | TILDE | BANG) expression
+    ;
+
+castExpression
+    : LPAREN simpleType RPAREN expression
+    ;
+    
+isaExpression
+    :| expression ISA simpleType
+    ;
+
+binaryExpression
+    : expression bop = (STAR | SLASH | MOD) expression
     | expression bop = (PLUS | MINUS) expression
     | expression bop = (LSHIFT | RUSHIFT | RSHIFT) expression
     | expression bop = (LE | GE | LT | GT) expression
-    | expression bop = ISA simpleType
     | expression bop = (EQ | NE) expression
     | expression bop = BITAND expression
     | expression bop = CARET expression
     | expression bop = BITOR expression
     | expression bop = ANDAND expression
     | expression bop = OROR expression
-    | <assoc = right> expression top = (QMARK | QQ) expression COLON expression
+    ;
+
+trinaryExpression
+    : <assoc = right> expression top = (QMARK | QQ) expression COLON expression
     ;
 
     

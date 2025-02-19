@@ -10,12 +10,15 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.runtime.Log;
+
 /**
 * A Site is a namespace and a collection of related definitions.
 *
 * @author Michael St. Hippolyte
 */
 public class Site extends MultiUnitDefinition {
+    private static final Log LOG = Log.getLogger(Site.class);
 
     public static Access defaultExternalAccess = Access.PUBLIC;
     public static Durability defaultExternalDurability = Durability.DYNAMIC;

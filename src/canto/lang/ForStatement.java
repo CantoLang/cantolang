@@ -14,14 +14,15 @@ import java.util.*;
 import canto.runtime.CantoObjectWrapper;
 import canto.util.CollectionFactory;
 
+import canto.runtime.Log;
+
 /**
  * ForStatement implements Canto <code>for</code> statements.
- *
- * @author Michael St. Hippolyte
  */
 
 public class ForStatement extends Construction implements ConstructionContainer, ConstructionGenerator {
-
+    private static final Log LOG = Log.getLogger(ForStatement.class);
+    
     private IteratorValues vals;
     private Block body;
 

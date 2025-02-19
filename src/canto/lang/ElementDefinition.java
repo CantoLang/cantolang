@@ -12,13 +12,16 @@ import java.util.List;
 import java.util.Map;
 
 import canto.runtime.CantoObjectWrapper;
+import canto.runtime.Log;
 
 /**
  * ElementDefinition is a definition whose content is a single objet.
  */
 
 public class ElementDefinition extends Definition {
+    private static final Log LOG = Log.getLogger(ElementDefinition.class);
 
+    
     /** Flag indicating whether the contents of the definition is
      *  a wrapped element (as opposed to the element itself).
      */
@@ -359,7 +362,7 @@ System.err.println("***** ElementDefinition getBaseDefinition null due to null o
     }
 
     @Override
-    public Value instantiate(canto.lang.Context context) {
+    public Value instantiate(canto.lang.Context context, ArgumentList args, List<Index> indexes) {
         // TODO Auto-generated method stub
         return null;
     }

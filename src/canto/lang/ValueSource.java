@@ -8,8 +8,6 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
-
 
 /**
  * Common base interface for the Value and ValueGenerator classes.  This

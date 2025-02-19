@@ -10,14 +10,11 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.*;
-
+import canto.runtime.Log;
+import canto.util.*;
 
 /**
  * An ResolvedInstance is an Instantiation with a fixed resolution context.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.39 $
  */
 public class ResolvedInstance extends Instantiation implements Value {
 
@@ -354,6 +351,12 @@ public class ResolvedInstance extends Instantiation implements Value {
 
     public String toString() {
         return super.toString() + " (resolved)";
+    }
+
+    @Override
+    public Object getObject() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

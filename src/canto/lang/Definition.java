@@ -136,6 +136,24 @@ abstract public class Definition extends CantoNode {
         return DefaultType.TYPE;
     }
 
+    /** Returns true if <code>def</code> equals this definition or is a subdefinition of
+     *  this definition.
+     */
+    public boolean equalsOrExtends(Definition def) {
+        return equals(def);
+    }
+
+    /** Returns true if this definition has a child definition by the specified name.
+     */
+    public boolean hasChildDefinition(String name, boolean localAllowed) {
+        for (int i = 0; i < childDefs.length; i++) {
+            if (childDefs[i].getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private List<Definition> extractDefinitions(CantoNode contents) {
         List<Definition> defs = new ArrayList<Definition>();
         if (contents != null && contents.getNumChildren() > 0) {
@@ -167,7 +185,7 @@ abstract public class Definition extends CantoNode {
         return true;
     }
 
-    public abstract Value instantiate(Context context);
+    public abstract Value instantiate(Context context, ArgumentList args, List<Index> indexes);
 
     public String getFullName() {
         if (owner == null) {

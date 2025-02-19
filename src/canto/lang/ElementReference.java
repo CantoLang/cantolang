@@ -10,12 +10,16 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.runtime.Log;
+
 
 /**
  * ElementReference represents an instance of an array or table element.
  */
 
 public class ElementReference extends Definition {
+    private static final Log log = Log.getLogger(ElementReference.class);
+    
     private CollectionInstance collection;
     private Definition collectionDef;
     private List<Index> indexes;
@@ -316,7 +320,7 @@ public class ElementReference extends Definition {
         try {
         	Definition def = getElementDefinition(argContext);
             if (def != null) {
-                return ((AnonymousDefinition) def).getMatch(args, argContext);
+                return def.getMatch(args, argContext);
             }
         } catch (Redirection r) {
         	;
@@ -346,8 +350,8 @@ public class ElementReference extends Definition {
     }
 
     @Override
-    public Value instantiate(canto.lang.Context context) {
-        // TODO Auto-generated method stub
+    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
+
         return null;
     }
 

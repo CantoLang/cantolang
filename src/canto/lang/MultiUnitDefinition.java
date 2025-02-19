@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * 
  */
-public class MultiUnitDefinition extends Definition {
+public class MultiUnitDefinition extends ComplexDefinition {
     
     List<CompilationUnit> units;
 
@@ -28,7 +28,7 @@ public class MultiUnitDefinition extends Definition {
     }
  
     @Override
-    public Value instantiate(Context context) {
+    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
         return null;
     }
 

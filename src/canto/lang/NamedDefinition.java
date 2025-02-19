@@ -11,18 +11,16 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.CantoObjectWrapper;
+import canto.runtime.Log;
 import canto.util.Holder;
 
 /**
 * NamedDefinition is a definition which can be looked up by name, allowing it to be
 * instantiated, and also making it elegible for subclassing.
-*
-* @author Michael St. Hippolyte
-* @version $Revision: 1.150 $
 */
 
 public class NamedDefinition extends Definition {
-
+    private static final Log LOG = Log.getLogger(NamedDefinition.class);
 
     public static NameNode createNameNode(String name) {
         if (name == null || name.length() == 0) {
@@ -2203,12 +2201,6 @@ public class NamedDefinition extends Definition {
     }
 
     @Override
-    public Value instantiate(canto.lang.Context context) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public boolean isPrimitive() {
         // TODO Auto-generated method stub
         return false;
@@ -2224,6 +2216,12 @@ public class NamedDefinition extends Definition {
     public boolean isDynamic() {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 }
