@@ -136,11 +136,42 @@ abstract public class Definition extends CantoNode {
         return DefaultType.TYPE;
     }
 
+    /** Anonymous definitions have no supertype; returns null. */
+    public Type getSuper() {
+        return null;
+    }
+
+    public Type getSuper(Context context) {
+        return getSuper();
+    }
+
+    /** Anonymous definitions have no supertype; returns null. */
+    public Type getSuperForChild(Context context, Definition childDef) throws Redirection {
+        return null;
+    }
+
+    /** Anonymous definitions have no supertype; returns null. */
+    public NamedDefinition getSuperDefinition() {
+        return null;
+    }
+
+    /** Anonymous definitions have no supertype; returns null. */
+    public NamedDefinition getSuperDefinition(Context context) {
+        return null;
+    }
+
     /** Returns true if <code>def</code> equals this definition or is a subdefinition of
      *  this definition.
      */
     public boolean equalsOrExtends(Definition def) {
         return equals(def);
+    }
+
+    /** Returns true if <code>name</code> is the name of an ancestor of this
+     *  definition.
+     */
+    public boolean isSuperType(String name) {
+        return (name.equals(""));
     }
 
     /** Returns true if this definition has a child definition by the specified name.
@@ -195,5 +226,27 @@ abstract public class Definition extends CantoNode {
         }
     }
 
+    public Definition getExplicitChildDefinition(NameNode node) {
+        for (int i = 0; i < childDefs.length; i++) {
+            if (childDefs[i].getName().equals(node.getName())) {
+                return childDefs[i];
+            }
+        }
+        return null;
+    }
+
+    DefinitionTable getDefinitionTable() {
+        if (owner == null) {
+            LOG.error("Definition " + name.getName() + " has no owner!");
+            return null;
+        }
+        return owner.getDefinitionTable();
+    }
+
+    void setDefinitionTable(DefinitionTable table) {
+        ;
+    }
+
+    
 }
 

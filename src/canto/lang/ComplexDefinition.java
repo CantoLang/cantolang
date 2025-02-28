@@ -174,7 +174,7 @@ public class ComplexDefinition extends NamedDefinition {
 
     public Definition getExplicitChildDefinition(NameNode node) {
         if (definitions == null) {
-            vlog(getFullName() + " has no definition table, cannot look up " + node.getName());
+            LOG.warn(getFullName() + " has no definition table, cannot look up " + node.getName());
             return null;
         }
         return definitions.getDefinition(this, node);

@@ -72,6 +72,19 @@ abstract public class CantoNode {
         return owner;
     }
 
+    /** Returns the site containing this node. */
+    public Site getSite() {
+        Definition owner = getOwner();
+        if (owner == null) {
+            return null;
+        } else if (owner == this) {
+            throw new IllegalStateException("Circular definition: " + getName() + " owns itself");
+        
+        } else {
+            return owner.getSite();
+        }
+    }
+    
     public void setParent(CantoNode parent) {
         this.parent = parent;
     }

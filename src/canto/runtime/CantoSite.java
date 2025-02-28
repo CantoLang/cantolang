@@ -12,6 +12,7 @@ import java.io.*;
 import java.util.*;
 
 import canto.lang.*;
+import canto.util.SingleItemList;
 
 /**
  */
@@ -133,14 +134,6 @@ public class CantoSite extends CantoDomain {
 
     public void enableDebugging(boolean enabled) {
         debuggingEnabled = enabled;
-    }
-
-    public int getErrorThreshhold() {
-        return errorThreshhold;
-    }
-
-    public void setErrorThreshhold(int threshhold) {
-        errorThreshhold = threshhold;
     }
 
     public void clearStats() {
@@ -308,13 +301,7 @@ public class CantoSite extends CantoDomain {
             
             boolean handleAsObj = (pageName.charAt(0) == '$' || handleAsObject(pageName));
 
-            if (pageName.equalsIgnoreCase("$debug")) {
-                CantoDebugger debugger = context.getDebugger();
-                if (debugger == null) {
-                    debugger = createDebugger();
-                }
-            
-            } else if (pageName.equalsIgnoreCase("$stat")) {
+            if (pageName.equalsIgnoreCase("$stat")) {
                 recordRequest("$stat", pageTracker);
                 printStatus(out);
 
@@ -361,7 +348,7 @@ public class CantoSite extends CantoDomain {
                     }
                     
                     Definition instanceDef = instance.getDefinition(context);
-                    if (instanceDef == null || instanceDef.getAccess() != Definition.PUBLIC_ACCESS) {
+                    if (instanceDef == null || instanceDef.getAccess() != Definition.Access.PUBLIC) {
                         LOG.info("Object " + pageName + " is not public.");
                         return CantoServer.NOT_FOUND;
                     }
@@ -649,23 +636,24 @@ public class CantoSite extends CantoDomain {
         }
     }
 
-    private void printStatus(PrintWriter out) {
-        out.println("<html>");
-        out.println("<head><title>Site " + siteName + "</title></head>");
-        out.println("<body bgcolor=\"#ccbb99\">");
-        out.println("<h2><font color=\"#993300\">STATUS</font></h2>");
-        out.println("<hr>");
-        out.println("<h3>Site: " + siteName + "</h3>");
-        out.println("<p>Loaded " + (new Date(loadTime)).toString() + ".</p>");
-        out.println("<h3>Resource Usage</h3>");
+    private void printStatus(OutputStream out) {
+        PrintWriter writer = new PrintWriter(out);
+        writer.println("<html>");
+        writer.println("<head><title>Site " + siteName + "</title></head>");
+        writer.println("<body bgcolor=\"#ccbb99\">");
+        writer.println("<h2><font color=\"#993300\">STATUS</font></h2>");
+        writer.println("<hr>");
+        writer.println("<h3>Site: " + siteName + "</h3>");
+        writer.println("<p>Loaded " + (new Date(loadTime)).toString() + ".</p>");
+        writer.println("<h3>Resource Usage</h3>");
         long memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-        out.println("<p>" + memory + " bytes of memory in use.<br>");
-        out.println("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).<br>");
-        out.println("Created " + Context.getNumHashMapsCreated() + " HashMaps.<br>");
-        out.println("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.</p>");
+        writer.println("<p>" + memory + " bytes of memory in use.<br>");
+        writer.println("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).<br>");
+        writer.println("Created " + Context.getNumHashMapsCreated() + " HashMaps.<br>");
+        writer.println("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.</p>");
 
-        out.println("<h3>Input</h3>");
-        out.println("<p>cantopath: " + cantoPath + "</p>");
+        writer.println("<h3>Input</h3>");
+        writer.println("<p>cantopath: " + cantoPath + "</p>");
 
         int numExceptions = 0;
         int numFiles = 0;
@@ -679,34 +667,34 @@ public class CantoSite extends CantoDomain {
 
         }
         int numURLs = sources.length - numFiles;
-        out.println("<p>Loaded Canto source from " + numFiles + " file" + (numFiles == 1 ? "" : "s") + ", " + numURLs + " URL" + (numURLs == 1 ? "" : "s") + ".</p>");
+        writer.println("<p>Loaded Canto source from " + numFiles + " file" + (numFiles == 1 ? "" : "s") + ", " + numURLs + " URL" + (numURLs == 1 ? "" : "s") + ".</p>");
         if (numExceptions == 0) {
-            out.println("<p>No exceptions reported.</p>");
+            writer.println("<p>No exceptions reported.</p>");
         } else {
-            out.println("<p>" + numExceptions + " exceptions encountered:</p><ol>");
+            writer.println("<p>" + numExceptions + " exceptions encountered:</p><ol>");
             for (int i = 0; i < exceptions.length; i++) {
                 if (exceptions[i] != null) {
                    Object source = sources[i];
                    String name = (source instanceof File ? ((File) source).getAbsolutePath() : source.toString());
-                   out.println("<li>Exception processing " + name + ": " + exceptions[i].toString() + "</li><p>");
+                   writer.println("<li>Exception processing " + name + ": " + exceptions[i].toString() + "</li><p>");
                 }
             }
-            out.println("</ol>");
+            writer.println("</ol>");
         }
 
-        out.println("<h3>Output</h3>");
+        writer.println("<h3>Output</h3>");
 
-        out.println("<p><table border=\"1\" cellpadding=\"8\"><tr><th align=\"left\">Page</th><th align=\"left\">Requests</th></tr>");
-        printTrackerRows(out, pageTracker);
-        out.println("</table></p>");
-        out.println("<p><table border=\"1\" cellpadding=\"8\"><tr><th align=\"left\">File</th><th align=\"left\">Requests</th></tr>");
-        printTrackerRows(out, fileTracker);
-        out.println("</table></p>");
-        out.println("<p><table border=\"1\" cellpadding=\"8\"><tr><th align=\"left\">Redirected to</th><th align=\"left\">Redirections</th></tr>");
-        printTrackerRows(out, redirectTracker);
-        out.println("</table></p>");
+        writer.println("<p><table border=\"1\" cellpadding=\"8\"><tr><th align=\"left\">Page</th><th align=\"left\">Requests</th></tr>");
+        printTrackerRows(writer, pageTracker);
+        writer.println("</table></p>");
+        writer.println("<p><table border=\"1\" cellpadding=\"8\"><tr><th align=\"left\">File</th><th align=\"left\">Requests</th></tr>");
+        printTrackerRows(writer, fileTracker);
+        writer.println("</table></p>");
+        writer.println("<p><table border=\"1\" cellpadding=\"8\"><tr><th align=\"left\">Redirected to</th><th align=\"left\">Redirections</th></tr>");
+        printTrackerRows(writer, redirectTracker);
+        writer.println("</table></p>");
 
-        out.println("<h3>Sites</h3>");
+        writer.println("<h3>Sites</h3>");
         Iterator<Site> sites = core.getSites();
         int totalDefs = 0;
         if (sites.hasNext()) {
@@ -714,9 +702,9 @@ public class CantoSite extends CantoDomain {
                 Site site = sites.next();
                 int numDefs = site.getNumDefinitions();
                 totalDefs += numDefs;
-                AbstractNode contents = site.getContents();
+                CantoNode contents = site.getContents();
                 int numTLDs = contents.getNumChildren();
-                out.println("<p>site " + site.getName() + ": " + numDefs + " definition" + (numDefs == 1 ? "" : "s") + " (top level: " + numTLDs + ")</p>");
+                writer.println("<p>site " + site.getName() + ": " + numDefs + " definition" + (numDefs == 1 ? "" : "s") + " (top level: " + numTLDs + ")</p>");
 //                out.println("<blockquote>");
 //                for (int i = 0; i < numTLDs; i++) {
 //                    CantoNode node = contents.getChild(i);
@@ -729,12 +717,12 @@ public class CantoSite extends CantoDomain {
 //                out.println("</blockquote>");
             }
         } else {
-            out.println("<p>No sites.</p>");
+            writer.println("<p>No sites.</p>");
         }
 
-        out.println("<h3>Objects</h3>");
-        out.println("<p>" + totalDefs + " definition" + (totalDefs == 1 ? "" : "s") + "</p>");
-        out.println("<hr><p><i>" + CantoServer.NAME_AND_VERSION + "</i></p></body></html>");
+        writer.println("<h3>Objects</h3>");
+        writer.println("<p>" + totalDefs + " definition" + (totalDefs == 1 ? "" : "s") + "</p>");
+        writer.println("<hr><p><i>" + CantoServer.NAME_AND_VERSION + "</i></p></body></html>");
     }
 
     private void printTrackerRows(PrintWriter out, Map<String, Integer> tracker) {
@@ -748,12 +736,13 @@ public class CantoSite extends CantoDomain {
         }
     }
 
-    private void printSource(PrintWriter out) {
-        SourceReporter reporter = new SourceReporter(out);
+    private void printSource(OutputStream out) {
+        PrintWriter writer = new PrintWriter(out);
+        SourceReporter reporter = new SourceReporter(writer);
         reporter.handleSite(site);
-        out.println();
+        writer.println();
         reporter.handleSite(core);
-        out.println();
+        writer.println();
     }
 
 

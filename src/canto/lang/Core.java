@@ -2,7 +2,7 @@
  * 
  * Core.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,13 +10,13 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.runtime.Log;
+
 /**
  * The Core is the owner of all sites.  It establishes a global namespace.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.15 $
  */
 public class Core extends Site {
+    private static final Log LOG = Log.getLogger(Core.class);
 
     private static Core originalCore = null;
     
@@ -62,15 +62,15 @@ public class Core extends Site {
         String name = site.getName();
         Site oldSite = getSite(name);
         if (oldSite == null) {
-            log("Adding site " + name + " to core");
+            LOG.info("Adding site " + name + " to core");
             siteTable.put(name, site);
             
         } else if (oldSite instanceof MultiSite) {
-            log("Adding site " + name + " to multisite");
+            LOG.info("Adding site " + name + " to multisite");
             ((MultiSite) oldSite).addSite(site);
             
         } else {
-            log("Site " + name + " exists; creating new multisite");
+            LOG.info("Site " + name + " exists; creating new multisite");
             MultiSite newSite = new MultiSite(oldSite);
             newSite.addSite(site);
             newSite.setOwner(this);
@@ -106,8 +106,8 @@ public class Core extends Site {
             siteList.add(site);
         }
         
-        public AbstractNode getContents() {
-            List<Definition> list = new ArrayList<Definition>();
+        public CantoNode getContents() {
+            List<CantoNode> list = new ArrayList<CantoNode>();
             Iterator<Site> it = siteList.iterator();
             while (it.hasNext()) {
                 Site site = it.next();
@@ -118,10 +118,7 @@ public class Core extends Site {
                     }
                 }
             }
-            int n = list.size();
-            AbstractNode[] nodes = new AbstractNode[n];
-            nodes = (AbstractNode[]) list.toArray(nodes);
-            return new CantoBlock(nodes);
+            return new CodeBlock(list);
         }
         
         public List<Name> getAdoptedSiteList() {

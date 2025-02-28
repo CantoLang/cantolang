@@ -79,7 +79,7 @@ public class NamedDefinition extends Definition {
         }
     }
 
-    public NamedDefinition(String name, CantoNode parent, Definition owner, Type superType, int access, int dur, Object value) {
+    public NamedDefinition(String name, CantoNode parent, Definition owner, Type superType, Definition.Access access, Definition.Durability dur, Object value) {
         super();
         
         setAccess(access);
@@ -89,8 +89,8 @@ public class NamedDefinition extends Definition {
         if (complexOwner != null) {
             setDefinitionTable(complexOwner.getDefinitionTable());
         }
-        jjtSetParent((AbstractNode) parent);
-        AbstractNode valueNode = (value instanceof AbstractNode ? (AbstractNode) value : new PrimitiveValue(value));
+        setParent(parent);
+        CantoNode valueNode = (value instanceof CantoNode ? (CantoNode) value : new PrimitiveValue(value));
         init(superType, new NameNode(name), valueNode);
     }
     
@@ -2162,15 +2162,7 @@ public class NamedDefinition extends Definition {
         
     }
 
-    DefinitionTable getDefinitionTable() {
-        NamedDefinition owner = (NamedDefinition) getOwner();
-        if (owner == null) {
-            log("NamedDefinition " + getFullName() + " has no owner!");
-            return null;
-        }
-        return owner.getDefinitionTable();
-    }
-    
+   
     // methods in the definition api
     
     /** Gets the cached value for this definition in the current context,

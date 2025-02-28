@@ -48,7 +48,7 @@ public class Dim extends CantoNode {
                 TYPE type = TYPE.DEFINITE;
                 Object[] array = (Object[]) obj;
                 for (Object element: array) {
-                    if (element instanceof SuperStatement || element instanceof SubStatement || element instanceof NextStatement) {
+                    if (element instanceof SuperStatement || element instanceof SubStatement) {
                         type = TYPE.INDEFINITE;
                         break;
                     }

@@ -87,8 +87,245 @@ public class Context {
             scopeStack.push(context.scopeStack.peek());
         }
     }
+    // -------------------------------------------
+    // push and pop operations
+
+    public void push(Definition def, ParameterList params, ArgumentList args) throws Redirection {
+        DefinitionInstance defInstance = getContextDefInstance(def, args);
+        Scope scope = newScope(defInstance.def, defInstance.def, params, defInstance.args);
+        push(scope);
+    }
+
+    public void push(Definition def, ParameterList params, ArgumentList args, boolean newFrame) throws Redirection {
+        DefinitionInstance defInstance = getContextDefInstance(def, args);
+        if (defInstance.args != null && (defInstance.args != args || params == null)) {
+            args = defInstance.args;
+            params = defInstance.def.getParamsForArgs(args, this);
+        }
+        Definition superdef = (newFrame ? null : defInstance.def);
+        Scope scope = newScope(defInstance.def, superdef, params, args);
+        push(scope);
+    }
+
+    public void push(Definition instantiatedDef, Definition superdef, ParameterList params, ArgumentList args) throws Redirection {
+        DefinitionInstance defInstance = getContextDefInstance(instantiatedDef, args);
+        if (defInstance.args != null && defInstance.args != args) {
+            args = defInstance.args;
+            params = defInstance.def.getParamsForArgs(args, this);
+        }
+        Scope scope = newScope(defInstance.def, getContextDefinition(superdef), params, args);
+        push(scope);
+    }
+
+    private void push(Scope scope) throws Redirection {
+        boolean newFrame = (scope.superdef == null);
+        boolean newScope = (scope.def != scope.superdef);
+
+        if (scope.def == null) {
+            throw new NullPointerException("attempt to push null definition onto context stack");
+        }
+        if (scope.def instanceof Site) {
+            // if we are pushing a site, share the cache from the
+            // root scope
+            if (rootScope != null && !scope.equals(rootScope)) {
+                scope.cache = rootScope.cache;
+            }
+    
+        } else {
+            Site scopeSite = scope.def.getSite();
+            if (scopeSite != null && !(scopeSite instanceof Core) && topScope != null) {
+                Site currentSite = topScope.def.getSite();
+                if (!scopeSite.equals(currentSite)) {
+                    Map<String, Object> siteKeep = siteKeeps.get(scopeSite.getName());
+                    if (siteKeep == null) {
+                        siteKeep = newHashMap(Object.class);
+                        siteKeeps.put(scopeSite.getName(), siteKeep);
+                    }
+                    //scope.setSiteKeep(siteKeep);
+                }
+            }
+        }
+
+        stateCount = stateFactory.nextState();
+        scope.setState(stateCount);
+        _push(scope);
+        if (scope.def instanceof NamedDefinition) {
+            definingDef = scope.def;
+    
+            // add keep directives to this scope's list.
+            NamedDefinition scopedef = (NamedDefinition) ((scope.superdef == null && scope.def instanceof NamedDefinition) ? scope.def : scope.superdef);
+            Scope prev = scope.link;
+            if (!newFrame && prev != null) {
+                if (sharesKeeps(scope, prev, true)) {
+                    setKeepsFromScope(prev);
+                } else {
+                    List<KeepStatement> keeps = scopedef.getKeeps();
+                    if (keeps != null) {
+                        Iterator<KeepStatement> it = keeps.iterator();
+                        while (it.hasNext()) {
+                            KeepStatement k = it.next();
+                            try {
+                                keep(k);
+                            } catch (Redirection r) {
+                                vlog("Error in keep statement: " + r.getMessage());
+                                throw r;
+                            }
+                        }
+                
+                        String keepKeepKey = scopedef.getName() + ".keep";
+                        String globalKeepKeepKey = makeGlobalKey(scopedef.getFullNameInContext(this)) + ".keep";
+                        while (prev != null) {
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> keepKeep = (Map<String, Object>) prev.get(keepKeepKey, globalKeepKeepKey, null, true);
+                            if (keepKeep != null) {
+                                topScope.addKeepKeep(keepKeep);
+                                break;
+                            }
+                            prev = prev.link;
+                        }
+                    }
+                }
+
+            } else if (newScope) {
+                List<KeepStatement> keeps = scopedef.getKeeps();
+                if (keeps != null) {
+                    Iterator<KeepStatement> it = keeps.iterator();
+                    while (it.hasNext()) {
+                        KeepStatement k = it.next();
+                        try {
+                            keep(k);
+                        } catch (Redirection r) {
+                            vlog("Error in keep statement: " + r.getMessage());
+                            throw r;
+                        }
+                    }
+                }
+                // Don't cache the keep map if the def owning the keeps is dynamic or the current instantiation
+                // of the owning def is dynamic.
+                //
+                // Not sure if scope.args is right -- maybe should be the args for the scope where
+                // scopedef shows up (assuming scopedef is right -- maybe should be scope.def) 
+                if (scopedef.getDurability() != Definition.DYNAMIC && (scope.args == null || !scope.args.isDynamic())) {
+                    String keepKeepKey = scopedef.getName() + ".keep";
+                    String globalKeepKeepKey = makeGlobalKey(scopedef.getFullNameInContext(this)) + ".keep";
+                    while (prev != null) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> keepKeep = (Map<String, Object>) prev.get(keepKeepKey, globalKeepKeepKey, null, true);
+                        if (keepKeep != null) {
+                            topScope.addKeepKeep( keepKeep);
+                            break;
+                        }
+                        prev = prev.link;
+                    }
+                }
+            }
+        }
+    }
+
+    // other operations
+
+    /** Dereferences the passed definition if necessary to return the proper
+     *  definition to push on the context.
+     * @throws Redirection 
+     */
+    private Definition getContextDefinition(Definition definition) {
+        Definition contextDef = null;
+
+        // first resolve element references to element definitions,
+        // which are handled below
+        if (definition instanceof ElementReference) {
+            try {
+                Definition elementDef = ((ElementReference) definition).getElementDefinition(this);
+                if (elementDef != null) {
+                    definition = elementDef;
+                }
+            } catch (Redirection r) {
+                throw new IllegalStateException("Redirection on attempt to get element definition: " + r);
+            }
+        }
 
 
+        if (definition instanceof DefinitionFlavor) {
+            contextDef = ((DefinitionFlavor) definition).def;
+        } else if (definition instanceof TypeDefinition) {
+            contextDef = ((TypeDefinition) definition).def;
+        //} else if (definition instanceof ElementReference) {
+        //    // array and table references defer to their collections for context.
+        //    contextDef = ((ElementReference) definition).getCollectionDefinition();
+        } else if (definition instanceof ElementDefinition) {
+            Object element = ((ElementDefinition) definition).getElement(this);
+            if (element instanceof Definition) {
+                contextDef = getContextDefinition((Definition) element);
+            } else if (element instanceof Instantiation) {
+                Instantiation instance = (Instantiation) element;
+                contextDef = getContextDefinition(instance.getDefinition(this));
+            }
+        }
+
+        if (contextDef != null) {
+            return contextDef;
+
+        } else {
+        // anything else has to be a named definition
+           return definition;
+        }
+    }
+
+    /** Dereferences the passed definition if necessary to return the proper
+     *  definition to push on the context.
+     * @throws Redirection 
+     */
+    private DefinitionInstance getContextDefInstance(Definition definition, ArgumentList args) {
+        DefinitionInstance contextDefInstance = null;
+
+        if (definition instanceof AliasedDefinition) {
+            definition = definition.getUltimateDefinition(this);
+        }
+        
+        // first resolve element references to element definitions,
+        // which are handled below
+        if (definition instanceof ElementReference) {
+            try {
+                Definition elementDef = ((ElementReference) definition).getElementDefinition(this);
+                if (elementDef != null) {
+                    definition = elementDef;
+                }
+            } catch (Redirection r) {
+                throw new IllegalStateException("Redirection on attempt to get element definition: " + r);
+            }
+        }
+
+        if (definition instanceof DefinitionFlavor) {
+            definition = ((DefinitionFlavor) definition).def;
+        } else if (definition instanceof TypeDefinition) {
+            definition = ((TypeDefinition) definition).def;
+        //} else if (definition instanceof ElementReference) {
+        //    // array and table references defer to their collections for context.
+        //    contextDef = ((ElementReference) definition).getCollectionDefinition();
+        } else if (definition instanceof ElementDefinition) {
+            Object element = ((ElementDefinition) definition).getElement(this);
+            if (element instanceof Definition) {
+                contextDefInstance = getContextDefInstance((Definition) element, args);
+            } else if (element instanceof Instantiation) {
+                Instantiation instance = (Instantiation) element;
+                Definition instanceDef = instance.getDefinition(this);
+                if (instanceDef != null) {
+                    contextDefInstance = getContextDefInstance(instanceDef, instance.getArguments());
+                }
+            }
+        }
+
+        if (contextDefInstance != null) {
+            return contextDefInstance;
+
+        } else {
+        // anything else has to be a named definition
+           return new DefinitionInstance(definition, args, null);
+        }
+    }
+
+    
+    
     public Object getMarker(Object obj) {
         if (obj == null) {
             return new ContextMarker(this);
@@ -265,47 +502,47 @@ public class Context {
         return new ArrayList<E>(list);
     }
 
-    protected static int entriesCreated = 0;
+    protected static int scopesCreated = 0;
     public static int getNumEntriesCreated() {
-        return entriesCreated;
+        return scopesCreated;
     }
-    protected static int entriesCloned = 0;
+    protected static int scopesCloned = 0;
     public static int getNumEntriesCloned() {
-        return entriesCloned;
+        return scopesCloned;
     }
 
 
     public Scope newScope(Definition def, Definition superdef, ParameterList params, ArgumentList args) {
 
-        Map<String, Object> entryKeep = null;
+        Map<String, Object> scopeKeep = null;
         if (def instanceof Site) {
-            entryKeep = siteKeeps.get(def.getName());
-            if (entryKeep == null) {
-                entryKeep = newHashMap(Object.class);
-                siteKeeps.put(def.getName(), entryKeep);
+            scopeKeep = siteKeeps.get(def.getName());
+            if (scopeKeep == null) {
+                scopeKeep = newHashMap(Object.class);
+                siteKeeps.put(def.getName(), scopeKeep);
             }
         }
         // ENTRY REUSE HAS BEEN DISABLED FOR NOW
         // getAbandonedScope will always return null
-        Scope entry = getAbandonedScope();
-        if (entry != null) {
-            entry.init(def, superdef, params, args, entryKeep, globalKeep);
+        Scope scope = getAbandonedScope();
+        if (scope != null) {
+            scope.init(def, superdef, params, args, scopeKeep, globalKeep);
         } else {
-            entry = new Scope(def, superdef, params, args, entryKeep, globalKeep);
+            scope = new Scope(def, superdef, params, args, scopeKeep, globalKeep);
         }
-        return entry;
+        return scope;
     }
 
     public Scope newScope(Scope copyScope, boolean copyKeep) {
         // ENTRY REUSE HAS BEEN DISABLED FOR NOW
         // getAbandonedScope will always return null
-        Scope entry = getAbandonedScope();
-        if (entry != null) {
-            entry.copy(copyScope, copyKeep);
+        Scope scope = getAbandonedScope();
+        if (scope != null) {
+            scope.copy(copyScope, copyKeep);
         } else {
-            entry = new Scope(copyScope, copyKeep);
+            scope = new Scope(copyScope, copyKeep);
         }
-        return entry;
+        return scope;
     }
 
     private void oldScope(Scope scope) {
@@ -318,13 +555,13 @@ public class Context {
                 scope.clear();
                 addAbandonedScope(scope);
             } else {
-                LOG.debug(" !!! popped an entry with ref count of " + scope.refCount);
+                LOG.debug(" !!! popped an scope with ref count of " + scope.refCount);
             }
         }
 
     }
     // DISABLE ENTRY REUSE FOR NOW
-    // see addAbandonedEntry
+    // see addAbandonedScope
     private Scope getAbandonedScope() {
         Scope scope = rootContext.abandonedScopes;
         if (scope != null) {

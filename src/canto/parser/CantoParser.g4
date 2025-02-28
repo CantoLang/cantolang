@@ -371,41 +371,22 @@ instantiation
     ;
 
 expression
-    : primary
-    | unaryExpression
-    | castExpression
-    | isaExpression
-    | binaryExpression
-    | trinaryExpression
-    ;
-
-unaryExpression    
-    : prefix = (PLUS | MINUS | TILDE | BANG) expression
-    ;
-
-castExpression
-    : LPAREN simpleType RPAREN expression
-    ;
-    
-isaExpression
-    :| expression ISA simpleType
-    ;
-
-binaryExpression
-    : expression bop = (STAR | SLASH | MOD) expression
-    | expression bop = (PLUS | MINUS) expression
-    | expression bop = (LSHIFT | RUSHIFT | RSHIFT) expression
-    | expression bop = (LE | GE | LT | GT) expression
-    | expression bop = (EQ | NE) expression
-    | expression bop = BITAND expression
-    | expression bop = CARET expression
-    | expression bop = BITOR expression
-    | expression bop = ANDAND expression
-    | expression bop = OROR expression
-    ;
-
-trinaryExpression
-    : <assoc = right> expression top = (QMARK | QQ) expression COLON expression
+    : LPAREN simpleType RPAREN expression                       #NestedExpression
+    | primary                                                   #Element
+    | op = (PLUS | MINUS | TILDE | BANG) expression             #UnaryExpression
+    | expression op = ISA simpleType                            #IsaExpression
+    | expression op = (STAR | SLASH | MOD) expression           #MulDivExpression
+    | expression op = (PLUS | MINUS) expression                 #AddSubExpression
+    | expression op = (LSHIFT | RUSHIFT | RSHIFT) expression    #ShiftExpression
+    | expression op = (LE | GE | LT | GT) expression            #RelExpression
+    | expression op = (EQ | NE) expression                      #EqExpression
+    | expression op = BITAND expression                         #BitAndExpression
+    | expression op = CARET expression                          #BitXorExpression
+    | expression op = BITOR expression                          #BitOrExpression
+    | expression op = ANDAND expression                         #LogicalAndExpression
+    | expression op = OROR expression                           #LogicalOrExpression
+    | <assoc = right> expression op = (QMARK | QQ)
+                      expression COLON expression               #ChoiceExpression 
     ;
 
     

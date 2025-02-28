@@ -56,23 +56,19 @@ public class Site extends MultiUnitDefinition {
     }
         
     protected void setName(NameNode name) {
-        this.name = name;
+        super.setName(name);
         sitePrefix = getFullName();
         if (sitePrefix.length() > 0) {
             sitePrefix = sitePrefix + '.';
         }
     }
-    
-    protected void setDomainName(String name) {
-        domainName = name;
+
+    public String getDomainName() {
+        return domainName;
     }
 
-    public boolean equals(Object obj) {
-        if (obj instanceof Site) {
-            return equals((Definition) obj, null);
-        } else {
-            return false;
-        }
+    protected void setDomainName(String name) {
+        domainName = name;
     }
 
     public String toString(String prefix) {
@@ -99,8 +95,8 @@ public class Site extends MultiUnitDefinition {
     
     /** Add a site's content to this site */
     synchronized void addContents(Site site) {
-        AbstractNode newContents = site.getContents();
-        AbstractNode oldContents = getContents();
+        CantoNode newContents = site.getContents();
+        CantoNode oldContents = getContents();
         if (oldContents == null) {
             setContents(newContents);
         } else {
@@ -133,23 +129,21 @@ public class Site extends MultiUnitDefinition {
     /** If the contents have not been initialized, getContents returns a block containing
      *  the definitions which are immediate children of the site.
      */
-    public AbstractNode getContents() {
-        AbstractNode contents = super.getContents();
+    public CantoNode getContents() {
+        CantoNode contents = super.getContents();
         if (contents == null) {
             // getDefinitions returns all the definitions owned directly or indirectly
             // by this site; only the immmediate children will be returned as the
             // contents
             Definition[] defs = getDefinitions();
-            List<Definition> list = new ArrayList<Definition>();
+            List<CantoNode> list = new ArrayList<CantoNode>();
             for (int i = 0; i < defs.length; i++) {
                 if (isOwnerOf(defs[i])) {
                     list.add(defs[i]);
                 }
             }
             int n = list.size();
-            AbstractNode[] nodes = new AbstractNode[n];
-            nodes = (AbstractNode[]) list.toArray(nodes);
-            contents = new CantoBlock(nodes);
+            contents = new CantoBlock(list);
             setContents(contents);
         }
         return contents;
