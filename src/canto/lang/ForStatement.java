@@ -350,10 +350,10 @@ public class ForStatement extends Construction implements ConstructionContainer,
         public ValueSource getUntil() {
             if (next != null && next.getUntil() != null) {
                 if (until != null) {
-                    AbstractNode[] nodes = new AbstractNode[3];
-                    nodes[0] = (AbstractNode) until;
+                    CantoNode[] nodes = new CantoNode[3];
+                    nodes[0] = (CantoNode) until;
                     nodes[1] = new LogicalAndOperator();
-                    nodes[2] = (AbstractNode) next.getUntil();
+                    nodes[2] = (CantoNode) next.getUntil();
                     ValueExpression exp = new ValueExpression();
                     exp.children = nodes;
                     return exp;

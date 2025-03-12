@@ -16,7 +16,6 @@ import canto.util.SingleItemList;
 
 /**
  */
-
 public class CantoSite extends CantoDomain {
 
     private static final Log LOG = Log.getLogger(CantoSite.class);

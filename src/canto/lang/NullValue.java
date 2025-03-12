@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
 import canto.util.EmptyList;
 
 /**
@@ -102,7 +101,7 @@ public class NullValue extends Block implements Value {
     }
 
     /** ValueSource interface method; returns this Value. **/
-    public Value getValue(Context context) throws Redirection {
+    public Value getValue(Context context) {
     	return this;
     }
     	         

@@ -8,12 +8,12 @@
 
 package canto.lang;
 
-import canto.util.*;
-
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import canto.util.*;
 
 
 /**
@@ -215,4 +215,24 @@ abstract public class CantoNode {
     public String toString(String prefix) {
         return prefix + toString();
     }
+
+    /** Static utility method to retrieve the value of an arbitrary object. */
+    public static Object getObjectValue(Context context, Object obj) {
+        Object data = null;
+        if (obj instanceof ValueGenerator) {
+            try {
+                data = ((ValueGenerator) obj).getData(context);
+            } catch (Redirection r) {
+                data = null;
+            }
+
+        } else if (obj instanceof Value) {
+            data = ((Value) obj).getValue();
+        } else {
+            data = obj;
+        }
+        return data;
+    }
+
+
 }

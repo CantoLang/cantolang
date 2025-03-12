@@ -11,13 +11,11 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.CantoObjectWrapper;
+import canto.util.EmptyList;
 
 /**
  * DefParameter is a formal parameter declaration in a parameterized definition or a
  * for statement.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.32 $
  */
 
 public class DefParameter extends NamedDefinition {
@@ -95,9 +93,9 @@ public class DefParameter extends NamedDefinition {
             int numUnpushes = 0;
             try {
                 if (arg.isParameterKind()) {
-                    Context.Entry entry = context.peek();
-                    while (!entry.covers(argOwner)) {
-                        Context.Entry link = entry.getPrevious();
+                    Scope scope = context.peek();
+                    while (!scope.covers(argOwner)) {
+                        Scope link = entry.getPrevious();
                         if (link == null || link.equals(context.getRootEntry())) {
                             while (numUnpushes-- > 0) {
                                 context.repush();

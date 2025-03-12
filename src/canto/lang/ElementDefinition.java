@@ -68,7 +68,7 @@ public class ElementDefinition extends Definition {
     }
 
     public Context getResolutionContext() {
-        AbstractNode contents = getContents();
+        CantoNode contents = getContents();
         if (contents instanceof ResolvedInstance) {
             return ((ResolvedInstance) contents).getResolutionContext();
         } else {
@@ -81,7 +81,7 @@ public class ElementDefinition extends Definition {
     }
     
     public Object getElement(Context context) {
-        AbstractNode contents = getContents();
+        CantoNode contents = getContents();
 
         if (wrapped) {
             return ((Value) contents).getValue();
@@ -128,9 +128,9 @@ public class ElementDefinition extends Definition {
             context = elementContext;
         }
         Object element = getElement(context);
-        if (context == null) { // && element instanceof AbstractNode) {
+        if (context == null) { // && element instanceof CantoNode) {
             throw new NullPointerException("null context passed to getChildDefinition");
-//            AbstractNode node = (AbstractNode) element;
+//            CantoNode node = (CantoNode) element;
 //            try {
 //                context = new Context(node.getOwner());
 //            } catch (Redirection r) {
@@ -277,7 +277,7 @@ public class ElementDefinition extends Definition {
     public Type getType() {
         
         Type contentType = DefaultType.TYPE;
-        AbstractNode contents = getContents();
+        CantoNode contents = getContents();
         
         if (contents instanceof PrimitiveValue) {
             contentType = ((PrimitiveValue) contents).getType();
@@ -393,7 +393,7 @@ class SingleElementCount extends CountDefinition {
         super(elementDef);
     }
 
-    public AbstractNode getContents() {
+    public CantoNode getContents() {
         return new PrimitiveValue(1);
     }
 }

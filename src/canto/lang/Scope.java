@@ -20,14 +20,16 @@ import canto.util.Holder;
 public class Scope {
     private static final Log LOG = Log.getLogger(Scope.class);
     
-    protected static int entriesCreated = 0;
+    protected static int scopesCreated = 0;
     public static int getNumEntriesCreated() {
-        return entriesCreated;
+        return scopesCreated;
     }
-    protected static int entriesCloned = 0;
+    protected static int scopesCloned = 0;
     public static int getNumEntriesCloned() {
-        return entriesCloned;
+        return scopesCloned;
     }
+
+    private final static int MAX_POINTER_CHAIN_LENGTH = 10; 
     
     public Definition def;
     public Definition superdef;
@@ -37,14 +39,15 @@ public class Scope {
     public Scope root = null;
     public Scope previous = null;
     
-    private Map<String, Object> cache = null;
+    Map<String, Object> cache = null;
+    private Map<String, Object> globalKeep = null;
 
     // Objects that are persisted through keep directives are cached here
     public Map<String, Pointer> keepMap = null;
     private Map<String, Object> keepKeep = null;
  
     
-    int refCount = 0;   // number of links by other entries to this one
+    int refCount = 0;   // number of previouss by other scopes to this one
     private int contextState = -1;
     private int loopIx = -1;
     private StateFactory loopIndexFactory;
@@ -53,7 +56,7 @@ public class Scope {
 
     
     public Scope(Definition def, ParameterList params, ArgumentList args) {
-        entriesCreated++;
+        scopesCreated++;
 
         this.def = def;
         this.superdef = null;
@@ -64,7 +67,7 @@ public class Scope {
     
 
     public Scope(Definition def, Definition superdef, ParameterList params, ArgumentList args, Map<String, Object> cache, Map<String, Object> globalKeep) {
-        entriesCreated++;
+        scopesCreated++;
 
         this.def = def;
         this.superdef = superdef;
@@ -81,17 +84,18 @@ public class Scope {
         loopIndexFactory = new StateFactory();
 
         this.cache = cache;
+        this.globalKeep = globalKeep;
     }
 
     protected Scope(Scope scope, boolean copyKeep) {
-        entriesCreated++;
-        entriesCloned++;
+        scopesCreated++;
+        scopesCloned++;
 
         def = scope.def;
         params = (scope.params != null ? (ParameterList) scope.params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
         args = (scope.args != null ? (ArgumentList) scope.args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
 
-        // don't clone the link to avoid duplicating references.  If the
+        // don't clone the previous to avoid duplicating references.  If the
         // clone needs to point somewhere, it has to be done explicitly.
 
         contextState = scope.contextState;
@@ -100,6 +104,7 @@ public class Scope {
 
         // the keep map is always shared
         keepMap = scope.keepMap;
+        globalKeep = scope.globalKeep;
 
         // make shallow copy of cache if copyKeep flag is true, otherwise they
         // will be null;
@@ -146,7 +151,7 @@ public class Scope {
 
     void copy(Scope scope, boolean copyKeep) {
         if (refCount > 0) {
-            throw new RuntimeException("Attempt to copy over entry with non-zero refCount");
+            throw new RuntimeException("Attempt to copy over scope with non-zero refCount");
         }
 
         def = scope.def;
@@ -174,7 +179,7 @@ public class Scope {
         loopIndexFactory = scope.loopIndexFactory;
 
         // for now, let everybody write (yikes!)
-        //entry.readOnlyKeep = (cache != null ? cache : readOnlyKeep);
+        //scope.readOnlyKeep = (cache != null ? cache : readOnlyKeep);
         if (copyKeep) {
             copyKeeps(scope);
         } else {
@@ -190,11 +195,11 @@ public class Scope {
     void copyKeeps(Scope scope) {
         // Calling getKeep allocates the cache if it doesn't exist; this is
         // wasteful if the cache never gets used, but it guarantees that if the
-        // cache is used, it's the same cache for every entry that wants to use
+        // cache is used, it's the same cache for every scope that wants to use
         // the same cache.
         //
         // To eliminate the waste, we could wait till the cache is allocated,
-        // then backfill previous entries as appropriate.  For now, we do the
+        // then backfill previous scopes as appropriate.  For now, we do the
         // allocation on the first copy, trading greater waste for less risk.
         cache = scope.getKeep();
         keepKeep = scope.keepKeep;
@@ -236,7 +241,7 @@ public class Scope {
 
     public void clear() {
         if (refCount > 0) {
-            throw new RuntimeException("Attempt to clear entry with non-zero refCount");
+            throw new RuntimeException("Attempt to clear scope with non-zero refCount");
         }
 
         def = null;
@@ -337,7 +342,7 @@ public class Scope {
         }
     }
 
-    /** Returns true if a parameter of the specified name is present in this entry. */
+    /** Returns true if a parameter of the specified name is present in this scope. */
     public boolean paramIsPresent(NameNode nameNode, boolean checkForArg) {
         boolean isPresent = false;
         String name = nameNode.getName();
@@ -413,7 +418,7 @@ public class Scope {
         Definition def = null;
         ResolvedInstance ri = null;
 
-        // If there is a keep entry here but no value was retrieved from the cache above
+        // If there is a keep scope here but no value was retrieved from the cache above
         // then it means the value has not been instantiated yet in this context.  If
         // this is not a keep statement, or there is no value for this key in the
         // out-of-context cache, or if the key is accompanied by a non-null modifier,
@@ -434,7 +439,7 @@ public class Scope {
                     if (data instanceof Holder) {
                         holder = (Holder) data;
                         if (isCompatibleHolder(holder, localAllowed)) {
-                            data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
+                            data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
                             def = holder.def;
                             args = holder.args;
                             ri = holder.resolvedInstance;
@@ -450,7 +455,7 @@ public class Scope {
             } else if (data instanceof Holder) {
                 holder = (Holder) data;
                 if (isCompatibleHolder(holder, localAllowed)) {
-                    data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
+                    data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
                     def = p.riAs.getDefinition();
                     args = holder.args;
                     ri = holder.resolvedInstance;
@@ -460,82 +465,13 @@ public class Scope {
             } else if (data instanceof ElementDefinition) {
                 def = (Definition) data;
                 data = ((ElementDefinition) data).getElement();
-                data = AbstractNode.getObjectValue(null, data);
-            }
-        }
-    
-        if (data == null && !local && siteKeepMap != null) {
-            Iterator<Name> it = adoptedSites.iterator();
-            while (it.hasNext()) {
-                NameNode adoptedSiteName = (NameNode) it.next();
-                Map<String, Object> adoptedSiteKeep = (Map<String, Object>) siteKeepMap.get(adoptedSiteName.getName());
-                data = adoptedSiteKeep.get(key);
-                if (data != null) {
-                    break;
-                }
-            }
-
-            if (data != null) {
-            
-                if (data instanceof Holder) {
-                    holder = (Holder) data;
-                    if (isCompatibleHolder(holder, localAllowed)) {
-                        data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
-                        def = holder.def;
-                        args = holder.args;
-                        ri = holder.resolvedInstance;
-                    } else {
-                        data = null;
-                    }
-                } else if (data instanceof Pointer) {
-                    def = ((Pointer) data).riAs.getDefinition();
-
-                    // strip off modifier if present
-                    key = baseKey(((Pointer) data).getKey());
-                }
-
-                if (data != null) {
-                    // to prevent an infinite loop arising from a circular list
-                    // of pointers, abort after reaching a maximum
-                    int i = 0;
-                    if (data instanceof Pointer) {
-                        do {
-                            Pointer p = (Pointer) data;
-                            data = p.cache.get(p.getKey());
-                            if (data instanceof Holder) {
-                                holder = (Holder) data;
-                                if (isCompatibleHolder(holder, localAllowed)) {
-                                    data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
-                                    def = holder.def;
-                                    args = holder.args;
-                                    ri = holder.resolvedInstance;
-                                } else {
-                                    data = null;
-                                }
-                            }
-                            i++;
-                            if (i >= MAX_POINTER_CHAIN_LENGTH) {
-                                throw new IndexOutOfBoundsException("Pointer chain in cache exceeds limit");
-                            }
-                        } while (data instanceof Pointer);
-                    } else if (data instanceof Holder) {
-                        holder = (Holder) data;
-                        if (isCompatibleHolder(holder, localAllowed)) {
-                            data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
-                            def = holder.def;
-                            args = holder.args;
-                            ri = holder.resolvedInstance;
-                        } else {
-                            data = null;
-                        }
-                    }
-                } 
+                data = CantoNode.getObjectValue(null, data);
             }
         }
 
         if (data == null && c != null) {
             String ckey = (c == globalKeep ? globalKey : key);
-            data = getKeepData(c, ckey, globalKey);
+            data = Context.getKeepData(c, ckey, globalKey);
             if (data != null) {
 
                 if (data instanceof ElementDefinition) {
@@ -544,7 +480,7 @@ public class Scope {
                 } else if (data instanceof Holder) {
                     holder = (Holder) data;
                     if (isCompatibleHolder(holder, localAllowed)) {
-                        data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
+                        data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
                         def = holder.def;
                         args = holder.args;
                         ri = holder.resolvedInstance;
@@ -576,7 +512,7 @@ public class Scope {
                             holder = (Holder) data;
                             if (isCompatibleHolder(holder, localAllowed)) {
                                 holder = (Holder) data;
-                                data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
+                                data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
                                 def = holder.def;
                                 args = holder.args;
                                 ri = holder.resolvedInstance;
@@ -593,7 +529,7 @@ public class Scope {
                     holder = (Holder) data;
                     if (isCompatibleHolder(holder, localAllowed)) {
                         holder = (Holder) data;
-                        data = (holder.data == AbstractNode.UNINSTANTIATED ? null : holder.data);
+                        data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
                         def = holder.def;
                         args = holder.args;
                         ri = holder.resolvedInstance;
@@ -605,8 +541,8 @@ public class Scope {
         }
 
         // continue up the context chain
-        if (data == null && (def == null || !getDefHolder) && !local && link != null && !this.def.hasChildDefinition(key, localAllowed) && !NameNode.isSpecialName(key)) {
-            return link.get(key, globalKey, args, getDefHolder, false, (localAllowed && link.def.getOwner().equals(this.def)));
+        if (data == null && (def == null || !getDefHolder) && !local && previous != null && !this.def.hasChildDefinition(key, localAllowed) && !NameNode.isSpecialName(key)) {
+            return previous.get(key, globalKey, args, getDefHolder, false, (localAllowed && previous.def.getOwner().equals(this.def)));
         }
 
         // return either the definition or the data, depending on the passed flag
@@ -617,8 +553,8 @@ public class Scope {
                     def = ri.getDefinition();
                 }
         
-                // if def is null, this might be an entry resulting from an "as" clause
-                // in a keep statement, so look in the keep table for an entry.
+                // if def is null, this might be an scope resulting from an "as" clause
+                // in a keep statement, so look in the keep table for an scope.
                 if (def == null && keepMap != null && keepMap.get(key) != null) {
                     Pointer p = keepMap.get(key);
                     def = p.riAs.getDefinition();
@@ -645,7 +581,7 @@ public class Scope {
      *  data in the cache pointed to by the Pointer; otherwise stores the data in the
      *  current cache.  Then traverses back up the context tree, storing the data in
      *  any other context level where data for that key is explicitly stored (i.e. the
-     *  cache contains a Pointer for that key, or the entry definition is the owner or
+     *  cache contains a Pointer for that key, or the scope definition is the owner or
      *  a subdefinition of the owner of a child whose name is the key).
      *
      *  If the definition parameter is non-null, the data and the definition are
@@ -674,20 +610,20 @@ public class Scope {
             }
         }
 
-        int access = (nominalDef != null ? nominalDef.getAccess() : Definition.LOCAL_ACCESS);
-        if (link != null && access != Definition.LOCAL_ACCESS) {
+        Definition.Access access = (nominalDef != null ? nominalDef.getAccess() : Definition.Access.LOCAL);
+        if (previous != null && access != Definition.Access.LOCAL) {
             KeepStatement keep = this.def.getKeep(key);
             String ownerName = this.def.getName();
             if (ownerName != null && nominalDef != null && !nominalDef.isFormalParam()) { 
                 // should this be def or nominalDef?
                 Definition defOwner = nominalDef.getOwner();
-                for (Entry nextEntry = link; nextEntry != null; nextEntry = nextEntry.link) {
-                    if (nextEntry.def.equalsOrExtends(defOwner)) {
+                for (Scope nextScope = previous; nextScope != null; nextScope = nextScope.previous) {
+                    if (nextScope.def.equalsOrExtends(defOwner)) {
                         // get the subbest subclass
                         do {
-                            defOwner = nextEntry.def;
-                            nextEntry = nextEntry.link;
-                        } while (nextEntry != null && nextEntry.def.equalsOrExtends(defOwner));
+                            defOwner = nextScope.def;
+                            nextScope = nextScope.previous;
+                        } while (nextScope != null && nextScope.def.equalsOrExtends(defOwner));
 
                         break;
                     }
@@ -696,28 +632,23 @@ public class Scope {
                     defOwner = defOwner.getOwner();
                 }
 
-                if (defOwner != null && defOwner.getDurability() != Definition.DYNAMIC && this.def.equalsOrExtends(defOwner)) {
+                if (defOwner != null && defOwner.getDurability() != Definition.Durability.DYNAMIC && this.def.equalsOrExtends(defOwner)) {
                     Definition defOwnerOwner = defOwner.getOwner();
                     boolean isSite = (defOwnerOwner instanceof Site);
                     Map<String, Object> ownerKeep = null;
-                    Entry entry = link;
-                    while (entry != null) {
-                        if (entry.def.equalsOrExtends(defOwnerOwner)) {
-                            ownerKeep = entry.getKeep();
+                    Scope scope = previous;
+                    while (scope != null) {
+                        if (scope.def.equalsOrExtends(defOwnerOwner)) {
+                            ownerKeep = scope.getKeep();
                             break;
-                        } else if (isSite && entry.siteKeepMap != null) {
-                            ownerKeep = entry.siteKeepMap.get(defOwnerOwner.getName());
-                            if (ownerKeep != null) {
-                                break;
-                            }
                         }
-                        entry = entry.link;
+                        scope = scope.previous;
                     }
-                    if (entry != null && ownerKeep != null) {
+                    if (scope != null && ownerKeep != null) {
                         String ownerKey = ownerName + "." + key;
                         if (keep != null || ownerKeep.containsKey(ownerKey)) {
                             synchronized (ownerKeep) {
-                                entry.localPut(ownerKeep, null, ownerName + "." + key, holder, false);
+                                scope.localPut(ownerKeep, null, ownerName + "." + key, holder, false);
                             }
                         }
                     }
@@ -728,11 +659,11 @@ public class Scope {
             if (maxLevels > 0) maxLevels--;
             if (!kept && maxLevels != 0) {
                 if (this.def.hasChildDefinition(key, true)) {
-                    if (keep == null || !(keep.isInContainer() || keep.getTableInstance() != null /* || this.def.equals(link.def) */ )) {
+                    if (keep == null || !(keep.isInContainer() || keep.getTableInstance() != null /* || this.def.equals(previous.def) */ )) {
                         return;
                     }
                 }
-                link.checkForPut(key, holder, context, maxLevels);
+                previous.checkForPut(key, holder, context, maxLevels);
             }
         }
     }
@@ -742,21 +673,21 @@ public class Scope {
             Definition ownerDef = def.getOwner();
             if (ownerDef != null) {
                 boolean isSite = (ownerDef instanceof Site); // && !(ownerDef instanceof Core);
-                Scope entry = this;
-                while (entry != null) {
-                    if (entry.def.equalsOrExtends(ownerDef)) {
+                Scope scope = this;
+                while (scope != null) {
+                    if (scope.def.equalsOrExtends(ownerDef)) {
                         break;
-                    } else if (entry.def != def && entry.def.equalsOrExtends(def)) {
-                        Definition entryDefOwner = entry.def.getOwner();
-                        if (entryDefOwner != null) {
-                            ownerDef = entryDefOwner;
+                    } else if (scope.def != def && scope.def.equalsOrExtends(def)) {
+                        Definition scopeDefOwner = scope.def.getOwner();
+                        if (scopeDefOwner != null) {
+                            ownerDef = scopeDefOwner;
                         }
-                    } else if (isSite && entry.previous == null) {
+                    } else if (isSite && scope.previous == null) {
                         break;
                     }
-                    entry = entry.previous;
+                    scope = scope.previous;
                 }
-                return entry;
+                return scope;
             }
         }
         return null;
@@ -768,7 +699,7 @@ public class Scope {
         Pointer p = null;
         Object oldData = cache.get(key);
 
-        // if this is the first entry, set up any required pointers for keep tables
+        // if this is the first scope, set up any required pointers for keep tables
         // and modifiers, save the data and return
         if (oldData == null || (oldData instanceof Holder && (((Holder) oldData).data == CantoNode.UNINSTANTIATED || ((Holder) oldData).data == null))) {
 
@@ -811,7 +742,7 @@ public class Scope {
 
         } else {
 
-            // There is an existing entry.  See if it's a pointer
+            // There is an existing scope.  See if it's a pointer
             if (oldData instanceof Pointer) {
                 p = (Pointer) oldData;
                 Map<String, Object> keepTable = p.cache;
@@ -861,8 +792,8 @@ public class Scope {
         // need to update container children (specified by a boolean parameter to this 
         // function), and we are caching a container child, check to see if there is a
         // keep map cached for the definition corresponding to the prefix (i.e., the
-        // container).  If so, check to see if that keep map has an entry for the 
-        // child being cached.  If so, update that entry. 
+        // container).  If so, check to see if that keep map has an scope for the 
+        // child being cached.  If so, update that scope. 
         if (updateContainerChild) {
             int ix = key.indexOf('.');
             if (ix > 0) {
@@ -895,37 +826,16 @@ public class Scope {
 
         if ((cache != null && cache.get(key) != null) ||
                 (keepMap != null && keepMap.get(key) != null) ||
-                hasSiteKeep(def) ||
                 this.def.hasChildDefinition(key, true)) {
 
             put(key, holder, context, maxLevels);
         } else {
             if (maxLevels > 0) maxLevels--;
-            if (link != null && maxLevels != 0) {
-                link.checkForPut(key, holder, context, maxLevels);
+            if (previous != null && maxLevels != 0) {
+                previous.checkForPut(key, holder, context, maxLevels);
             }
         }
     }
-
-    boolean hasSiteKeepEntryFor(Definition def) {
-        if (def != null) {
-            String key = def.getName();
-            if (siteKeepMap != null) {
-                Definition defOwner = def.getOwner();
-                if (defOwner instanceof Site) {
-                    String defSiteName = defOwner.getName();
-                    Map<String, Object> cache = (Map<String, Object>) siteKeepMap.get(defSiteName);
-                    if (cache != null) {
-                        if (cache.get(key) != null) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
 
     private String getLoopModifier() {
         int loopIx = getLoopIndex();
@@ -950,42 +860,40 @@ public class Scope {
         }
 
         if (keepKeep == null) {
-            // cache the keep cache in the owner entry in the context
-            Scope containerEntry = getOwnerContainerScope(def);
-            if (containerEntry != null && containerEntry != this) {
+            // cache the keep cache in the owner scope in the context
+            Scope containerScope = getOwnerContainerScope(def);
+            if (containerScope != null && containerScope != this) {
                 String key = def.getName() + ".keep";
-                Map<String, Object> containerKeep = containerEntry.getKeep();
+                Map<String, Object> containerKeep = containerScope.getKeep();
                 synchronized (containerKeep) {
                     keepKeep = (Map<String, Object>) containerKeep.get(key);
                     if (keepKeep == null) {
-                        Map<String, Object> containerKeepKeep = containerEntry.getKeepKeep();
+                        Map<String, Object> containerKeepKeep = containerScope.getKeepKeep();
                         keepKeep = (Map<String, Object>) containerKeepKeep.get(key);
                         if (keepKeep == null) {
                             keepKeep = Context.newHashMap(Object.class);
-                            if (def.getDurability() != Definition.DYNAMIC) {
+                            if (def.getDurability() != Definition.Durability.DYNAMIC) {
                                 containerKeep.put(key, keepKeep);
                                 containerKeepKeep.put(key, keepKeep);
                             }
                             keepKeep.put("from", keepMap);
                         }
-                    } else {
-                        vlog(" ---)> retrieving keep cache for " + def.getName() + " from " + containerEntry.def.getName());
                     }
                 }
             } else {
-                keepKeep = newHashMap(Object.class);
+                keepKeep = Context.newHashMap(Object.class);
             }            
         } else {
-            // make sure the keep cache is cached in the owner entry 
+            // make sure the keep cache is cached in the owner scope 
             // in the context
-            Entry containerEntry = getOwnerContainerEntry(def);
-            if (containerEntry != null) {
+            Scope containerScope = getOwnerContainerScope(def);
+            if (containerScope != null) {
                 String key = def.getName() + ".keep";
-                Map<String, Object> containerKeep = containerEntry.getKeep();
+                Map<String, Object> containerKeep = containerScope.getKeep();
                 Map<String, Object> containerKeepKeep = (Map<String, Object>) containerKeep.get(key);
                 if (containerKeepKeep == null) {
                     keepKeep.put("from", keepMap);
-                    if (def.getDurability() != Definition.DYNAMIC) {
+                    if (def.getDurability() != Definition.Durability.DYNAMIC) {
                         containerKeep.put(key, keepKeep);
                     }
                 }        
@@ -997,19 +905,19 @@ public class Scope {
     @SuppressWarnings("unchecked")
     void addKeepKeep(Map<String, Object> cache) {
         if (keepKeep == null) {
-            keepKeep = newHashMap(Object.class);
+            keepKeep = Context.newHashMap(Object.class);
         }
         Set<Map.Entry<String, Object>> entrySet = cache.entrySet();
         Iterator<Map.Entry<String, Object>> it = entrySet.iterator();
         while (it.hasNext()) {
-            Map.Entry<String, Object> entry = it.next();
-            String key = entry.getKey();
+            Map.Entry<String, Object> scope = it.next();
+            String key = scope.getKey();
             if (!key.equals("from")) {
-                keepKeep.put(entry.getKey(), entry.getValue());
+                keepKeep.put(scope.getKey(), scope.getValue());
             }
         }
         if (keepMap == null) {
-            keepMap = newHashMap(Pointer.class);
+            keepMap = Context.newHashMap(Pointer.class);
             keepKeep.put("from", keepMap);
         }
         Map<String, Pointer> map = (Map<String, Pointer>) cache.get("from");
@@ -1019,13 +927,13 @@ public class Scope {
     }
 
     public boolean equals(Object obj) {
-        if (obj instanceof Entry) {
-            Entry entry = (Entry) obj;
-            if (def.equals(entry.def) && args.equals(entry.args)) {
+        if (obj instanceof Scope) {
+            Scope scope = (Scope) obj;
+            if (def.equals(scope.def) && args.equals(scope.args)) {
                 if (superdef == null) {
-                    return (entry.superdef == null);
+                    return (scope.superdef == null);
                 } else {
-                    return superdef.equals(entry.superdef); 
+                    return superdef.equals(scope.superdef); 
                 }
             }
         }
@@ -1099,17 +1007,17 @@ public class Scope {
     }
 
     public Scope getPrevious() {
-        return link;
+        return previous;
     }
 
-    void setPrevious(Scope entry) {
-        // decrement the ref count in the old link
-        if (link != null) {
-            link.refCount--;
+    void setPrevious(Scope scope) {
+        // decrement the ref count in the old previous
+        if (previous != null) {
+            previous.refCount--;
         }
-        link = entry;
-        if (link != null) {
-            link.refCount++;
+        previous = scope;
+        if (previous != null) {
+            previous.refCount++;
         }
     }
     void incRefCount() {
@@ -1120,10 +1028,26 @@ public class Scope {
         refCount--;
     }
 
-    void setSiteKeepMap(Map<String, Map<String, Object>> siteKeepMap, List<Name> adoptedSites) {
-        this.siteKeepMap = siteKeepMap;
-        this.adoptedSites = adoptedSites;
+    static String makeGlobalKey(String fullName) {
+        return fullName;
     }
+    
+    /** Takes a cache key and strips off modifiers indicating arguments or loop index. */
+    private static String baseKey(String key) {
+        // argument modifier
+        int ix = key.indexOf('(');
+        if (ix > 0) {
+            key = key.substring(0, ix);
+        } else {
+            // loop modifier
+            ix = key.indexOf('#');
+            if (ix > 0) {
+                key = key.substring(0, ix);
+            }
+        }
+        return key;
+    }
+
 }
 
 

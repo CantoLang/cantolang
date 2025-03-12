@@ -10,6 +10,7 @@ package canto.lang;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import canto.runtime.Log;
@@ -17,7 +18,7 @@ import canto.runtime.Log;
 /**
  * 
  */
-abstract public class Definition extends CantoNode {
+abstract public class Definition extends CantoNode implements Name {
     private static final Log LOG = Log.getLogger(Definition.class);
 
     // The modifier values are such that for groups of definitions, the lowest value
@@ -69,6 +70,9 @@ abstract public class Definition extends CantoNode {
 
     /** Durability. */
     private Durability dur = Durability.IN_CONTEXT;
+
+    /** The parameters for this definition, if any */
+    private List<ParameterList> paramLists = null;
 
     /** The children of this definition. */
     protected Definition[] childDefs = null;
@@ -130,6 +134,18 @@ abstract public class Definition extends CantoNode {
         return name.getName();
     }
 
+    public NameNode getNameNode() {
+        return null;
+    }
+
+    public List<ParameterList> getParamLists() {
+        return paramLists;
+    }
+
+    protected void setParamLists(List<ParameterList> paramLists) {
+        this.paramLists = paramLists;
+    }
+
     /** The default Type is DefaultType.TYPE.
      */
     public Type getType() {
@@ -137,6 +153,27 @@ abstract public class Definition extends CantoNode {
     }
 
     /** Anonymous definitions have no supertype; returns null. */
+    /** A <code>sub</code> statement in an anonymous definition would
+     *  be meaningless.
+     */
+    public boolean hasSub(Context context) {
+        return false;
+    }
+    
+    /** A <code>next</code> statement in an anonymous definition would
+     *  be meaningless.
+     */
+    public boolean hasNext(Context context) {
+        return false;
+    }
+
+    /** Anonymous definitions have no superdefinitions with <code>next</code>
+     *  statements; returns null.
+     */
+    public LinkedList<Definition> getNextList(Context context) {
+        return null;
+    }
+    
     public Type getSuper() {
         return null;
     }
@@ -146,7 +183,7 @@ abstract public class Definition extends CantoNode {
     }
 
     /** Anonymous definitions have no supertype; returns null. */
-    public Type getSuperForChild(Context context, Definition childDef) throws Redirection {
+    public Type getSuperForChild(Context context, Definition childDef) {
         return null;
     }
 
@@ -158,6 +195,14 @@ abstract public class Definition extends CantoNode {
     /** Anonymous definitions have no supertype; returns null. */
     public NamedDefinition getSuperDefinition(Context context) {
         return null;
+    }
+
+    /** If this definition is a reference to another definition, returns the definition
+     *  ultimately referenced after the entire chain of references has been resolved.
+     * 
+     */
+    public Definition getUltimateDefinition(Context context) {
+        return this;
     }
 
     /** Returns true if <code>def</code> equals this definition or is a subdefinition of
@@ -174,6 +219,13 @@ abstract public class Definition extends CantoNode {
         return (name.equals(""));
     }
 
+    /** Returns true if this definition can have child definitions.  The base class
+     *  returns true unless the definition is an alias, identity or primitive type.
+     */
+    public boolean canHaveChildDefinitions() {
+        return !isAlias() && !isParamAlias() && !isIdentity() && !isPrimitive();
+    }
+
     /** Returns true if this definition has a child definition by the specified name.
      */
     public boolean hasChildDefinition(String name, boolean localAllowed) {
@@ -183,6 +235,46 @@ abstract public class Definition extends CantoNode {
             }
         }
         return false;
+    }
+
+    public Definition getChildDefinition(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, Definition resolver) {
+        try {
+            Object obj = getChild(name, args, indexes, parentArgs, argContext, false, true, null, resolver);
+            if (obj instanceof Definition) {
+                return (Definition) obj;
+            } else if (obj instanceof DefinitionInstance) {
+                return ((DefinitionInstance) obj).def;
+            // presume obj is UNDEFINED
+            } else {
+                return null;
+            }
+        } catch (Throwable t) {
+            LOG.error("Unable to find definition for " + name.getName() + " in " + getFullName());
+            t.printStackTrace();
+            return null;
+        }
+    }
+
+    /** Unnamed definitions are opaque, and the definitions they contain
+     *  cannot be retrieved, so the base class returns null.  Definitions which
+     *  support the retrieval of contained definitions (ComplexDefinition, for
+     *  example) must override this to return the specified definition, if it
+     *  exists, else null.
+     */
+    public Definition getChildDefinition(NameNode name, Context context) {
+        return null;
+    }
+
+    /** Find the child definition, if any, by the specified name; if <code>generate</code> is
+     *  false, return the definition, else instantiate it and return the result.  If <code>generate</code>
+     *  is true and a definition is not found, return UNDEFINED.
+     */
+    public Object getChild(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+        if (generate) {
+            return UNDEFINED;
+        } else {
+            return null;
+        }
     }
 
     private List<Definition> extractDefinitions(CantoNode contents) {
@@ -197,6 +289,88 @@ abstract public class Definition extends CantoNode {
             }
         }
         return defs;
+    }
+
+    public ParameterList getParamsForArgs(ArgumentList args, Context argContext) {
+        return getMatch(args, argContext);
+    }
+
+    public Definition getDefinitionForArgs(ArgumentList args, Context argContext) {
+        ParameterList params = getParamsForArgs(args, argContext);
+        // if args is nonnull and params is null or smaller than args, there is no match.
+        if (args != null && args.size() > 0 && (params == null || params.size() < args.size())) {
+            return null;
+        } else {
+            return getDefinitionFlavor(argContext, params);
+        }
+    }
+
+    protected Definition getDefinitionFlavor(Context context, ParameterList params) {
+        List<ParameterList> paramLists = getParamLists();
+        if (paramLists != null && paramLists.size() > 1) {
+            return new DefinitionFlavor(this, context, params);
+        } else {
+            return this;
+        }
+    }
+
+    /** Go through all the parameter lists belonging to this definition and
+     *  select the best match (if any) for the specified argument list and context.
+     *
+     *  Returns the most closely matching parameter list, or null if none matches.
+     */
+    protected ParameterList getMatch(ArgumentList args, Context argContext) {
+        ParameterList params = null;
+        List<ParameterList> paramLists = getParamLists(); 
+        if (paramLists != null) {
+            int score = NO_MATCH;
+            Iterator<ParameterList> it = paramLists.iterator();
+            while (it.hasNext()) {
+                ParameterList p = it.next();
+                int s = p.getScore(args, argContext, this);
+                if (s < score) {
+                    params = p;
+                    score = s;
+                }
+            }
+        }
+        return params;
+    }
+
+    /** Go through all the parameter lists belonging to this definition and
+     *  all the passed argument lists and select the best match (if any).
+     *
+     *  Returns an array of ListNodes with two elements, a ParameterList
+     *  and an ArgumentList, or null if none matches.
+     */
+    public ListNode<?>[] getMatch(ArgumentList[] argLists, Context argContext) {
+        ListNode<?>[] paramsAndArgs = null; 
+        ListNode<?> args = null;
+        ListNode<?> params = null;
+        List<ParameterList> paramLists = getParamLists(); 
+        if (paramLists != null) {
+            int score = NO_MATCH;
+            Iterator<ParameterList> itParams = paramLists.iterator();
+            while (itParams.hasNext()) {
+                ParameterList p = itParams.next();
+                for (int i = 0; i < argLists.length; i++) {
+                    ArgumentList a = argLists[i];
+                    int s = p.getScore(a, argContext, this);
+                    if (s < score) {
+                        params = p;
+                        args = a;
+                        score = s;
+                    }
+                }
+                
+            }
+        }
+        if (params != null || args != null) {
+            paramsAndArgs = new ListNode<?>[2];
+            paramsAndArgs[0] = params;
+            paramsAndArgs[1] = args;
+        }
+        return paramsAndArgs;
     }
 
     public boolean isElementDefinition() {
@@ -216,6 +390,93 @@ abstract public class Definition extends CantoNode {
         return true;
     }
 
+    /** Returns true if this definition is abstract, i.e., it has an abstract
+     *  block as its contents.
+     */
+    public boolean isAbstract(Context context) {
+        CantoNode contents = getContents();
+        if (contents instanceof Block && ((Block) contents).isAbstract(context)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isIdentity() {
+        return false;
+    }
+
+    public boolean isFormalParam() {
+        return false;
+    }
+    
+    public boolean isAlias() {
+        return false;
+    }
+
+    public NameNode getAlias(){
+        return null;
+    }
+
+    public boolean isParamAlias() {
+        return false;
+    }
+
+    public NameNode getParamAlias(){
+        return null;
+    }
+
+    public Instantiation getAliasInstance() {
+        return null;
+    }
+
+    public boolean isAliasInContext(Context context) {
+        return false;
+    }
+
+    public NameNode getAliasInContext(Context context) {
+        return null;
+    }
+    
+    public Instantiation getAliasInstanceInContext(Context context) {
+        return null;
+    }
+    
+    public boolean isReference() {
+        return false;
+    }
+
+    public NameNode getReference() {
+        return null;
+    }
+
+    public boolean isExternal() {
+        return false;
+    }
+
+    /** Returns true if this is a collection; the base class returns false by default. */
+    public boolean isCollection() {
+        return false;
+    }
+
+    /** Returns true if this is an array; the base class returns false by default. */
+    public boolean isArray() {
+        return false;
+    }
+
+    /** Returns true if this is a table; the base class returns false by default. */
+    public boolean isTable() {
+        return false;
+    }
+
+    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
+        return null;
+    }
+
+    public List<Dim> getDims() {
+        return null;
+    }
+    
     public abstract Value instantiate(Context context, ArgumentList args, List<Index> indexes);
 
     public String getFullName() {
@@ -226,12 +487,81 @@ abstract public class Definition extends CantoNode {
         }
     }
 
+    /** Returns the full name, with the ownership chain adjusted to reflect the
+     *  actual subclasses, in dot notation.
+     */
+    public String getFullNameInContext(Context context) {
+        String name = getName();
+        if (name != null && name != Name.ANONYMOUS) {
+            Definition owner = getOwner();
+            if (owner == null || owner instanceof Site) {
+                return name;
+            }
+            Definition contextDef = owner.getSubdefInContext(context);
+            if (this.equals(contextDef)) {
+                return getFullName();
+            }
+            String ownerName = contextDef.getFullNameInContext(context);
+            if (ownerName != null && ownerName.length() > 0) {
+                name = ownerName + '.' + name;
+            }
+        }
+        return name;
+    }
+
+    public int numParts() {
+        return 1;
+    }
+
     public Definition getExplicitChildDefinition(NameNode node) {
         for (int i = 0; i < childDefs.length; i++) {
             if (childDefs[i].getName().equals(node.getName())) {
                 return childDefs[i];
             }
         }
+        return null;
+    }
+
+    
+    /** Returns the first scope in the context stack whose definition equals or extends 
+     *  this definition.  
+     */
+    public Scope getScopeInContext(Context context) {
+        Scope scope = context.peek();
+        if (scope.def.equalsOrExtends(this)) {
+            return scope;
+        } else {
+            while (scope != null) {
+                if (scope.def.equalsOrExtends(this)) {
+                    return scope;
+                }
+                scope = scope.getPrevious();
+            }
+        }
+        return null;
+    }
+
+    
+    public Definition getSubdefInContext(Context context) {
+        Scope scope = getScopeInContext(context);
+        if (scope != null) {
+            return scope.def;
+        } else {
+            return this;
+        }
+    }
+
+    public Definition getOwnerInContext(Context context) {
+        Definition owner = getOwner();
+        if (owner == null) {
+            return null;
+        }
+        return owner.getSubdefInContext(context);
+    }
+        
+    /** Returns the keep statement in this definition for the specified key.
+     */
+    public KeepStatement getKeep(String key) {
         return null;
     }
 
@@ -245,6 +575,30 @@ abstract public class Definition extends CantoNode {
 
     void setDefinitionTable(DefinitionTable table) {
         ;
+    }
+
+    public static Access minAccess(Access access2, Access access3) {
+        if (access2 == Access.LOCAL || access3 == Access.LOCAL) {
+            return Access.LOCAL;
+        } else if (access2 == Access.SITE || access3 == Access.SITE) {
+            return Access.SITE;
+        } else {
+            return Access.PUBLIC;
+        }
+    }
+
+    public static Durability minDurability(Durability dur2, Durability durability) {
+        if (dur2 == Durability.DYNAMIC || durability == Durability.DYNAMIC) {
+            return Durability.DYNAMIC;
+        } else if (dur2 == Durability.IN_CONTEXT || durability == Durability.IN_CONTEXT) {
+            return Durability.IN_CONTEXT;
+        } else if (dur2 == Durability.GLOBAL || durability == Durability.GLOBAL) {
+            return Durability.GLOBAL;
+        } else if (dur2 == Durability.COSMIC || durability == Durability.COSMIC) {
+            return Durability.COSMIC;
+        } else {
+            return Durability.STATIC;
+        }
     }
 
     

@@ -31,6 +31,8 @@ public class NameNode extends CantoNode implements Name {
      */ 
     private String cachedName = null;
 
+    private List<ParameterList> paramLists = null;
+
     public NameNode() {
         super();
     }
@@ -107,6 +109,23 @@ public class NameNode extends CantoNode implements Name {
         }
     }
 
+    public int getNumParamLists() {
+        if (paramLists == null) {
+            return 0;
+        } else {
+            return paramLists.size();
+        }
+    }
+
+    public List<ParameterList> getParamLists() {
+        return paramLists;
+    }
+
+    public void setParamLists(List<ParameterList> paramLists) {
+        this.paramLists = paramLists;
+    }
+
+    
     /** Returns <code>true</code> if this is a special name.
      */
     public boolean isSpecial() {

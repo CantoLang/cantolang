@@ -146,8 +146,8 @@ public class ElementReference extends Definition {
         }
     }
 
-    public AbstractNode getContents() {
-        return (AbstractNode) instance;
+    public CantoNode getContents() {
+        return (CantoNode) instance;
     }
 
     public boolean equalsOrExtends(Definition def) {
@@ -337,7 +337,7 @@ public class ElementReference extends Definition {
             sb.append(' ');
         }
 
-        AbstractNode contents = getContents();  
+        CantoNode contents = getContents();  
         sb.append(contents.toString(""));
 
 //        String name = getName();

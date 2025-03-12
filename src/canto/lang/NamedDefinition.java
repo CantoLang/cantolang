@@ -94,30 +94,17 @@ public class NamedDefinition extends Definition {
         init(superType, new NameNode(name), valueNode);
     }
     
-
-    public String getName() {
-        return (name == null ? null : name.getName());
-    }
-
-    public boolean isAnonymous() {
-        return (name == null || name.getName().equals(ANONYMOUS));
-    }
-
-    public NameNode getNameNode() {
-        return name;
-    } 
-
-    public void init(Type supertype, NameNode name, AbstractNode contents) {
+    public void init(Type supertype, NameNode name, CantoNode contents) {
         setSuper(supertype);
         setName(name);
         setType(createType());
         
         // external definitions have complex names; the params are on the last part
         if (name instanceof ComplexName) {
-            name = ((ComplexName) name).getLastPart();
+            name = name.getLastPart();
         }
-        if (name instanceof NameWithParams && ((NameWithParams) name).getNumParamLists() > 0) {
-            setParamLists(((NameWithParams) name).getParamLists());
+        if (name.getNumParamLists() > 0) {
+            setParamLists(name.getParamLists());
         } else {
             setParamLists(null);
         }
@@ -132,6 +119,19 @@ public class NamedDefinition extends Definition {
         }
         setContents(contents);
     }
+
+    public String getName() {
+        return (name == null ? null : name.getName());
+    }
+
+    public boolean isAnonymous() {
+        return (name == null || name.getName().equals(ANONYMOUS));
+    }
+
+    public NameNode getNameNode() {
+        return name;
+    } 
+
 
 
     /** Called in the validation pass to check aliases and remove any that point to
@@ -658,7 +658,7 @@ public class NamedDefinition extends Definition {
         // if not found, try supertypes and supertype aliases
         if (def == null) {
 
-//            AbstractNode contents = getContents();
+//            CantoNode contents = getContents();
 //            if (context != null && !isAlias() && !isIdentity() && contents instanceof Construction) {
 //                Construction construction = ((Construction) contents).getUltimateConstruction(context);
 //            
@@ -1447,7 +1447,7 @@ public class NamedDefinition extends Definition {
 //            }
 
             // not an alias; see if it is a construction that defines the child
-            AbstractNode contents = getContents();
+            CantoNode contents = getContents();
             if (!isAlias() && !isIdentity() && !(contents instanceof ConstructionGenerator) && contents instanceof Construction && !((Construction) contents).isPrimitive()) {
                 Construction construction = ((Construction) contents).getUltimateConstruction(context);
                 if (construction instanceof Instantiation && !((Instantiation) construction).isParameterKind()) {
@@ -1980,7 +1980,7 @@ public class NamedDefinition extends Definition {
         // if the content is a construction, see if it defines a child by this name,
         // either via its type or by a cached definition if it is an identity
         } else {
-            AbstractNode contents = getContents();
+            CantoNode contents = getContents();
             if (contents instanceof Construction) {
                 Construction construction = ((Construction) contents).getUltimateConstruction(context);
             
@@ -2214,7 +2214,6 @@ public class NamedDefinition extends Definition {
     public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
         // TODO Auto-generated method stub
         return null;
-    }
-    
+    }   
 }
 

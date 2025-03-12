@@ -88,7 +88,7 @@ public class DefinitionFlavor extends ComplexDefinition {
     /** Returns true if the definition this is a flavor of is primitive.
      */
     public boolean isPrimitive() {
-        return ((AbstractNode) def).isPrimitive();
+        return ((CantoNode) def).isPrimitive();
     }
 
     /** Returns the access modifier. */
@@ -226,7 +226,7 @@ public class DefinitionFlavor extends ComplexDefinition {
     /** Gets the contents of the definition as a single node, which may be a block,
      *  an array or a single value.
      */
-    public AbstractNode getContents() {
+    public CantoNode getContents() {
         return def.getContents();
     }
 }

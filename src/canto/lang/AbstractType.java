@@ -2,7 +2,7 @@
  * 
  * AbstractType.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,13 +10,9 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
 
 /**
  * Base class for types.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.43 $
  */
 
 abstract public class AbstractType extends NameNode implements Type {
@@ -210,26 +206,26 @@ abstract public class AbstractType extends NameNode implements Type {
 
     private Type[] getChildTypes(boolean onlyPersistable) {
         Type[] childTypes = null;
-        if (definition != null && definition instanceof AbstractNode && definition.canHaveChildDefinitions()) {
+        if (definition != null && definition instanceof CantoNode && definition.canHaveChildDefinitions()) {
             CantoBlock block = null;
             // the child definitions will be children of a CantoBlock,
             // which may be either the second or third child of the definition
-            Object child = ((AbstractNode) definition).getChild(1);
+            Object child = definition.getChild(1);
             if (child instanceof CantoBlock) {
                 block = (CantoBlock) child;
             } else {
-                child = ((AbstractNode) definition).getChild(2);
+                child = definition.getChild(2);
                 if (child instanceof CantoBlock) {
                     block = (CantoBlock) child;
                 }
             }
             if (block != null) { 
-                AbstractNode[] nodes = block.children;
+                CantoNode[] nodes = block.children;
                 List<Type> types = new ArrayList<Type>(nodes.length); 
                 for (int i = 0; i < nodes.length; i++) {                 
                     if (nodes[i] instanceof Definition) {
                         Definition childDef = (Definition) nodes[i];
-                        if (!onlyPersistable || childDef.getDurability() == Definition.IN_CONTEXT) {
+                        if (!onlyPersistable || childDef.getDurability() == Definition.Durability.IN_CONTEXT) {
                             types.add(childDef.getType());
                         }
                     }

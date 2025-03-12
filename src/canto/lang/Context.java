@@ -10,9 +10,11 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.runtime.CantoObjectWrapper;
 import canto.runtime.CantoSession;
 import canto.util.Holder;
 import canto.runtime.Log;
+import canto.util.StateFactory;
 
 /**
  * 
@@ -59,6 +61,7 @@ public class Context {
     private Map<String, Object> globalKeep = null;
     private CantoSession session = null;
     
+    private StateFactory stateFactory;
     private int stateCount;
 
     private int size = 0;
@@ -71,25 +74,40 @@ public class Context {
     public Context() {
         instanceCount++;
         rootContext = this;
+        stateFactory = new StateFactory();
+        stateCount = stateFactory.lastState();
     }
 
     public Context(Site site) {
         instanceCount++;
         rootContext = this;
+        stateFactory = new StateFactory();
+        stateCount = stateFactory.lastState();
         scopeStack.push(new Scope(site, null, null));        
     }
    
     public Context(Context context) {
         instanceCount++;
         rootContext = context.rootContext;
+        // this is a copy, so don't pop past the current top
+
+        // copy the global state variables
+        stateCount = context.stateCount;
+        stateFactory = new StateFactory(context.stateFactory);
+        size = context.size;
+
+        // copy the session
+        session = context.session;
+
+        keepMap = context.keepMap;
         scopeStack = new ArrayDeque<Scope>();
         if (context.scopeStack.size() > 0) {
             scopeStack.push(context.scopeStack.peek());
         }
     }
     // -------------------------------------------
-    // push and pop operations
-
+    // push, pop, peek, etc.
+    
     public void push(Definition def, ParameterList params, ArgumentList args) throws Redirection {
         DefinitionInstance defInstance = getContextDefInstance(def, args);
         Scope scope = newScope(defInstance.def, defInstance.def, params, defInstance.args);
@@ -154,7 +172,7 @@ public class Context {
     
             // add keep directives to this scope's list.
             NamedDefinition scopedef = (NamedDefinition) ((scope.superdef == null && scope.def instanceof NamedDefinition) ? scope.def : scope.superdef);
-            Scope prev = scope.link;
+            Scope prev = scope.previous;
             if (!newFrame && prev != null) {
                 if (sharesKeeps(scope, prev, true)) {
                     setKeepsFromScope(prev);
@@ -173,7 +191,7 @@ public class Context {
                         }
                 
                         String keepKeepKey = scopedef.getName() + ".keep";
-                        String globalKeepKeepKey = makeGlobalKey(scopedef.getFullNameInContext(this)) + ".keep";
+                        String globalKeepKeepKey = Scope.makeGlobalKey(scopedef.getFullNameInContext(this)) + ".keep";
                         while (prev != null) {
                             @SuppressWarnings("unchecked")
                             Map<String, Object> keepKeep = (Map<String, Object>) prev.get(keepKeepKey, globalKeepKeepKey, null, true);
@@ -181,7 +199,7 @@ public class Context {
                                 topScope.addKeepKeep(keepKeep);
                                 break;
                             }
-                            prev = prev.link;
+                            prev = prev.previous;
                         }
                     }
                 }
@@ -205,9 +223,9 @@ public class Context {
                 //
                 // Not sure if scope.args is right -- maybe should be the args for the scope where
                 // scopedef shows up (assuming scopedef is right -- maybe should be scope.def) 
-                if (scopedef.getDurability() != Definition.DYNAMIC && (scope.args == null || !scope.args.isDynamic())) {
+                if (scopedef.getDurability() != Definition.Durability.DYNAMIC && (scope.args == null || !scope.args.isDynamic())) {
                     String keepKeepKey = scopedef.getName() + ".keep";
-                    String globalKeepKeepKey = makeGlobalKey(scopedef.getFullNameInContext(this)) + ".keep";
+                    String globalKeepKeepKey = Scope.makeGlobalKey(scopedef.getFullNameInContext(this)) + ".keep";
                     while (prev != null) {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> keepKeep = (Map<String, Object>) prev.get(keepKeepKey, globalKeepKeepKey, null, true);
@@ -215,13 +233,125 @@ public class Context {
                             topScope.addKeepKeep( keepKeep);
                             break;
                         }
-                        prev = prev.link;
+                        prev = prev.previous;
                     }
                 }
             }
         }
     }
 
+    private synchronized void _push(Scope scope) {
+        if (scope.def == null) {
+            throw new NullPointerException("attempt to push null definition on context");
+        }
+
+        if (size >= maxSize) {
+            throw new RuntimeException("blown context");
+        } else if (size == 300) {
+            System.err.println("**** context exceeding 300 ****");
+        } else if (size == 200) {
+            System.err.println("**** context exceeding 200 ****");
+        } else if (size == 100) {
+            System.err.println("**** context exceeding 100 ****");
+        }
+
+        if (rootScope == null) {
+            if (scope.getPrevious() != null) {
+                scope = newScope(scope, true);
+            }
+            setRootScope(scope);
+        } else {
+            if (scope.getPrevious() != topScope) {
+                if (scope.getPrevious() != null) {
+                    scope = newScope(scope, true);
+                }
+                scope.setPrevious(topScope);
+            }
+        }
+        setTop(scope);
+    }
+
+    public synchronized void pop() {
+        Scope scope = _pop();
+
+        if (topScope != null) {
+            stateCount = topScope.getState();
+            definingDef = topScope.def;
+            if (sharesKeeps(scope, topScope, false)) {
+                addKeepsFromScope(scope);
+            } else if (scope.keepMap != null) {
+                //topScope.cache.put
+            }
+        } else {
+            stateCount = -1;
+            definingDef = null;
+        }
+        oldScope(scope);
+    }
+
+    private Scope _pop() {
+        if (size > 0) {
+            if (topScope == popLimit) {
+                vlog("popping context beyond popLimit");
+                throw new IndexOutOfBoundsException("Illegal pop attempt; can only pop scopes pushed after this copy was made.");
+            }
+            Scope scope = topScope;
+            setTop(scope.getPrevious());
+            return scope;
+        } else {
+            return null;
+        }
+    }
+
+    public synchronized Scope unpush() {
+        if (size <= 1) {
+            throw new IndexOutOfBoundsException("Attempt to unpush root scope in context");
+        }
+        Scope scope = _pop();
+        unpushedEntries.push(scope);
+        return scope;
+    }
+
+    public synchronized void repush() {
+        Scope scope = unpushedEntries.pop();
+        // by pre-setting the previous to topScope, we avoid the logic in _push that clones
+        // the scope being pushed
+        //scope.setPrevious(topScope);
+        _push(scope);
+    }
+
+
+    public synchronized void unpop(Definition def, ParameterList params, ArgumentList args) {
+        DefinitionInstance defInstance = getContextDefInstance(def, args);
+        Definition contextDef = defInstance.def;
+        if (defInstance.args != null && defInstance.args != args) {
+            args = defInstance.args;
+            params = contextDef.getParamsForArgs(args, this);
+        }
+        _push(newScope(contextDef, contextDef, params, args));
+    }
+
+    public synchronized void unpop(Scope scope) {
+        _push(scope);
+    }
+
+    public synchronized Scope repop() {
+        Scope scope = _pop();
+        return scope;
+    }
+
+    public Scope peek() {
+        return topScope;
+    }
+
+    public Scope doublePeek() {
+        if (topScope != null) {
+            return topScope.previous;
+        } else {
+            return null;
+        }
+    }
+    
     // other operations
 
     /** Dereferences the passed definition if necessary to return the proper
@@ -324,6 +454,187 @@ public class Context {
         }
     }
 
+    public Object getParameter(NameNode name, boolean inContainer, Class<?> returnClass) throws Redirection {
+        if (topScope == null) {
+            return null;
+        }
+        Scope scope = topScope;
+
+        if (inContainer) {
+            Object paramObj = null;
+            synchronized (this) {
+                int i = 0;
+                try {
+                    //unpush();
+                    //i++;
+                    while (topScope != null) {
+                        paramObj = getParameter(name, false, returnClass);
+                        if (paramObj != null || topScope.getPrevious() == null) {
+                            break;
+                        }
+                        unpush();
+                        i++;
+                    }
+                } finally {
+                    while (i > 0) {
+                        repush();
+                        i--;
+                    }
+                }
+            }
+            return paramObj;
+        }
+
+        boolean checkForChild = (name.numParts() > 1);
+        String checkName  = name.getName();
+        ArgumentList args = scope.args;
+        int numArgs = args.size();
+        ParameterList params = scope.params;
+        int numParams = params.size();
+
+        ArgumentList argArgs = null;
+        ParameterList argParams = null;
+
+        Object arg = null;
+        int n = (numParams > numArgs ? numArgs : numParams);
+        boolean mustUnpush = false;
+        DefParameter param = null;
+        Type paramType = null;
+
+        int i;
+        for (i = n - 1; i >= 0; i--) {
+            param = params.get(i);
+            String paramName = param.getName();
+            if ((!checkForChild && checkName.equals(paramName)) || (checkForChild && checkName.startsWith(paramName + '.'))) {
+                arg = args.get(i);
+                break;
+            }
+        }
+
+        if (arg == null) {
+            return null;
+        }
+
+        Definition argDef = null;
+
+        // for loop arguments are in the same context, not the next higher context
+        if (!param.isInFor() && size > 1) {
+            mustUnpush = true;
+            unpush();
+        }
+
+        int numPushes = 0;
+        Instantiation argInstance = null;
+        try {
+            if (arg instanceof Definition) {
+                argDef = (Definition) arg;
+            } else if (arg != ArgumentList.MISSING_ARG) {
+                argDef = param.getDefinitionFor(this, arg);
+                if (arg instanceof Instantiation && argDef != null) {
+                    argInstance = (Instantiation) arg;
+                    argArgs = argInstance.getArguments();
+                    if (argInstance.isSuper() && argArgs == null) {
+                        argArgs = topScope.args;
+                    }
+                    argParams = argDef.getParamsForArgs(argArgs, this);
+
+                    //numPushes += pushParts(argInstance);
+                }
+            }
+    
+            if (argDef == null) {
+                return null;
+            }
+
+            push(argDef, argParams, argArgs);
+            numPushes++;
+    
+            paramType = param.getType();
+
+            // dereference the argument definition if the reference includes indexes
+            NameNode paramNameNode = (checkForChild ? (NameNode) name.getChild(0) : name);
+            ArgumentList paramArgs = paramNameNode.getArguments();
+            List<Index> paramIndexes = paramNameNode.getIndexes();
+            if ((paramArgs != null && paramArgs.size() > 0) || (paramIndexes != null && paramIndexes.size() > 0)) {
+                Context argContext = this;
+                if (mustUnpush) {
+                    argContext = clone(false);
+                    Scope clonedScope = newScope(unpushedEntries.peek(), true);
+                    argContext.push(clonedScope);
+                }
+                argDef = argContext.initDef(argDef, paramArgs, paramIndexes);
+            }
+    
+            // if this is a child of a parameter, resolve it.
+            if (checkForChild && argDef != null) {
+
+                // the child consists of everything past the first dot, which is the
+                // same as a complex name consisting of every node in the name
+                // except for the first
+                ComplexName childName = new ComplexName(name, 1, name.getNumChildren());
+
+                // see if the argument definition has a child definition by that name
+                ArgumentList childArgs = childName.getArguments();
+                Definition childDef = argDef.getChildDefinition(childName, childArgs, childName.getIndexes(), args, this, null);
+
+                // if not, then look for an aliased external definition
+                if (childDef == null) {
+                    if (argDef.isAlias()) {
+                        NameNode aliasName = argDef.getAlias();
+                        childName = new ComplexName(aliasName, childName);
+                        Definition ndef = peek().def;
+                        childDef = ExternalDefinition.createForName(ndef, childName, param.getType(), argDef.getAccess(), argDef.getDurability(), this);
+                    }
+
+                    // if that didn't work, look for a special definition child
+                    if (childDef == null) {
+                        if (paramType != null && paramType.getName().equals("definition")) {
+                            childDef = argDef.getDefinitionChild(childName, this, args);
+                        }
+                    }
+            
+                } else {
+                    childDef = childDef.getUltimateDefinition(this);
+                }
+                argDef = childDef;
+
+                if (arg instanceof PrimitiveValue && CantoObjectWrapper.class.equals(((PrimitiveValue) arg).getValueClass())) {
+                    CantoObjectWrapper wrapper = (CantoObjectWrapper) ((Value) arg).getValue();
+                    Context argContext = wrapper.context;
+                    argDef = new BoundDefinition(argDef, argContext);
+                }
+            }
+
+            if (returnClass == Scope.class) {
+                if (argDef == null) {
+                    return null;
+                } else {
+                    return newScope(argDef, argDef, argParams, argArgs);
+                }
+            } else if (returnClass == Definition.class) {
+                return argDef;
+            } else if (returnClass == ResolvedInstance.class) {
+                return new ResolvedInstance(argDef, this, argArgs, null);
+            } else {
+                Object data = (argDef == null ? null : construct(argDef, argArgs));
+                if (data == null) {
+                    return NullValue.NULL_VALUE;
+                } else {
+                    return data;
+                }
+            }
+
+        } finally {
+            // restore the stack
+            while (numPushes-- > 0) {
+                pop();
+            }
+            if (mustUnpush) {
+                repush();
+            }
+            //validateSize();
+        }
+    }
     
     
     public Object getMarker(Object obj) {
@@ -382,7 +693,7 @@ public class Context {
 
     
     @SuppressWarnings("unchecked")
-    private static Object getKeepData(Map<String, Object> cache, String key, String fullKey) {
+    static Object getKeepData(Map<String, Object> cache, String key, String fullKey) {
         Object data = null;
 
         data = cache.get(key);

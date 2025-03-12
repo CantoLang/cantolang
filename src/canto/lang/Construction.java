@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import canto.runtime.CantoObjectWrapper;
-import canto.runtime.Context;
-import canto.runtime.Holder;
+import canto.util.EmptyList;
+import canto.util.Holder;
 
 /**
  * A construction is a Canto statement which generates data.
@@ -358,7 +358,7 @@ public abstract class Construction extends CantoNode {
 
         } else if (isStatic()) {
             if (staticData == null) {
-                staticData = generateData(context, def, debugger);
+                staticData = generateData(context, def);
             }
             return staticData;
 
@@ -366,7 +366,7 @@ public abstract class Construction extends CantoNode {
             CacheabilityInfo cacheInfo = getCacheability(context, def);
             int cacheability = cacheInfo.cacheability;
             if (cacheability == NOT_CACHEABLE) {
-                return generateData(context, cacheInfo.def, debugger);
+                return generateData(context, cacheInfo.def);
 
             } else {
                 Definition defInKeep = null;
@@ -718,7 +718,7 @@ public abstract class Construction extends CantoNode {
             Definition definition = (Definition) reference;
             String name = definition.getName();
             if (name == null || name.equals(Name.ANONYMOUS)) {
-                String defstr = ((AbstractNode) definition).toString(prefix);
+                String defstr = definition.toString(prefix);
                 if (defstr.endsWith("\n")) {
                     defstr = defstr.substring(0, defstr.length() - 1);
                 }

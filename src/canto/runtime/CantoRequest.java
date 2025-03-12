@@ -38,7 +38,12 @@ public class CantoRequest {
     
     public Map<String, String> params() {
         if (paramMap == null) {
-            paramMap = new SingleEntryMap(request.getParameterMap());
+            paramMap = new HashMap<String, String>();
+            try {
+                Request.getParameters(request).stream().forEach(p -> paramMap.put(p.getName(), p.getValue()));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return paramMap;
     }

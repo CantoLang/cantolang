@@ -10,8 +10,6 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
-
 /**
  * An ArgumentList is a list of arguments.
  */
@@ -29,19 +27,14 @@ public class ArgumentList extends ListNode<Construction> {
         public String getDefinitionName()                            { return null; }
         public Construction getUltimateConstruction(Context context) { return this; }
         public String toString()                                     { return "(missing arg)"; }
-        public String getString(Context context) throws Redirection  { return null; }
-        public byte getByte(Context context) throws Redirection      { return 0; }
-        public char getChar(Context context) throws Redirection      { return 0; }
-        public int getInt(Context context) throws Redirection        { return 0; }
-        public long getLong(Context context) throws Redirection      { return 0; }
-		public double getDouble(Context context) throws Redirection  { return 0; }
-		public Value getValue(Context context) throws Redirection    { return NullValue.NULL_VALUE; }
+        public String getString(Context context)                     { return null; }
+        public byte getByte(Context context)                         { return 0; }
+        public char getChar(Context context)                         { return 0; }
+        public int getInt(Context context)                           { return 0; }
+        public long getLong(Context context)                         { return 0; }
+		public double getDouble(Context context)                     { return 0; }
+		public Value getValue(Context context)                       { return NullValue.NULL_VALUE; }
 		public boolean isPrimitive()                                 { return true; }
-        @Override
-        public Value construct(canto.lang.Context context) {
-            // TODO Auto-generated method stub
-            return null;
-        }
         @Override
         public boolean isStatic() {
             // TODO Auto-generated method stub
@@ -51,6 +44,11 @@ public class ArgumentList extends ListNode<Construction> {
         public boolean isDynamic() {
             // TODO Auto-generated method stub
             return false;
+        }
+        @Override
+        public Object generateData(Context context, Definition def) {
+            // TODO Auto-generated method stub
+            return null;
         }
     };
 
