@@ -52,8 +52,8 @@ public class AliasedDefinition extends ExternalDefinition {
         return true;
     }
 
-    public int getDurability() {
-        return Definition.IN_CONTEXT;
+    public Durability getDurability() {
+        return Durability.IN_CONTEXT;
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
@@ -71,7 +71,7 @@ public class AliasedDefinition extends ExternalDefinition {
         return data; 
     }
     
-    public Definition getDefForContext(Context context, ArgumentList args) throws Redirection {
+    public Definition getDefForContext(Context context, ArgumentList args) {
 //        if (def instanceof ExternalDefinition) {
 //            return ((ExternalDefinition) def).getDefForContext(context, args);
 //        } else {

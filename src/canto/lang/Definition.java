@@ -80,6 +80,27 @@ abstract public class Definition extends CantoNode implements Name {
     /** The contents of this definition. */
     protected CantoNode contents = null;
 
+    /** static data cache, unused if this definition is not declared to be static. **/
+    private static class StaticData {
+        public Object data = null;
+    }
+    private StaticData staticData;
+
+    protected boolean hasStaticData() {
+        return (staticData.data != null);
+    }
+
+    protected void setStaticData(Object data) {
+        if (dur == Durability.GLOBAL || dur == Durability.STATIC) {
+            LOG.debug("Setting " + (dur == Durability.GLOBAL ? "global" : "static") + " data for " + getFullName());
+            staticData.data = data;
+        }
+    }
+
+    protected Object getStaticData() {
+        return staticData.data;
+    }
+    
     protected Definition(Name name, CantoNode contents) {
         this(name);
         setContents(contents);
@@ -219,6 +240,24 @@ abstract public class Definition extends CantoNode implements Name {
         return (name.equals(""));
     }
 
+    public Block getCatchBlock() {
+        CantoNode contents = getContents();
+        if (contents instanceof Block) {
+            return ((Block) contents).getCatchBlock();
+        } else {
+            return null;
+        }
+    }
+
+    public String getCatchIdentifier() {
+        Block catchBlock = getCatchBlock();
+        if (catchBlock != null) {
+            return catchBlock.getCatchIdentifier();
+        } else {
+            return null;
+        }
+    }
+
     /** Returns true if this definition can have child definitions.  The base class
      *  returns true unless the definition is an alias, identity or primitive type.
      */
@@ -265,6 +304,12 @@ abstract public class Definition extends CantoNode implements Name {
         return null;
     }
 
+    /** Get a child of this definition as a definition. This only works for named definitions. 
+     */
+    public Definition getDefinitionChild(NameNode childName, Context context, ArgumentList args) {
+        return null;
+    }
+    
     /** Find the child definition, if any, by the specified name; if <code>generate</code> is
      *  false, return the definition, else instantiate it and return the result.  If <code>generate</code>
      *  is true and a definition is not found, return UNDEFINED.
@@ -477,7 +522,55 @@ abstract public class Definition extends CantoNode implements Name {
         return null;
     }
     
-    public abstract Value instantiate(Context context, ArgumentList args, List<Index> indexes);
+    /** Construct this definition with the specified arguments in the specified context. */
+    public Object instantiate(ArgumentList args, List<Index> indexes, Context context) throws Redirection {
+        Definition initializedDef = context.initDef(this, args, indexes);
+        if (initializedDef == null && indexes != null) {
+            initializedDef = context.initDef(this, args, null);
+        } else if (initializedDef != this) {
+            indexes = null;
+        }
+        if (initializedDef != this && initializedDef != null) {
+            return initializedDef._instantiate(context, args, indexes);
+        } else {
+            return _instantiate(context, args, indexes);
+        }
+    }
+        
+    private Object _instantiate(Context context, ArgumentList args, List<Index> indexes) throws Redirection {        
+        if ((dur == Durability.GLOBAL || dur == Durability.STATIC) && staticData.data != null && (args == null || !args.isDynamic())) {
+            return staticData.data;
+        }
+
+        if (isAbstract(context)) {
+            throw new Redirection(Redirection.STANDARD_ERROR, getFullName() + " is abstract; cannot instantiate");
+        }
+
+        if (dur == Durability.GLOBAL || dur == Durability.STATIC) {
+            LOG.debug("Constructing " + (dur == Durability.GLOBAL ? "global" : "static") + " data for " + getFullName());
+            staticData.data = construct(context, args, indexes);
+            return staticData.data;
+        } else {
+            return construct(context, args, indexes);
+        }
+    }
+
+    /* TODO: this is probably the best place to coerce the constructed data into the proper type for this definition. */
+    protected Object construct(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+        // dynamic objects are objects such as arrays with logic in their
+        // initialization expressions
+        Definition def = this;
+        
+        Object obj = context.construct(def, args);
+
+        if (def.isCollection() && indexes != null) {
+            obj = context.dereference(obj, indexes);
+        }
+
+        return obj;
+    }
+
+
 
     public String getFullName() {
         if (owner == null) {

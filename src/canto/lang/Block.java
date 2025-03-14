@@ -20,6 +20,8 @@ import canto.util.EmptyList;
 public class Block extends Construction {
 
     private List<Construction> constructions;
+    private Block catchBlock = null;
+    private String catchIdentifier = null;
     
     protected Block() {
         super(new EmptyList<CantoNode>());
@@ -89,5 +91,22 @@ public class Block extends Construction {
         }
         return false;
     }
+
+    public Block getCatchBlock() {
+        return catchBlock;
+    }
+
+    protected void setCatchBlock(Block block) {
+        catchBlock = block;
+    }
+
+    public String getCatchIdentifier() {
+        return catchIdentifier;
+    }
+
+    public void setCatchIdentifier(Name catchName) {
+        catchIdentifier = catchName.getName();
+    }
+
 
 }

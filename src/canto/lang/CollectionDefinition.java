@@ -15,12 +15,9 @@ import canto.util.Holder;
 
 /**
  * CollectionDefinition is the common base class for array and table definitions.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.90 $
  */
 
-public class CollectionDefinition extends ComplexDefinition /* implements DynamicObject */ {
+public class CollectionDefinition extends ComplexDefinition {
 
     static public boolean isCollectionObject(Object obj) {
         return obj != null && (obj.getClass().isArray() || obj instanceof List<?> || obj instanceof Map<?, ?>);

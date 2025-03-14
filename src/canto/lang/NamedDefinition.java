@@ -815,7 +815,7 @@ public class NamedDefinition extends Definition {
     }
 
     /** Get a child of this definition as a definition. This only works for named definitions. */
-    public Definition getDefinitionChild(NameNode childName, Context context, ArgumentList args) throws Redirection {
+    public Definition getDefinitionChild(NameNode childName, Context context, ArgumentList args) {
         AliasedDefinition adef = new AliasedDefinition(this, getNameNode());
         Definition def = adef.getDefForContext(context, args);
         return def.getChildDefinition(childName, context);
@@ -2210,10 +2210,5 @@ public class NamedDefinition extends Definition {
         return false;
     }
 
-    @Override
-    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
-        // TODO Auto-generated method stub
-        return null;
-    }   
 }
 

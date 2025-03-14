@@ -36,14 +36,14 @@ public class ExternalDefinition extends ComplexDefinition {
     /**
      * Creates a prototype definition.
      */
-    public static ExternalDefinition createPrototype(ComplexName nameNode, Type superType, int access, int dur) {
+    public static ExternalDefinition createPrototype(ComplexName nameNode, Type superType, Access access, Durability dur) {
         return (ExternalDefinition) createForName(null, nameNode, superType, access, dur, null);
     }
     
     /**
      * Creates a definition corresponding to the passed complex name.
      */
-    public static Definition createForName(Definition owner, ComplexName nameNode, Type superType, int access, int dur, Context context) {
+    public static Definition createForName(Definition owner, ComplexName nameNode, Type superType, Access access, Durability dur, Context context) {
         // find the left-most class named by the passed complex name.
         Class<?> externalClass = null;
         String name = "";
@@ -77,7 +77,7 @@ public class ExternalDefinition extends ComplexDefinition {
 
         // can't create a definition with nothing to point to
         if (externalClass == null) {
-            CantoLogger.vlog("No external definition for " + name);
+            LOG.warn("No external definition for " + name);
             return null;
         }
 
@@ -115,14 +115,14 @@ public class ExternalDefinition extends ComplexDefinition {
                     def = def.getChildDefinition(namePart, namePart.getArguments(), namePart.getIndexes(), null, context, null);
                 }
                 if (def == null) {
-                    CantoLogger.log("No " + namePart.getName() + " belonging to external definition " + nameNode.getName());
+                    LOG.info("No " + namePart.getName() + " belonging to external definition " + nameNode.getName());
                     return null;
                 }
                 n++;
             }
             return def;
         } catch (Throwable t) {
-            CantoLogger.log("Problem initing external definition " + externalDef.getFullName() + ": " + t.toString());
+            LOG.error("Problem initing external definition " + externalDef.getFullName() + ": " + t.toString());
             return null;
         }
     }
@@ -154,7 +154,7 @@ public class ExternalDefinition extends ComplexDefinition {
     }
         
         
-    public ExternalDefinition(NameNode name, CantoNode parent, Definition owner, Type superType, int access, int dur, Object object, ArgumentList args) {
+    public ExternalDefinition(NameNode name, CantoNode parent, Definition owner, Type superType, Access access, Durability dur, Object object, ArgumentList args) {
         super();
         setAccess(access);
         setDurability(dur);
@@ -163,7 +163,7 @@ public class ExternalDefinition extends ComplexDefinition {
         if (complexOwner != null) {
             setDefinitionTable(complexOwner.getDefinitionTable());
         }
-        jjtSetParent((AbstractNode) parent);
+        setParent(parent);
         setObject(object);
         setArguments(args);
         if (object instanceof Value) {
@@ -181,9 +181,9 @@ public class ExternalDefinition extends ComplexDefinition {
             name = new ComplexName(c.getName());
         }
         setName(name);
-        AbstractNode contents = null;
-        if (object instanceof AbstractNode) {
-            contents = (AbstractNode) object;
+        CantoNode contents = null;
+        if (object instanceof CantoNode) {
+            contents = (CantoNode) object;
         } else if (object instanceof Class<?>) {
             contents = getConstructor();
         } else {
@@ -208,7 +208,7 @@ public class ExternalDefinition extends ComplexDefinition {
         
         setExternalClass(clazz);
         setArguments(args);
-        AbstractNode contents = def.getContents();
+        CantoNode contents = def.getContents();
         if (contents instanceof PartialDefinition) {
             def = ((PartialDefinition) contents).completeForContext(context);
             contents = def.getContents();
@@ -532,7 +532,7 @@ public class ExternalDefinition extends ComplexDefinition {
                 mdef.setObject(parentObj);
             }
 
-//           AbstractNode contents = mdef.getContents();
+//           CantoNode contents = mdef.getContents();
 //           if (contents instanceof ExternalConstruction) {
 //               try {
 //                   ((ExternalConstruction) contents).initExternalObject(context);
@@ -544,14 +544,14 @@ public class ExternalDefinition extends ComplexDefinition {
 
             if (generate) {
                 Object data = null;
-                AbstractNode contents = mdef.getContents();
+                CantoNode contents = mdef.getContents();
                 if (contents instanceof Chunk) {
                     try {
                         data = ((Chunk) contents).getData(context);
                         if (data instanceof Value) {
                             data = ((Value) data).getValue();
-                        } else if (data instanceof AbstractNode) {
-                            initNode((AbstractNode) data);
+                        } else if (data instanceof CantoNode) {
+                            initNode((CantoNode) data);
                         }
                     } catch (Redirection r) {
                         ;
@@ -863,7 +863,7 @@ public class ExternalDefinition extends ComplexDefinition {
             } else {
                 def = new ExternalDefinition(this, context, args);
             }
-            initNode((AbstractNode) def);
+            initNode((CantoNode) def);
         }
         return def;
     }
@@ -916,7 +916,7 @@ public class ExternalDefinition extends ComplexDefinition {
                 ownerIndexes = ((IndexedMethodDefinition) owner).getIndexes();
             }
             AbstractConstruction.CacheabilityInfo cacheInfo = AbstractConstruction.NOT_CACHEABLE_INFO;
-            AbstractNode contents = owner.getContents();
+            CantoNode contents = owner.getContents();
             if (contents instanceof AbstractConstruction) {
                 cacheInfo = ((AbstractConstruction) contents).getCacheability(context, null);
                 if ((cacheInfo.cacheability & AbstractConstruction.CACHE_RETRIEVABLE) == AbstractConstruction.CACHE_RETRIEVABLE) {
