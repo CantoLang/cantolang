@@ -12,12 +12,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import canto.runtime.Log;
 import canto.util.EmptyList;
 
 /**
  * 
  */
 public class Block extends Construction {
+    private static final Log LOG = Log.getLogger(Block.class);
 
     private List<Construction> constructions;
     private Block catchBlock = null;
@@ -38,28 +40,8 @@ public class Block extends Construction {
         return constructions;
     }
 
-    public Object generateData(Context context, Definition def) {
-        Value val = null;
-        StringBuffer sb = null;
-        Iterator<Construction> it = constructions.iterator();
-        while (it.hasNext()) {
-            Construction construction = it.next();
-            Value v = construction.construct(context);
-            if (v != null) {
-                if (val == null) {
-                    val = v;
-                } else {
-                    if (sb == null) {
-                        sb = new StringBuffer(val.toString());
-                    }
-                    sb.append(v.toString());
-                }
-            }
-        }
-        if (sb != null) {
-            val = new Value(sb.toString());
-        }
-        return val;
+    public Object generateData(Context context, Definition def) throws Redirection {
+        return context.construct(constructions);
     }
 
     @Override

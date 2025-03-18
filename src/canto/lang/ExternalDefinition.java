@@ -12,6 +12,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 import canto.runtime.*;
+import canto.util.EmptyList;
 
 /**
 * Facade class to make a Java object available as a Canto definition.
@@ -58,8 +59,8 @@ public class ExternalDefinition extends ComplexDefinition {
                 name = name + '.' + namePart.getName();
             }
 
-            Class<?> entry = classes.get(name);
-            if (entry == null) {
+            Class<?> scope = classes.get(name);
+            if (scope == null) {
                 try {
                     externalClass = Class.forName(name);
                     classes.put(name, externalClass);
@@ -68,8 +69,8 @@ public class ExternalDefinition extends ComplexDefinition {
                 } catch (ClassNotFoundException cnfe) {
                     classes.put(name, Bogus.class);
                 }
-            } else if (entry != Unusable.class && entry != Bogus.class) {
-                externalClass = entry;
+            } else if (scope != Unusable.class && scope != Bogus.class) {
+                externalClass = scope;
             }
 
             n++;
@@ -386,7 +387,7 @@ public class ExternalDefinition extends ComplexDefinition {
             DefinitionInstance defInstance = (DefinitionInstance) getChild(node, node.getArguments(), node.getIndexes(), null, context, false, true, null, null);
             return (ExternalDefinition) (defInstance == null ? null : defInstance.def);
         } catch (Redirection r) {
-            log("Unable to find definition for " + node.getName() + " in external definition " + getFullName());
+            LOG.error("Unable to find definition for " + node.getName() + " in external definition " + getFullName());
             return null;
         }
     }
@@ -424,17 +425,17 @@ public class ExternalDefinition extends ComplexDefinition {
                     try {
                         if (instance.isParameterKind()) {
                             Definition paramOwner = instance.getOwner();
-                            Context.Entry entry = context.peek();
-                            while (!entry.covers(paramOwner)) {
-                                Context.Entry link = entry.getPrevious();
-                                if (link == null || link.equals(context.getRootEntry())) {
+                            Scope scope = context.peek();
+                            while (!scope.covers(paramOwner)) {
+                                Scope previous = scope.getPrevious();
+                                if (previous == null || previous.equals(context.getRootScope())) {
                                     while (numUnpushes-- > 0) {
                                         context.repush();
                                     }
                                     break;
                                 }
                                 numUnpushes++;
-                                entry = link;
+                                scope = previous;
                                 context.unpush();
                             }
                         }
@@ -513,11 +514,11 @@ public class ExternalDefinition extends ComplexDefinition {
                 }
                 
             } else {    
-//               vlog("No method " + name + " in class " + clazz.getName());
+//               LOG.debug("No method " + name + " in class " + clazz.getName());
             }
 
         } catch (Exception e) {
-            vlog("Exception finding method " + name + " in class " + clazz.getName() + ": " + e);
+            LOG.debug("Exception finding method " + name + " in class " + clazz.getName() + ": " + e);
             method = null;
         }
         if (method != null) {
@@ -545,9 +546,9 @@ public class ExternalDefinition extends ComplexDefinition {
             if (generate) {
                 Object data = null;
                 CantoNode contents = mdef.getContents();
-                if (contents instanceof Chunk) {
+                if (contents instanceof Construction) {
                     try {
-                        data = ((Chunk) contents).getData(context);
+                        data = ((Construction) contents).getData(context);
                         if (data instanceof Value) {
                             data = ((Value) data).getValue();
                         } else if (data instanceof CantoNode) {
@@ -570,7 +571,7 @@ public class ExternalDefinition extends ComplexDefinition {
                 field = clazz.getField(name);
 
             } catch (NoSuchFieldException nsme) {
-//               vlog("No field " + name + " in class " + clazz.getName());
+//               LOG.debug("No field " + name + " in class " + clazz.getName());
                 
                 // no explicit method or field by the specified name.  Look
                 // for a special collection name:
@@ -601,7 +602,7 @@ public class ExternalDefinition extends ComplexDefinition {
                 }
 
             } catch (Exception e) {
-                vlog("Exception finding field " + name + " in class " + clazz.getName() + ": " + e);
+                LOG.debug("Exception finding field " + name + " in class " + clazz.getName() + ": " + e);
                 field = null;
             }
             if (field != null) {
@@ -1015,7 +1016,7 @@ class PartialDefinition extends ExternalDefinition {
         for (int i = 0; i < nameParts.length; i++) {
             ExternalDefinition childDef = externalDef.getExternalChildDefinition(nameParts[i], context);
             if (childDef == null) {
-                vlog("No " + nameParts[i].getName() + " belonging to external definition " + externalDef.getFullName());
+                LOG.debug("No " + nameParts[i].getName() + " belonging to external definition " + externalDef.getFullName());
                 return null;
             }
             externalDef = childDef;
@@ -1025,7 +1026,8 @@ class PartialDefinition extends ExternalDefinition {
 }
 
 
-class ExternalConstruction extends AbstractConstruction implements ValueGenerator {
+class ExternalConstruction extends Construction implements ValueGenerator {
+    private static final Log LOG = Log.getLogger(ExternalConstruction.class);
 
     private ExternalDefinition externalDef;
 
@@ -1070,7 +1072,7 @@ class ExternalConstruction extends AbstractConstruction implements ValueGenerato
             }
 
             String name = def.getFullName();
-            vlog("Initializing external object " + name);
+            LOG.debug("Initializing external object " + name);
 
             ArgumentList args = def.getArguments();
             if (instanceArgs != null && instanceArgs.isDynamic()) {
@@ -1101,7 +1103,7 @@ class ExternalConstruction extends AbstractConstruction implements ValueGenerato
                 context.unpush();
                 unpushed = true;
             } else {
-                vlog("***> external def not at top of stack in initExternalObject");
+                LOG.debug("***> external def not at top of stack in initExternalObject");
             }
     
             for (int i = 0; i < numArgs; i++) {
@@ -1111,7 +1113,7 @@ class ExternalConstruction extends AbstractConstruction implements ValueGenerato
                 }
                 if (arg instanceof Instantiation && context.size() > 1) {
                     Definition argOwner = ((Instantiation) arg).getOwner();
-                    for (Context.Entry entry = context.peek(); !(entry.covers(argOwner)); entry = context.peek()) {
+                    for (Scope scope = context.peek(); !(scope.covers(argOwner)); scope = context.peek()) {
                         numUnpushes++;
                         context.unpush();
                         if (context.size() == 1) {
@@ -1157,15 +1159,15 @@ class ExternalConstruction extends AbstractConstruction implements ValueGenerato
             } catch (NoSuchMethodException nsme) {
                 constructor = ExternalDefinition.getClosestConstructor(instanceClass, params, paramDefs);
                 if (constructor == null) {
-                    vlog("No constructor found for class " + instanceClass.getName());
+                    LOG.debug("No constructor found for class " + instanceClass.getName());
                 }
             }
 
         } catch (Exception e) {
             String message = "Exception initializing external object " + def.getName() + ": " + e.toString();
-            log(message);
+            LOG.error(message);
             String contextMsg = "Context:\n" + context.toString();
-            log(contextMsg);
+            LOG.error(contextMsg);
             e.printStackTrace();
             throw new Redirection(Redirection.STANDARD_ERROR, message);
         } finally {
@@ -1237,7 +1239,7 @@ class ExternalConstruction extends AbstractConstruction implements ValueGenerato
         }
 
         String name = def.getFullName();
-        vlog("Generating data for external object " + name);
+        LOG.debug("Generating data for external object " + name);
 
 //       context.unpush();
         try {
@@ -1397,6 +1399,7 @@ class MethodDefinition extends ExternalDefinition {
 
 
 class MethodConstruction extends ExternalConstruction {
+    private static final Log LOG = Log.getLogger(MethodConstruction.class);
 
     // context-specific fields
     private Method method = null;
@@ -1440,7 +1443,7 @@ class MethodConstruction extends ExternalConstruction {
                     Definition argOwner = ((CantoNode) arg).getOwner();
                     int numUnpushes = 0;
                     try {
-                        for (Context.Entry entry = context.peek(); context.size() > 1 && !(entry.covers(argOwner)); entry = context.peek()) {
+                        for (Scope scope = context.peek(); context.size() > 1 && !(scope.covers(argOwner)); scope = context.peek()) {
                             numUnpushes++;
                             context.unpush();
                         }
@@ -1496,8 +1499,8 @@ class MethodConstruction extends ExternalConstruction {
             argObjects[i] = instantiateElements(argObjects[i], context);
 
             // cache instantiated arrays
-            if (args.get(i) instanceof AbstractConstruction && CollectionDefinition.isCollectionObject(argObjects[i])) {
-                AbstractConstruction argInstance = (AbstractConstruction) args.get(i);
+            if (args.get(i) instanceof Construction && CollectionDefinition.isCollectionObject(argObjects[i])) {
+                Construction argInstance = (Construction) args.get(i);
                 String name = argInstance.getDefinitionName();
                 ArgumentList argArgs = argInstance.getArguments();
                 Definition argDef = context.getDefinition(name, null, argArgs);

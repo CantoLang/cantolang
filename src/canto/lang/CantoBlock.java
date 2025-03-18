@@ -12,8 +12,6 @@ import java.util.List;
 
 /**
  * A CantoBlock is a container whose children are Canto statements.
- *
- * @author Michael St. Hippolyte
  */
 
 public class CantoBlock extends Block {
@@ -48,11 +46,6 @@ public class CantoBlock extends Block {
 //        str = str + "\n=]\n";
 //        return str;
 //    }
-
-    public String getTokenString(String prefix) {
-        String str = prefix + "{=\n" + getChildrenTokenString(prefix + "    ") + prefix + "=}\n";
-        return str;
-    }
 
     public String toString(String prefix) {
         String str = "{=\n" + super.toString(prefix) + prefix + "=}";

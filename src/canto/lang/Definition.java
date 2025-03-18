@@ -14,6 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import canto.runtime.Log;
+import canto.util.EmptyList;
+import canto.util.SingleItemList;
 
 /**
  * 
@@ -74,11 +76,19 @@ abstract public class Definition extends CantoNode implements Name {
     /** The parameters for this definition, if any */
     private List<ParameterList> paramLists = null;
 
+    /** The constructions comprising this definition */
+    private List<Construction> constructions = null;
+
     /** The children of this definition. */
     protected Definition[] childDefs = null;
 
     /** The contents of this definition. */
     protected CantoNode contents = null;
+
+    /** The context, if this definition is a copy initialized for a particular
+     *  context, else null.
+     */
+    protected Context initContext = null;
 
     /** static data cache, unused if this definition is not declared to be static. **/
     private static class StaticData {
@@ -173,6 +183,10 @@ abstract public class Definition extends CantoNode implements Name {
         return DefaultType.TYPE;
     }
 
+    public boolean isAnonymous() {
+        return true;
+    }
+
     /** Anonymous definitions have no supertype; returns null. */
     /** A <code>sub</code> statement in an anonymous definition would
      *  be meaningless.
@@ -238,6 +252,48 @@ abstract public class Definition extends CantoNode implements Name {
      */
     public boolean isSuperType(String name) {
         return (name.equals(""));
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Construction> getConstructions(Context context) {
+        CantoNode contents = getContents();
+        if (contents == null) {
+            if (constructions == null) {
+                constructions = new EmptyList<Construction>();
+            }
+          
+        } else if (constructions == null || contents.isDynamic()) {
+            if (contents instanceof List<?>) {
+                constructions = (List<Construction>) contents;
+            } else if (contents instanceof Block) {
+                constructions = ((Block) contents).getConstructions(context);
+                if (constructions == null) {
+                    constructions = new EmptyList<Construction>();
+                }
+            } else if (contents instanceof Construction) {
+                constructions = new SingleItemList<Construction>((Construction) contents);
+
+            } else if (contents instanceof CollectionDefinition) {
+                CollectionInstance collectionInstance = null;
+                try {
+                    collectionInstance = ((CollectionDefinition) contents).getCollectionInstance(context, null, null);
+                } catch (Redirection r) {
+                    LOG.error(" ******** unable to obtain collection instance for " + (contents == null ? "(anonymous)" : ((CollectionDefinition) contents).getName()) + " ******");
+                }
+                if (collectionInstance != null) {
+                    constructions = new SingleItemList<Construction>((Construction) collectionInstance);
+                } else {
+                    constructions = new EmptyList<Construction>();
+                }
+            } else if (contents instanceof Definition) {
+                constructions = ((Definition) contents).getConstructions(context);
+
+            } else {
+                if (contents != null) LOG.error(" ******** unexpected contents: " + contents.getClass().getName() + " ******");
+                constructions = new EmptyList<Construction>();
+            }
+        }
+        return constructions;
     }
 
     public Block getCatchBlock() {
@@ -334,6 +390,139 @@ abstract public class Definition extends CantoNode implements Name {
             }
         }
         return defs;
+    }
+
+    /** Instantiates a child definition in a specified context and returns the result.  The
+     *  type parameter is only used if the child definition is external, in which case it
+     *  is the Canto supertype of the external object.
+     **/
+    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) throws Redirection {
+        Object data = null;
+        ArgumentList childArgs = childName.getArguments();
+        List<Index> childIndexes = childName.getIndexes();
+
+        // see if the argument definition has a child definition by that name
+        Definition childDef = getChildDefinition(childName, childArgs, childIndexes, args, context, null);
+
+        // if not, then look for alternatives 
+        if (childDef == null) {
+
+            // if not, then look for an aliased external definition
+            if (isAlias()) {
+                childDef = ExternalDefinition.createForName(this, new ComplexName(getAlias(), childName), type, getAccess(), getDurability(), context);
+            }
+
+            // if that didn't work, look for a special definition child
+            if (childDef == null) {
+                if (type != null && type.getName().equals("definition")) {
+                    childDef = getDefinitionChild(childName, context, args);
+
+                } else {
+                    String cName = childName.getName();
+                    if (cName.equals("defs") || cName.equals("descendants_of_type") || cName.equals("full_name")) {
+                        ExternalDefinition externalDef = new ExternalDefinition("canto.lang.AnonymousDefinition", getParent(), getOwner(), type, getAccess(), Durability.DYNAMIC, this, null);
+                        childDef = externalDef.getExternalChildDefinition(childName, context);
+                    }
+                }
+            }
+        }
+        
+        if (childDef != null) {
+            if (childDef instanceof DefParameter) {
+                return context.getParameter(childName, false, Object.class);
+            }
+
+            if (args == null) {
+                Scope scope = context.peek();
+                args = scope.args;
+            }
+            //context.unpush();
+            //int numUnpushes = 1;
+            int numPushes = 0;
+            
+            try {
+                if (childDef instanceof ElementReference) {
+                    childDef = ((ElementReference) childDef).getElementDefinition(context);
+                    if (childDef == null) {
+                        throw new Redirection(Redirection.STANDARD_ERROR, "No definition for element " + childName.toString());
+                    }
+
+                // if the child name has one or more indexes, and the definition is a
+                // collection definition, get the appropriate element in the collection.
+                } else if (childDef instanceof CollectionDefinition && childName.hasIndexes()) {
+                    CollectionDefinition collectionDef = (CollectionDefinition) childDef;
+                    childDef = collectionDef.getElementReference(context, childName.getArguments(), childName.getIndexes());
+                }
+                
+                numPushes = context.pushSupersAndAliases(this, args, childDef);
+                //context.repush();
+                //numUnpushes = 0;
+
+                Durability dur = childDef.getDurability();
+                if (dur == Durability.STATIC || dur == Durability.GLOBAL) {
+                    synchronized (childDef.staticData) {
+                        if (childDef.staticData.data == null) {
+                            childDef.staticData.data = context.constructDef(childDef, childArgs, childIndexes);
+                        }
+                    }
+                    if (dur == Durability.GLOBAL && childArgs != null && childArgs.isDynamic()) {
+                        data = context.constructDef(childDef, childArgs, childIndexes);
+                    } else {
+                        data = childDef.staticData.data;
+                    }
+                } else if (dur != Durability.DYNAMIC) {
+                    data = context.getData(childDef, childDef.getName(), childArgs, childIndexes);
+                    if (data == null) {
+                        data = context.constructDef(childDef, childArgs, childIndexes);
+                    }
+                } else {
+                    data = context.constructDef(childDef, childArgs, childIndexes);
+                }
+
+            } finally {
+                if (numPushes > 0) {
+                    //if (numUnpushes == 0) {
+                    //    context.unpush();
+                    //    numUnpushes = 1;
+                    //}
+                    while (numPushes > 0) {
+                        context.pop();
+                        numPushes--;
+                    }
+                }
+                //if (numUnpushes > 0) {
+                //    context.repush();
+                //}
+            }
+            if (data == null) {
+                data = NullValue.NULL_VALUE;
+            }
+        }
+        return data;
+    }
+
+    public ParameterList getParamsForArgs(ArgumentList args, Context context, boolean validate) {
+        ParameterList params = null;
+        List<ParameterList> paramLists = getParamLists();
+        int numParamLists = (paramLists == null ? 0 : paramLists.size());
+        if (numParamLists > 1 || validate) {
+            params = getMatch(args, context);
+
+        } else if (numParamLists == 1) {
+            params = paramLists.get(0);
+        }
+        return params;
+    }
+
+
+    public Scope getEntryForArgs(ArgumentList args, Context context) throws Redirection {
+        ParameterList params = getParamsForArgs(args, context);
+        // if args is nonnull and params is null or smaller than args, there is no match.
+        if (args != null && args.size() > 0 && (params == null || params.size() < args.size())) {
+            throw new Redirection(Redirection.STANDARD_ERROR, "Attempt to reference " + getFullName() + " with incorrect number of arguments");
+        }
+
+        return context.newScope(getDefinitionFlavor(context, params), this, params, args);
     }
 
     public ParameterList getParamsForArgs(ArgumentList args, Context argContext) {
@@ -522,6 +711,16 @@ abstract public class Definition extends CantoNode implements Name {
         return null;
     }
     
+    /** Construct this definition without arguments in the specified context.
+     */
+    public Object instantiate(Context context) throws Redirection {
+        try {
+            return instantiate(null, null, context);
+        } catch (NullPointerException e) {
+            return null;
+        }
+    }
+
     /** Construct this definition with the specified arguments in the specified context. */
     public Object instantiate(ArgumentList args, List<Index> indexes, Context context) throws Redirection {
         Definition initializedDef = context.initDef(this, args, indexes);
@@ -570,8 +769,12 @@ abstract public class Definition extends CantoNode implements Name {
         return obj;
     }
 
-
-
+    
+    /** Returns an object wrapping this definition with arguments and indexes. */ 
+    public DefinitionInstance getDefInstance(ArgumentList args, List<Index> indexes) {
+        return new DefinitionInstance(this, args, indexes);
+    }
+    
     public String getFullName() {
         if (owner == null) {
             return name.getName();

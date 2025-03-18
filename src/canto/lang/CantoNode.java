@@ -92,6 +92,14 @@ abstract public class CantoNode {
     public CantoNode getParent() {
         return parent;
     }
+    
+    /** Set this node as the owner for a generated node. */
+    public void initNode(CantoNode node) {
+        node.setOwner(getOwner());
+        if (node instanceof Type) {
+            ((Type) node).resolve();
+        }
+    }
 
     /** If true, this node cannot have children. */
     abstract public boolean isPrimitive();

@@ -11,6 +11,7 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.*;
+import canto.util.SingleItemList;
 
 /**
 * An Instantiation is a construction based on a definition.
@@ -227,10 +228,8 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             Iterator<Construction> it = args.iterator();
             while (it.hasNext()) {
                 Construction arg = it.next(); 
-                if (arg instanceof AbstractConstruction) {
-                    if (((AbstractConstruction) arg).hasNext()) {
-                        return true;
-                    }
+                if (arg.hasNext()) {
+                    return true;
                 }
             }
         }
@@ -248,10 +247,8 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             Iterator<Construction> it = args.iterator();
             while (it.hasNext()) {
                 Construction arg = it.next(); 
-                if (arg instanceof AbstractConstruction) {
-                    if (((AbstractConstruction) arg).hasSub()) {
-                        return true;
-                    }
+                if (arg.hasSub()) {
+                    return true;
                 }
             }
         }
@@ -328,7 +325,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         String checkName = name.getName();
         boolean hasDot = (checkName.indexOf('.') > -1);
 
-        vlog("Resolving " + checkName + " in " + ndef.getFullName() + "...");
+        LOG.debug("Resolving " + checkName + " in " + ndef.getFullName() + "...");
         
         // first check for statement parameters, if any
         if (forParamDef != null) {
@@ -338,14 +335,14 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 if (hasDot) {
                     if (checkName.startsWith(forParamName.getName() + '.')) {
                         isParamChild = true;
-                        vlog("   ..." + checkName + " refers to the child of a for statement parameter");
+                        LOG.debug("   ..." + checkName + " refers to the child of a for statement parameter");
                         kind = FOR_PARAMETER_CHILD;
                         return;
                     }
                 } else {
                     if (checkName.equals(forParamName.getName())) {
                         isParam = true;
-                        vlog("   ..." + checkName + " refers to a for statement parameter");
+                        LOG.debug("   ..." + checkName + " refers to a for statement parameter");
                         kind = FOR_PARAMETER;
                         return;
                     }
@@ -357,14 +354,14 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                     if (hasDot) {
                         if (checkName.startsWith(forParamName.getName() + '.')) {
                             isParamChild = true;
-                            vlog("   ..." + checkName + " refers to the child of a for statement parameter");
+                            LOG.debug("   ..." + checkName + " refers to the child of a for statement parameter");
                             kind = FOR_PARAMETER_CHILD;
                             return;
                         }
                     } else {
                         if (checkName.equals(forParamName.getName())) {
                             isParam = true;
-                            vlog("   ..." + checkName + " refers to a for statement parameter");
+                            LOG.debug("   ..." + checkName + " refers to a for statement parameter");
                             kind = FOR_PARAMETER;
                             return;
                         }
@@ -390,11 +387,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                             if (checkName.startsWith(param.getName() + '.')) {
                                 isParamChild = true;
                                 if (nd.equals(ndef)) {
-                                    vlog("   ..." + checkName + " refers to the child of a parameter");
+                                    LOG.debug("   ..." + checkName + " refers to the child of a parameter");
                                     kind = PARAMETER_CHILD;
                                     return;
                                 } else {
-                                    vlog("   ..." + checkName + " refers to the child of a parameter in the container");
+                                    LOG.debug("   ..." + checkName + " refers to the child of a parameter in the container");
                                     kind = CONTAINER_PARAMETER_CHILD;
                                     break;
                                 }
@@ -413,11 +410,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                             if (checkName.equals(param.getName())) {
                                 isParam = true;
                                 if (nd.equals(ndef)) {
-                                    vlog("   ..." + checkName + " refers to a parameter");
+                                    LOG.debug("   ..." + checkName + " refers to a parameter");
                                     kind = PARAMETER;
                                     return;
                                 } else {
-                                    vlog("   ..." + checkName + " refers to a parameter in the container");
+                                    LOG.debug("   ..." + checkName + " refers to a parameter in the container");
                                     kind = CONTAINER_PARAMETER;
                                     break;
                                 }
@@ -460,25 +457,25 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 if (def.isFormalParam()) {
                     if (hasDot) {
                         isParamChild = true;
-                        vlog("   ..." + checkName + " refers to the child of a parameter in the container");
+                        LOG.debug("   ..." + checkName + " refers to the child of a parameter in the container");
                         kind = CONTAINER_PARAMETER_CHILD;
                     } else {
                         isParam = true;
-                        vlog("   ..." + checkName + " refers to a parameter in the container");
+                        LOG.debug("   ..." + checkName + " refers to a parameter in the container");
                         kind = CONTAINER_PARAMETER;
                     }
 
                 } else if (def.getAccess() == Definition.LOCAL_ACCESS) {
                     localDef = def;
-                    vlog("   ..." + checkName + " refers to local definition " + def.getFullName());
+                    LOG.debug("   ..." + checkName + " refers to local definition " + def.getFullName());
                     kind = LOCAL;
                 } else if (checkName.equals(def.getFullName())) {
                     explicitDef = def;
-                    vlog("   ..." + checkName + " is an explicit definition reference");
+                    LOG.debug("   ..." + checkName + " is an explicit definition reference");
                     kind = EXPLICITLY_RESOLVED;
                 } else {
                     classDef = def;
-                    vlog("   ..." + checkName + " refers to class definition " + def.getFullName());
+                    LOG.debug("   ..." + checkName + " refers to class definition " + def.getFullName());
                     kind = CLASS_RESOLVED;
                 }
                 if (def.isExternal()) {
@@ -487,7 +484,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             } else {
                 classDef = container.getClassDefinition(name);
                 if (classDef != null) {
-                    vlog("   ..." + checkName + " refers to class definition " + classDef.getFullName());
+                    LOG.debug("   ..." + checkName + " refers to class definition " + classDef.getFullName());
                     kind = CLASS_RESOLVED;
                 } else {
                     while (def == null) {
@@ -510,7 +507,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                     }
                     if (def != null) {
                         kind = DYNAMICALLY_RESOLVED;
-                        vlog("   ..." + checkName + " requires a context to resolve");
+                        LOG.debug("   ..." + checkName + " requires a context to resolve");
                     } 
                 }
             }
@@ -521,7 +518,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             def = defTable.getDefinition((NamedDefinition) owner, getReferenceName());
             if (def != null) {
                 kind = EXPLICITLY_RESOLVED;
-                vlog("   ..." + checkName + " is an explicit reference");
+                LOG.debug("   ..." + checkName + " is an explicit reference");
             }
         }
     }
@@ -858,7 +855,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
      *  the generated data, depending on the value of the passed flag.  If the flag is
      *  false, the return value will be an instance of Definition, or null if no definition
      *  is found.  If the flag is true, the type of the return value will depend on the
-     *  definition; if no definition is found, AbstractNode.UNDEFINED, which is a static
+     *  definition; if no definition is found, CantoNode.UNDEFINED, which is a static
      *  instance of Object, is returned.
      */
     private Object lookup(NameNode name, Context context, boolean generate, Definition resolver, boolean localScope) throws Redirection {
@@ -1005,7 +1002,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 //                                if (holder.data != null && holder.data != UNDEFINED) {
 //                                    data = holder.data;
 //                                }
-//                                vlog("...found cached definition for part of name (" + nm + ") rest of name: " + restOfName.getName());
+//                                LOG.debug("...found cached definition for part of name (" + nm + ") rest of name: " + restOfName.getName());
 //
 //                                // this appears to be redundant
 ////                                ParameterList nominalParams = holder.nominalDef.getParamsForArgs(holder.nominalArgs, context);
@@ -1040,7 +1037,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             // 9. explicit
             // 10. external
 
-            //vlog("looking up definition for " + name);
+            //LOG.debug("looking up definition for " + name);
 
 //            if (args == null && indexes == null) {
 //                nm = name.getName();
@@ -1049,9 +1046,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 //                    def = holder.def;
 //                    args = holder.args;
 //                    if (restOfName != null) {
-//                        vlog("...found cached definition for part of name (" + nm + ") rest of name: " + restOfName.getName());
+//                        LOG.debug("...found cached definition for part of name (" + nm + ") rest of name: " + restOfName.getName());
 //                    } else {
-//                        vlog("...found cached definition for name: " + nm);
+//                        LOG.debug("...found cached definition for name: " + nm);
 //                    }
 //                }
 //            }
@@ -1214,20 +1211,20 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                     }
                 }
             } else {
-                Iterator<Context.Entry> it = context.iterator();
-                Context.Entry entry = it.next();  // we already checked the top of the stack, so skip it
-                Definition lastDef = entry.def;
+                Iterator<Context.Scope> it = context.iterator();
+                Context.Scope scope = it.next();  // we already checked the top of the stack, so skip it
+                Definition lastDef = scope.def;
     
                 while (it.hasNext()) {
-                    entry = it.next();
-                    if (entry.def.equals(lastDef)) {
+                    scope = it.next();
+                    if (scope.def.equals(lastDef)) {
                         continue;
                     } else {
-                        lastDef = entry.def;
+                        lastDef = scope.def;
                     }
     
-                    if (entry.def instanceof ComplexDefinition) {
-                        ComplexDefinition cdef = (ComplexDefinition) entry.def;
+                    if (scope.def instanceof ComplexDefinition) {
+                        ComplexDefinition cdef = (ComplexDefinition) scope.def;
                         if (owner.equals(cdef) || owner.isSubDefinition(cdef)) {
                             if (!cdef.equals(resolver) && cdef.getChildDefinition(name, context) != null) {
                                 def = cdef.getChildDefinition(name, args, indexes, null, context, resolver);
@@ -1265,14 +1262,14 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             int limit = context.size() - 1;
             try {
                 while (numUnpushes < limit && container != null  && !(container instanceof Site)) {
-                    Iterator<Context.Entry> it = context.iterator();
+                    Iterator<Context.Scope> it = context.iterator();
                     while (it.hasNext()) {
-                        Context.Entry entry = (Context.Entry) it.next();
-                        if (!(entry.def instanceof NamedDefinition)) {
+                        Context.Scope scope = (Context.Scope) it.next();
+                        if (!(scope.def instanceof NamedDefinition)) {
                             continue;
                         }
                         
-                        NamedDefinition ndef = (NamedDefinition) entry.def;
+                        NamedDefinition ndef = (NamedDefinition) scope.def;
                         
                         if (ndef.equals(owner) || owner.isSubDefinition(ndef)) {
                             continue;    
@@ -1282,7 +1279,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                 Instantiation aliasInstance = ndef.getAliasInstance();
                                 ndef = (NamedDefinition) aliasInstance.getDefinition(context);
                             } else if (ndef.isIdentity()) {
-                                Holder holder = entry.getDefHolder(ndef.getName(), ndef.getFullName(), null, false);
+                                Holder holder = scope.getDefHolder(ndef.getName(), ndef.getFullName(), null, false);
                                 if (holder != null && holder.def != null) {
                                     ndef = (NamedDefinition) holder.def;
                                 }
@@ -1320,7 +1317,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                     }
                 }
                 if (def == null) {
-                    Site rootSite = (Site) context.getRootEntry().def;
+                    Site rootSite = (Site) context.getRootScope().def;
                     if (!site.equals(rootSite) && !container.equals(rootSite)) {
                         def = rootSite.getChildDefinition(name, context);
                     }
@@ -1339,11 +1336,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             if (def == null) {
                 container = ComplexDefinition.getComplexOwner(owner.getOwner());
                 while (def == null && container != null && !(container instanceof Site)) {
-                    Iterator<Context.Entry> it = context.iterator();
+                    Iterator<Context.Scope> it = context.iterator();
                     while (it.hasNext()) {
-                        Context.Entry entry = it.next();
-                        if (entry.def instanceof ComplexDefinition) {
-                            ComplexDefinition cdef = (ComplexDefinition) entry.def;
+                        Context.Scope scope = it.next();
+                        if (scope.def instanceof ComplexDefinition) {
+                            ComplexDefinition cdef = (ComplexDefinition) scope.def;
                             if (container.equals(cdef) || container.isSubDefinition(cdef)) {
                                 container = cdef;
                                 break;
@@ -1372,11 +1369,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                         }
                         container = ComplexDefinition.getComplexOwner(superdef.getOwner());
                         while (def == null && container != null) {
-                            Iterator<Context.Entry> it = context.iterator();
+                            Iterator<Context.Scope> it = context.iterator();
                             while (it.hasNext()) {
-                                Context.Entry entry = it.next();
-                                if (entry.def instanceof ComplexDefinition) {
-                                    ComplexDefinition cdef = (ComplexDefinition) entry.def;
+                                Context.Scope scope = it.next();
+                                if (scope.def instanceof ComplexDefinition) {
+                                    ComplexDefinition cdef = (ComplexDefinition) scope.def;
                                     if (container.equals(cdef) || container.isSubDefinition(cdef)) {
                                         container = cdef;
                                         break;
@@ -1486,14 +1483,14 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             }
 
         //} else if (cachedDef != null && (context == null ? (contextMarker == null) : context.equals(contextMarker))) {
-        //    //vlog("using cached definition for " + getDefinitionName());
+        //    //LOG.debug("using cached definition for " + getDefinitionName());
         //    def = cachedDef;
 
         } else {
 
             NameNode name = (NameNode) reference;
             if (name.isComplex()) {
-                vlog("!!! getInstanceDef but name is complex!!! (" + name.getName() + ")");
+                LOG.debug("!!! getInstanceDef but name is complex!!! (" + name.getName() + ")");
             }
 
             if (context != null) {
@@ -1546,13 +1543,13 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                         }
 
                     } else {
-                        Iterator<Context.Entry> it = context.iterator();
+                        Iterator<Scope> it = context.iterator();
                         Definition lastDef = null;
                         boolean isSpecial = name.isSpecial();
                         
                         while (it.hasNext()) {
-                            Context.Entry entry = it.next();
-                            Definition defcon = entry.def;
+                            Scope scope = it.next();
+                            Definition defcon = scope.def;
                             if (defcon.equals(lastDef)) {
                                 continue;
                             } else {
@@ -1564,7 +1561,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                             } else if (defcon.isAlias()) {
                                 continue;
                             } else if (!isSpecial && defcon.getChildDefinition(name, context) == null) {
-                                //vlog("getInstanceDef: context entry " + defcon.getFullName() + " doesn't have child " + name.getName());
+                                //LOG.debug("getInstanceDef: context scope " + defcon.getFullName() + " doesn't have child " + name.getName());
                                 continue;
                             }
  
@@ -1578,13 +1575,13 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                     // if not a parameter or in the class hierarchy or context
                     // stack, try the container hierarchy
                     if (def == null) {
-                        Iterator<Context.Entry> it = context.iterator();
+                        Iterator<Scope> it = context.iterator();
                         Definition lastDef = null;
                         boolean isSpecial = name.getFirstPart().isSpecial();
 
                         while (it.hasNext()) {
-                            Context.Entry entry = it.next();
-                            Definition defcon = entry.def;
+                            Scope scope = it.next();
+                            Definition defcon = scope.def;
                             if (defcon.equals(lastDef)) {
                                 continue;
                             } else {
@@ -1596,7 +1593,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                 if (owner.equals(resolver)) {
                                     continue;
                                 } else if (!isSpecial && owner.getChildDefinition(name, context) == null) {
-                                    //vlog("getInstanceDef: context entry owner " + owner.getFullName() + " doesn't have child " + name.getName());
+                                    //LOG.debug("getInstanceDef: context scope owner " + owner.getFullName() + " doesn't have child " + name.getName());
                                     continue;
                                 }
                                 def = owner.getChildDefinition(name, args, indexes, null, context, resolver);
@@ -1676,7 +1673,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 def = owner.getSuperDefinition(context);
 
             } else if (name == Name.SITE || name == Name.CORE) {
-                def = context.getRootEntry().def;
+                def = context.getRootScope().def;
                 while (def != null) {
                     if (def instanceof Site && name == Name.SITE) {
                         break;
@@ -1687,7 +1684,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 }
 
             } else if (name == Name.HERE) {
-                Definition siteDef = context.getRootEntry().def;
+                Definition siteDef = context.getRootScope().def;
                 while (siteDef != null) {
                     if (siteDef instanceof Site) {
                         break;
@@ -1758,10 +1755,10 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return data;
     }
         
-    public Object generateData(Context context, Definition definition) throws Redirection {
+    public Object generateData(Context context, Definition definition) {
         
         if (context == null) {
-            throw new Redirection(Redirection.STANDARD_ERROR, "Instantiation requires a context; none provided.");
+            throw new NullPointerException("Instantiation requires a context; none provided.");
         }
 
         Object data = null;
@@ -1769,13 +1766,13 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             // value generators are inherently dynamic
             setDynStat(true, false);
             data = ((ValueGenerator) reference).getData(context);
-            vlog("  * Instantiating a value using ValueGenerator " + reference.getClass().getName()); // + ", yielding " + (data == null ? "null" : "value " + ((Value) data).getString()));
+            LOG.debug("  * Instantiating a value using ValueGenerator " + reference.getClass().getName()); // + ", yielding " + (data == null ? "null" : "value " + ((Value) data).getString()));
 
         } else if (reference instanceof Value) {
             // values are inherently static
             setDynStat(false, true);
             data = ((Value) reference).getValue();
-            vlog("  * Instantiating value " + ((Value) reference).getString() + " directly");
+            LOG.debug("  * Instantiating value " + ((Value) reference).getString() + " directly");
 
         } else if (reference instanceof Definition) {
             data = instantiate(context, (Definition) reference);
@@ -1880,7 +1877,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                ArgumentList args = instance.getArguments();
                                ParameterList params = def.getParamsForArgs(args, context);
                                if (params == null && args != null) {
-                                   vlog("arguments in " + name + " do not match parameters in " + def.getFullName());
+                                   LOG.debug("arguments in " + name + " do not match parameters in " + def.getFullName());
                                }
                                context.push(def, params, args, true);
                                numPushes++;
@@ -2009,7 +2006,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 //           Definition definition = (Definition) reference;
 //           String name = definition.getName();
 //           if (name == null || name.equals(Name.ANONYMOUS)) {
-//               String defstr = ((AbstractNode) definition).toString(prefix);
+//               String defstr = ((CantoNode) definition).toString(prefix);
 //               if (defstr.endsWith("\n")) {
 //                   defstr = defstr.substring(0, defstr.length() - 1);
 //               }

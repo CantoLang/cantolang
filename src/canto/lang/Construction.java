@@ -47,7 +47,7 @@ public abstract class Construction extends CantoNode {
         setChildren(children);
     }
 
-    abstract public Object generateData(Context context, Definition def);
+    abstract public Object generateData(Context context, Definition def) throws Redirection;
     
 
     // possible values returned by getCacheability
@@ -452,8 +452,6 @@ public abstract class Construction extends CantoNode {
                             data = context.getData(def, name, getArguments(), getIndexes());
                             if (data == null) {
                                 //cachevlog(" - - - no data in cache for " + name + "; must instantiate - - - ");
-                            } else if (debugger != null) {
-                                debugger.retrievedFromKeep(def.getFullName(), context, data);
                             }
                         }
                     }
@@ -462,11 +460,11 @@ public abstract class Construction extends CantoNode {
                 if (data == null) {
                     if (Name.THIS.equals(name)) {
                         Definition owner = getOwner();
-                        Context.Entry entry = owner.getEntryInContext(context);
-                        if (entry == null || (args != null && args.size() > 0) || (indexes != null && indexes.size() > 0)) {
+                        Scope scope = owner.getScopeInContext(context);
+                        if (scope == null || (args != null && args.size() > 0) || (indexes != null && indexes.size() > 0)) {
                             return new CantoObjectWrapper(owner, args, indexes, context);
                         } else {
-                            return new CantoObjectWrapper(entry.def, entry.args, null, context);
+                            return new CantoObjectWrapper(scope.def, scope.args, null, context);
                         }
                     } else if (def != null && Name.THIS.equals(def.getName()) && def instanceof AliasedDefinition) {
                         if (nameNode != null) {
@@ -478,7 +476,7 @@ public abstract class Construction extends CantoNode {
                         }
                     }
                     
-                    data = generateData(context, def, debugger);
+                    data = generateData(context, def);
                     if ((cacheability & CACHE_STORABLE) == CACHE_STORABLE) {
                         if (data instanceof Definition) {
                             def = (Definition) data;

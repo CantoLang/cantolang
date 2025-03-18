@@ -23,7 +23,7 @@ public class CantoObjectWrapper {
     public static ArrayList<Context> contextList = new ArrayList<Context>();
     
     Construction construction;
-    Context context;
+    private Context context;
     Type type;
     Definition def;
 
@@ -34,13 +34,13 @@ public class CantoObjectWrapper {
         this.construction = construction;
         if (construction instanceof ResolvedInstance) {
             ResolvedInstance ri = (ResolvedInstance) construction;
-            context = ri.getResolutionContext();
+            setContext(ri.getResolutionContext());
             def = ri.getDefinition();
             type = ri.getType();
                     
         } else {
-            context = site.getNewContext();
-            type = construction.getType(context, false);
+            setContext(site.getNewContext());
+            type = construction.getType(getContext(), false);
             def = type.getDefinition();
         }
     }
@@ -55,9 +55,9 @@ public class CantoObjectWrapper {
         
         Context resolutionContext = ri.getResolutionContext();
 
-        this.context = (resolutionContext == context ? context.clone(false) : resolutionContext);
+        this.setContext((resolutionContext == context ? context.clone(false) : resolutionContext));
         //this.context.validateSize();
-        contextList.add(this.context);
+        contextList.add(this.getContext());
         
         this.def = def;
         type = def.getType();
@@ -72,7 +72,7 @@ public class CantoObjectWrapper {
     }
     
     public Context getResolutionContext() {
-        return context;
+        return getContext();
     }
     
     public Construction getConstruction() {
@@ -89,11 +89,11 @@ public class CantoObjectWrapper {
     
     public Object getData() throws Redirection {
         //context.validateSize();
-        return construction.getData(context);
+        return construction.getData(getContext());
     }
 
     public String getText() throws Redirection {
-        Object data = construction.getData(context);
+        Object data = construction.getData(getContext());
         if (data instanceof CantoObjectWrapper) {
             return null;
         } else {
@@ -104,7 +104,7 @@ public class CantoObjectWrapper {
     public Object getChildData(NameNode name, Type type, ArgumentList args) {
         //context.validateSize();
         try {
-            return def.getChildData(name, type, context, args);
+            return def.getChildData(name, type, getContext(), args);
         } catch (Redirection r) {
             return null;
         }
@@ -117,9 +117,9 @@ public class CantoObjectWrapper {
         int n = name.numParts();
         try {
             if (n == 1) {
-                return parentDef.getChildData(name, null, context, args);
+                return parentDef.getChildData(name, null, getContext(), args);
             } else {
-                return parentDef.getChild(name, name.getArguments(), name.getIndexes(), args, context, true, true, this, null);
+                return parentDef.getChild(name, name.getArguments(), name.getIndexes(), args, getContext(), true, true, this, null);
             }
 
         } catch (Redirection r) {
@@ -129,7 +129,7 @@ public class CantoObjectWrapper {
 
     public boolean getChildBoolean(String name) {
         try {
-            return PrimitiveValue.getBooleanFor(def.getChildData(new NameNode(name), null, context, getArguments()));
+            return PrimitiveValue.getBooleanFor(def.getChildData(new NameNode(name), null, getContext(), getArguments()));
         } catch (Redirection r) {
             return false;
         }
@@ -137,7 +137,7 @@ public class CantoObjectWrapper {
 
     public String getChildText(String name) {
         try {
-            return PrimitiveValue.getStringFor(def.getChildData(new NameNode(name), null, context, getArguments()));
+            return PrimitiveValue.getStringFor(def.getChildData(new NameNode(name), null, getContext(), getArguments()));
         } catch (Redirection r) {
             return null;
         }
@@ -145,7 +145,7 @@ public class CantoObjectWrapper {
 
     public int getChildInt(String name) {
         try {
-            return PrimitiveValue.getIntFor(def.getChildData(new NameNode(name), null, context, getArguments()));
+            return PrimitiveValue.getIntFor(def.getChildData(new NameNode(name), null, getContext(), getArguments()));
         } catch (Redirection r) {
             throw new NumberFormatException("unable to get int for " + name);
         }
@@ -179,7 +179,15 @@ public class CantoObjectWrapper {
     }
 
     public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, boolean generate, boolean trySuper, Object parentObject, Definition resolver) throws Redirection {
-        return def.getChild(node, args, indexes, parentArgs, context, generate, trySuper, null, resolver);
+        return def.getChild(node, args, indexes, parentArgs, getContext(), generate, trySuper, null, resolver);
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 }
 

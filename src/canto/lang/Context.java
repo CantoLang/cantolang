@@ -8,6 +8,7 @@
 
 package canto.lang;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import canto.runtime.CantoObjectWrapper;
@@ -37,6 +38,8 @@ public class Context {
         maxSize = max;
     }
 
+    private final static int MAX_POINTER_CHAIN_LENGTH = 10;
+    
     private static int instanceCount = 0;
     public static int getNumContextsCreated() {
         return instanceCount;
@@ -145,7 +148,10 @@ public class Context {
         numClonedContexts++;
         return context;
     }
-  
+
+    public int size() {
+        return size;
+    }
     
     // -------------------------------------------
     // push, pop, peek, etc.
@@ -360,6 +366,16 @@ public class Context {
         }
     }
 
+    public void popParam() {
+        Scope scope = topScope;
+        int n = scope.params.size();
+        if (n >  0) {
+            scope.params.remove(n - 1);
+            // this scope may have started with fewer args than params
+            scope.args.remove(scope.args.size() - 1);
+        }
+    }
+
     public synchronized Scope unpush() {
         if (size <= 1) {
             throw new IndexOutOfBoundsException("Attempt to unpush root scope in context");
@@ -529,6 +545,14 @@ public class Context {
         }
     }
 
+    /** Checks to see if a name corresponds to a parameter, and if so returns
+     *  the definition associated with it (i.e., the argument passed as the
+     *  parameter's value).
+     */
+    public Definition getParameterDefinition(NameNode name, boolean inContainer) throws Redirection {
+        return (Definition) getParameter(name, inContainer, Definition.class);
+    }
+
     public Object getParameter(NameNode name, boolean inContainer, Class<?> returnClass) throws Redirection {
         if (topScope == null) {
             return null;
@@ -675,7 +699,7 @@ public class Context {
 
                 if (arg instanceof PrimitiveValue && CantoObjectWrapper.class.equals(((PrimitiveValue) arg).getValueClass())) {
                     CantoObjectWrapper wrapper = (CantoObjectWrapper) ((Value) arg).getValue();
-                    Context argContext = wrapper.context;
+                    Context argContext = wrapper.getContext();
                     argDef = new BoundDefinition(argDef, argContext);
                 }
             }
@@ -1166,8 +1190,8 @@ public class Context {
                     } else {
                         if (element instanceof Value) {
                             data = ((Value) element).getValue();
-                        } else if (element instanceof Chunk) {
-                            data = ((Chunk) element).getData(this);
+                        } else if (element instanceof Construction) {
+                            data = ((Construction) element).getData(this);
                         } else if (element instanceof ValueGenerator) {
                             data = ((ValueGenerator) element).getData(this);
                         }  else {
@@ -1233,15 +1257,15 @@ public class Context {
                         } else if (arg instanceof Expression) {
                             data = ((ValueGenerator) arg).getData(this);
                 
-                        } else if (arg instanceof Chunk) { 
-                            argDef = param.getDefinitionFor(this, (Chunk) arg);
+                        } else if (arg instanceof Construction) { 
+                            argDef = param.getDefinitionFor(this, (Construction) arg);
                             // there must be a better way to avoid this, but for now...
                             if (argDef == null && numUnpushes > 0) {
                                 for (int i = 0; i < numUnpushes; i++) {
                                     repush();
                                 }
                                 numUnpushes = 0;
-                                argDef = param.getDefinitionFor(this, (Chunk) arg);
+                                argDef = param.getDefinitionFor(this, (Construction) arg);
                             }
                             if (argDef != null && arg instanceof Instantiation) {
                                 Instantiation instance = (Instantiation) arg;
@@ -1428,8 +1452,8 @@ public class Context {
                 data = wrapper.getChildData(childName);
         
             } else {
-                if (arg instanceof Chunk) {
-                    argDef = param.getDefinitionFor(this, (Chunk) arg);
+                if (arg instanceof Construction) {
+                    argDef = param.getDefinitionFor(this, (Construction) arg);
         
                     if (arg instanceof ResolvedInstance) {
                         fallbackContext = ((ResolvedInstance) arg).getResolutionContext();
@@ -1665,6 +1689,596 @@ public class Context {
         }
     }
 
+    /** Push superdefinitions of the passed definition on the stack, from most super to least super with
+     *  the passed definition remaining on top.  This is designed to accommodate instantiation of children
+     *  which reference parameters. 
+     */
+    private int pushSupers(Definition def, Definition superDef) throws Redirection {
+        int numPushes = 0;
+        Definition contextDef = def;
+
+        // remember the current top scope before we do all the pushing
+        Scope oldTop = topScope;
+
+        while (superDef != null) {
+            Type st = def.getSuper(this);
+            //if (superDef != topScope.superdef) {
+                ArgumentList args = st.getArguments(this);
+                ParameterList params = superDef.getParamsForArgs(args, this);
+                Scope scope = newScope(contextDef, superDef, params, args);
+                push(scope);
+                numPushes++;
+            //}
+            def = superDef;
+            superDef = def.getSuperDefinition(this);
+        }
+
+        if (numPushes > 0) {
+            Scope top = topScope;
+            Scope nextLink = oldTop;
+
+            for (int i = 0; i < numPushes - 1; i++) {
+                // now reverse the order of the just pushed entries
+                Scope nextTop = top.previous;
+                top.previous = nextLink;
+                nextLink = top;
+                top = nextTop;
+            }
+    
+            top.previous = nextLink;
+            topScope = top;
+            push(newScope(oldTop, true));
+            numPushes++;
+            //validateSize();
+        }
+        // get the top scope after all the pushing (not the same as before)
+        return numPushes;
+    }
+    
+    private void unpushSupers(int numPushes) {
+        for (int i = 0; i < numPushes; i++) {
+            pop();
+        }
+        //validateSize();
+    }
+    
+    
+    public int pushSupersAndAliases(Definition def, ArgumentList args, Definition childDef) throws Redirection {
+        //validateSize();
+        // track back through superdefinitions and aliases to push intermediate definitions
+        if (childDef != null  /* && !isSpecialDefinition(childDef) */ ) {
+
+            // find the complex owner of the child
+            Definition childOwner = childDef.getOwner();
+            while (childOwner != null && !(childOwner instanceof ComplexDefinition)) {
+                childOwner = childOwner.getOwner();
+            }
+            if (childOwner == null) {
+                throw new Redirection(Redirection.STANDARD_ERROR, "Improperly initialized definition tree");
+            }
+
+            return pushSupersAndAliases((ComplexDefinition) childOwner, def, args);
+        } else {
+            return 0;
+        }
+    }
+
+    public int pushSupersAndAliases(ComplexDefinition owner, Definition def, ArgumentList args) throws Redirection {
+        Definition instantiatedDef = def;
+        DefinitionInstance defInstance = getContextDefInstance(instantiatedDef, args);
+        def = defInstance.def;
+        if (defInstance.args != null) {
+            args = defInstance.args;
+        }
+        int numPushes = 0;
+        ParameterList params = def.getParamsForArgs(args, this);
+        Definition superdef = null;
+        while (!def.equals(owner)) {
+            push(instantiatedDef, params, args, false);
+            numPushes++;
+
+            Type st = def.getSuper(this);
+            superdef = def.getSuperDefinition(this);
+
+            // this doesn't completely work, because it misses
+            // superclasses of intermediate aliases.  To really
+            // handle this right, we need a flag for getChildDefinition
+            // which prevents it from restoring the context, so
+            // that none of the pushing here would be necessary.
+            // Instead we would use a clone of the context, which
+            // we could just throw away when we're done.
+            if (def.isAliasInContext(this)) {
+                Definition aliasDef = def;
+                int numAliasPushes = 0;
+                ArgumentList aliasArgs = args;
+                ParameterList aliasParams = def.getParamsForArgs(args, this);
+                while (aliasDef != null && aliasDef.isAliasInContext(this)) {
+                    push(instantiatedDef, aliasParams, aliasArgs, false);
+                    numAliasPushes++;
+                    Instantiation aliasInstance = aliasDef.getAliasInstanceInContext(this);
+                    aliasDef = (Definition) aliasInstance.getDefinition(this);  // lookup(this, false);
+                    aliasArgs = aliasInstance.getArguments();  // getUltimateInstance(this).getArguments();
+                    if (aliasDef != null) {
+                        aliasParams = aliasDef.getParamsForArgs(aliasArgs, this);
+                    }
+                }
+                if (aliasDef != null && aliasDef.equals(owner)) {
+                    def = aliasDef;
+                    args = aliasArgs;
+                    params = aliasParams;
+                    numPushes += numAliasPushes;
+                    continue;
+                } else {
+                    while (numAliasPushes-- > 0) {
+                        pop();
+                    }
+                }
+            }
+            if (st == null || superdef == null) {
+                break;
+            }
+            def = superdef;
+            args = st.getArguments(this);
+            params = def.getParamsForArgs(args, this);
+        }
+        if (superdef != null) {
+            push(instantiatedDef, superdef, params, args);
+            numPushes++;
+        }
+  
+        //validateSize();
+        return numPushes;
+    }
+
+    synchronized private Object _instantiateArgChild(NameNode childName, Type paramType, Definition argDef, ArgumentList argArgs, List<Index> argIndexes) throws Redirection {
+        Object data = null;
+        int numPushes = 0;
+        int numUnpushes = 0;
+
+        // initialization dynamic objects such as collections initialized with
+        // comprehensions or external methods
+        if (argDef instanceof DynamicObject) {
+            argDef = (Definition) ((DynamicObject) argDef).initForContext(this, argArgs, argIndexes);
+        }
+
+        try {
+            if (!childName.isSpecial()) {
+                while (argDef.isAliasInContext(this)) {
+                    ParameterList params = argDef.getParamsForArgs(argArgs, this);
+                    push(argDef, params, argArgs, false);
+                    numPushes++;
+                    Instantiation aliasInstance = argDef.getAliasInstanceInContext(this);  //.getUltimateInstance(this);
+                    if (aliasInstance == null) {
+                        pop();
+                        numPushes--;
+                        break;
+                    }
+                    Definition newDef = (Definition) aliasInstance.getDefinition(this);  // lookup(this, false);
+                    if (newDef == null) {
+                        pop();
+                        numPushes--;
+                        break;
+                    } else {
+                        argDef = newDef;
+                    }
+                    argArgs = aliasInstance.getArguments();
+                }
+            }
+            if (argDef != null) {
+                if (argDef instanceof ElementReference) {
+                    unpush();
+                    numUnpushes++;
+                    argDef = ((ElementReference) argDef).getElementDefinition(this);
+                    repush();
+                    numUnpushes--;
+                    if (argDef == null) {
+                        return null;
+                    }
+                }
+
+                // if it's a NamedDefinition, but not an external definition, push the 
+                // definition of the parameter onto the context in order to properly resolve 
+                // any of its children which may be instantiated
+                if (argDef instanceof NamedDefinition) { // && !argDef.isExternal()) {
+    
+                    // unpop the stack since the child's arguments have to be
+                    // resolved where they are, not up at the level of its parent's
+                    // referenced parameter.
+                    push(argDef, argDef.getParamsForArgs(argArgs, this, false), argArgs);
+                    numPushes++;
+                }
+        
+                data = argDef.getChildData(childName, paramType, this, argArgs);
+            }
+             
+        } finally {
+            while (numPushes-- > 0) {
+                pop();
+            }
+            while (numUnpushes-- > 0) {
+                repush();
+            }
+            //validateSize();
+        }
+        return data;
+    }
+
+    
+    /** Looks through the context for the immediate subdefinition of the superdefinition at the
+     *  top of the stack.
+     */
+    private synchronized NamedDefinition getSubdefinition() {
+
+        // if there is no superdef in the top context scope, then there is
+        // no subdefinition
+        if (topScope.superdef == null) {
+            return null;
+        }
+
+        int numUnpushes = 0;
+        Definition superdef = topScope.superdef;
+        try {
+            while (topScope != null) { 
+                Definition subdef = (topScope.superdef != null ? topScope.superdef : topScope.def);
+                NamedDefinition sd = subdef.getSuperDefinition(this);
+                if (sd != null && sd.includes(superdef)) {
+                    return (NamedDefinition) subdef;
+                }
+                if (topScope.previous == null) {
+                    break;
+                }
+                unpush();
+                numUnpushes++;
+            }
+        } finally {
+            while (numUnpushes > 0) {
+                repush();
+                numUnpushes--;
+            }
+        }
+        return null;
+    }
+
+    private Object constructSuper(Definition def, ArgumentList args, Definition instantiatedDef) throws Redirection {
+        return constructSuper(def, args, instantiatedDef, null);
+    }
+
+    
+    private Object constructSuper(Definition def, ArgumentList args, Definition instantiatedDef, LinkedList<Definition> nextList) throws Redirection {
+        Object data = null;
+        boolean pushed = false;
+        boolean hasMore = (nextList != null && nextList.size() > 0);
+
+        if (!hasMore) {
+            ParameterList params = def.getParamsForArgs(args, this, false);
+            push(instantiatedDef, def, params, args);
+            pushed = true;
+        }
+
+        try {
+            List<Construction> constructions = def.getConstructions(this);
+            int numConstructions = (constructions == null ? 0 : constructions.size());
+            NamedDefinition superDef = def.getSuperDefinition(this);
+
+            if (!hasMore && superDef != null && (superDef.hasSub(this) || numConstructions == 0)) {
+                Type st = def.getSuper(this);
+                ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
+                data = constructSuper(superFlavor, superArgs, instantiatedDef);
+
+            } else {
+        
+                if (hasMore) {
+                    Definition nextDef = nextList.removeFirst();
+                    constructions = nextDef.getConstructions(this);
+                    numConstructions = (constructions == null ? 0 : constructions.size());
+                }
+        
+                if (numConstructions == 1) {
+                    Construction object = constructions.get(0);
+                    if (object instanceof SubStatement) {
+                        NamedDefinition sub = (NamedDefinition) peek().def;
+                        data = constructSub(sub, instantiatedDef);
+
+                    } else if (object instanceof SuperStatement) {
+                        Type st = def.getSuper(this);
+                        ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                        NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
+                        data = constructSuper(superFlavor, superArgs, instantiatedDef);
+
+                    } else if (object instanceof NextStatement) {
+                        data = constructSuper(def, args, instantiatedDef, nextList);
+                
+                    } else if (object instanceof RedirectStatement) {
+                        RedirectStatement redir = (RedirectStatement) object;
+                        throw redir.getRedirection(this);
+
+                    } else if (object instanceof Value) {
+                        data = object;
+
+                    } else if (object instanceof ValueGenerator) {
+                        data = ((ValueGenerator) object).getData(this);
+
+                    } else {
+                        data = object.getData(this);
+                    }
+            
+                    if (data instanceof Value) {
+                        data = ((Value) data).getValue();
+                    } else if (data instanceof CantoNode) {
+                        ((CantoNode) instantiatedDef).initNode((CantoNode) data);
+                    }
+
+                } else if (numConstructions > 1) {
+                    Iterator<Construction> it = constructions.iterator();
+                    while (it.hasNext()) {
+                        Construction chunk = it.next();
+                        if (chunk == null) {
+                            continue;
+
+                        } else if (chunk instanceof RedirectStatement) {
+                            RedirectStatement redir = (RedirectStatement) chunk;
+                            throw redir.getRedirection(this);
+
+                        } else {
+                            Object chunkData = null;
+
+                            if (chunk instanceof SubStatement) {
+                                NamedDefinition sub = getSubdefinition();
+                                Object subData = (sub == null ? null : constructSub(sub, instantiatedDef));
+                                if (subData != null) {
+                                    if (subData instanceof Value) {
+                                        chunkData = ((Value) subData).getValue();
+                                    } else if (subData instanceof ValueGenerator) {
+                                        chunkData = ((ValueGenerator) subData).getValue(this);
+                                    } else {
+                                        chunkData = subData;
+                                    }
+                                }
+
+                            } else if (chunk instanceof SuperStatement) {
+                                Type st = def.getSuper(this);
+                                ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                                NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
+                                Object superData = constructSuper(superFlavor, superArgs, instantiatedDef);
+                                if (superData != null) {
+                                    if (superData instanceof Value) {
+                                        chunkData = ((Value) superData).getValue();
+                                    } else if (superData instanceof ValueGenerator) {
+                                        chunkData = ((ValueGenerator) superData).getValue(this);
+                                    } else {
+                                        chunkData = superData;
+                                    }
+                                }
+
+                            } else if (chunk instanceof NextStatement) {
+                                chunkData = constructSuper(def, args, instantiatedDef, nextList);
+                        
+                            } else {
+                                chunkData = chunk.getData(this);
+                                if (chunkData != null && chunkData instanceof Value) {
+                                    chunkData = ((Value) chunkData).getValue();
+                                }
+                            }
+                            if (chunkData != null) {
+                                if (data == null) {
+                                    data = chunkData;
+                                } else {
+                                    data = PrimitiveValue.getStringFor(data) + PrimitiveValue.getStringFor(chunkData);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } finally {
+            if (pushed) {
+                pop();
+            }
+            //validateSize();
+        }
+        return data;
+    }
+
+    public Object constructSub(Definition def, Definition instantiatedDef) throws Redirection {
+        Object data = getLocalData("sub", null, null); // getData(null, "sub", null, null, null);
+        if (data != null) {
+            return data;
+        }
+
+        LinkedList<Definition> nextList = null;
+
+        // call the form of getSuperDefinition that does not take
+        // a context parameter, because we want the multidefinition
+        // if there is one.
+        Definition superDef = def.getSuperDefinition();
+
+        if (superDef != null && superDef.hasNext(this)) {
+              nextList = superDef.getNextList(this);
+        }
+
+        if (nextList != null && nextList.size() > 0) {
+            Definition nextDef = nextList.removeFirst();
+            data = constructSub(nextDef, instantiatedDef, nextList);
+
+        } else {
+            try {
+                unpush();
+                data = constructSub(def, instantiatedDef, null);
+            } finally {
+                repush();
+            }
+        }
+    
+        if (data == null) {
+            data = NullValue.NULL_VALUE;
+        }
+        putData(def, null, null, "sub", data);
+        return data;
+    }
+    
+
+    private Object constructSub(Definition def, Definition instantiatedDef, LinkedList<Definition> nextList) throws Redirection {
+        Object data = null;    
+        List<Construction> constructions = def.getConstructions(this);
+        boolean hasMoreNext = (nextList != null && nextList.size() > 0);
+    
+        if (constructions == null || constructions.size() == 0) {
+            NamedDefinition sub = getSubdefinition();
+            data = (sub == null ? null : constructSub(sub, instantiatedDef));
+        } else {
+            if (def.equals(instantiatedDef)) {
+                data = construct(constructions);
+            } else {
+                int n = constructions.size();
+                if (n == 1) {
+                    Construction object = constructions.get(0);
+                    if (object instanceof NextStatement) {
+                        if (hasMoreNext) {
+                            Definition nextDef = nextList.removeFirst();
+                            data = constructSub(nextDef, instantiatedDef, nextList);
+                        } else {
+                            NamedDefinition sub = getSubdefinition();
+                            if (sub == null) {
+                                data = null;
+                            } else {
+                                try {
+                                    unpush();
+                                    data = constructSub(sub, instantiatedDef, null);
+                                } finally {
+                                    repush();
+                                }
+                            }
+                        }
+                
+                    } else if (object instanceof SubStatement) {
+                        NamedDefinition sub = getSubdefinition();
+                        data = (sub == null ? null : constructSub(sub, instantiatedDef));
+
+                    } else if (object instanceof SuperStatement) {
+                        Definition superDef = def.getSuperDefinition(this);
+                        if (superDef == null) {
+                            throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
+                        } else {
+                            Type st = def.getSuper(this);
+                            ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                            NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
+                            data = constructSuper(superFlavor, superArgs, instantiatedDef);
+                        }
+                
+                    } else if (object instanceof RedirectStatement) {
+                        RedirectStatement redir = (RedirectStatement) object;
+                        throw redir.getRedirection(this);
+
+                    } else if (object instanceof Value) {
+                        data =  object;
+                    } else if (object instanceof ValueGenerator) {
+                        data = ((ValueGenerator) object).getData(this);
+                    } else {
+                        data = object.getData(this);
+                    }
+                    if (data instanceof Value) {
+                        data = ((Value) data).getValue();
+                    } else if (data instanceof CantoNode) {
+                        instantiatedDef.initNode((CantoNode) data);
+                    }
+
+
+                } else if (n > 1) {
+                    Iterator<Construction> it = constructions.iterator();
+                    while (it.hasNext()) {
+                        Construction chunk = it.next();
+                        if (chunk == null) {
+                            continue;
+
+                        } else if (chunk instanceof RedirectStatement) {
+                            RedirectStatement redir = (RedirectStatement) chunk;
+                            throw redir.getRedirection(this);
+
+                        } else {
+                            Object chunkData = null;
+                            if  (chunk instanceof NextStatement) {
+                                Object subData = null;
+                                if (hasMoreNext) {
+                                    Definition nextDef = nextList.removeFirst();
+                                    subData = constructSub(nextDef, instantiatedDef, nextList);
+                                } else { 
+                                    NamedDefinition sub = getSubdefinition();
+                                    if (sub == null) {
+                                        subData = null;
+                                    } else {
+                                        try {
+                                            unpush();
+                                            subData = constructSub(sub, instantiatedDef, null);
+                                        } finally {
+                                            repush();
+                                        }
+                                    }
+                                }
+                                if (subData != null) {
+                                    if (subData instanceof Value) {
+                                        chunkData = ((Value) subData).getValue();
+                                    } else if (subData instanceof ValueGenerator) {
+                                        chunkData = ((ValueGenerator) subData).getValue(this);
+                                    } else {
+                                        chunkData = subData;
+                                    }
+                                }
+                        
+                            } else if (chunk instanceof SubStatement) {
+                                NamedDefinition sub = getSubdefinition();
+                                Object subData = (sub == null ? null : constructSub(sub, instantiatedDef));
+                                if (subData != null) {
+                                    if (subData instanceof Value) {
+                                        chunkData = ((Value) subData).getValue();
+                                    } else if (subData instanceof ValueGenerator) {
+                                        chunkData = ((ValueGenerator) subData).getValue(this);
+                                    } else {
+                                        chunkData = subData;
+                                    }
+                                }
+
+                            } else if (chunk instanceof SuperStatement) {
+                                Definition superDef = def.getSuperDefinition(this);
+                                if (superDef == null) {
+                                    throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
+                                } else {
+                                    Type st = def.getSuper(this);
+                                    ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                                    NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
+                                    Object superData = constructSuper(superFlavor, superArgs, instantiatedDef);
+                                    if (superData != null) {
+                                        if (superData instanceof Value) {
+                                            chunkData = ((Value) superData).getValue();
+                                        } else if (superData instanceof ValueGenerator) {
+                                            chunkData = ((ValueGenerator) superData).getValue(this);
+                                        } else {
+                                            chunkData = superData;
+                                        }
+                                    }
+                                }
+                            } else {
+                                chunkData = chunk.getData(this);
+                                if (chunkData != null && chunkData instanceof Value) {
+                                    chunkData = ((Value) chunkData).getValue();
+                                }
+                            }
+                            if (chunkData != null) {
+                                if (data == null) {
+                                    data = chunkData;
+                                } else {
+                                    data = PrimitiveValue.getStringFor(data) + PrimitiveValue.getStringFor(chunkData);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return data;
+    }
+
+
     public Object construct(Definition definition, ArgumentList args) throws Redirection {
         Object data = null;
 
@@ -1694,7 +2308,7 @@ public class Context {
             // alias and if so look for params there
             if (params == null && args != null && definition.isAliasInContext(this)) {
                 Definition aliasDef = definition;
-                while (params == null && aliasDef.isAlias() && (aliasDef.getDurability() == Definition.DYNAMIC || getData(aliasDef, aliasDef.getName(), args, null) == null)) {
+                while (params == null && aliasDef.isAlias() && (aliasDef.getDurability() == Definition.Durability.DYNAMIC || getData(aliasDef, aliasDef.getName(), args, null) == null)) {
                     Instantiation aliasInstance = aliasDef.getAliasInstanceInContext(this);
                     aliasDef = aliasInstance.getUltimateDefinition(this);
                     if (aliasDef == null) {
@@ -1733,7 +2347,7 @@ public class Context {
                         //}
                     }
                 }
-                AbstractNode contents = definition.getContents();
+                CantoNode contents = definition.getContents();
                 Definition constructedDef = null;
                 if (contents instanceof Construction) {
                     Type constructedType = ((Construction) contents).getType(this, true);
@@ -1774,8 +2388,8 @@ public class Context {
             if (data instanceof Value) {
                 data = ((Value) data).getValue();
 
-            } else if (data instanceof AbstractNode) {
-                instantiatedDef.initNode((AbstractNode) data);
+            } else if (data instanceof CantoNode) {
+                instantiatedDef.initNode((CantoNode) data);
             }
     
             return data;
@@ -1862,11 +2476,7 @@ public class Context {
                             Definition def = peek().def;
                             NamedDefinition superDef = def.getSuperDefinition();
                             if (superDef == null) {
-                                if (errorThreshhold <= Context.IGNORABLE_ERRORS) {
-                                    throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
-                                } else {
-                                    data = null;
-                                }
+                                throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                             } else {
                                 LinkedList<Definition> nextList = null;
                                 if (superDef.hasNext(this)) {
@@ -1876,11 +2486,7 @@ public class Context {
                                 // get the specific definition for this context
                                 superDef = def.getSuperDefinition(this);
                                 if (superDef == null) {
-                                    if (errorThreshhold <= Context.IGNORABLE_ERRORS) {
-                                        throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
-                                    } else {
-                                        data = null;
-                                    }
+                                    throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                                 } else {
                                     Type st = def.getSuper(this);
                                     ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
@@ -1891,21 +2497,17 @@ public class Context {
 
                         } else if (object instanceof Value) {
                             data = object;
-                        } else if (object instanceof Chunk) {
-                            data = object.getData(this);
-                        } else if (object instanceof ValueGenerator) {
-                            data = ((ValueGenerator) object).getData(this);
                         } else {
-                            data = object;
+                            data = object.getData(this);
                         }
                 
                         if (data instanceof Value) {
                             data = ((Value) data).getValue();
-                        } else if (data instanceof AbstractNode) {
+                        } else if (data instanceof CantoNode) {
                             if (instantiatedDef != null) {
-                                instantiatedDef.initNode((AbstractNode) data);
+                                instantiatedDef.initNode((CantoNode) data);
                             } else {
-                                vlog("Null instantiatedDef in constructions for " + peek().def.getFullName());
+                                LOG.debug("Null instantiatedDef in constructions for " + peek().def.getFullName());
                             }
                         }
 
@@ -1924,11 +2526,7 @@ public class Context {
                             Definition def = peek().def;
                             NamedDefinition superDef = def.getSuperDefinition();
                             if (superDef == null) {
-                                if (errorThreshhold <= Context.IGNORABLE_ERRORS) {
-                                    throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
-                                } else {
-                                    str = null;
-                                }
+                                throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                             } else {
                                 LinkedList<Definition> nextList = null;
                                 if (superDef.hasNext(this)) {
@@ -1938,11 +2536,7 @@ public class Context {
                                 // get the specific definition for this context
                                 superDef = def.getSuperDefinition(this);
                                 if (superDef == null) {
-                                    if (errorThreshhold <= Context.IGNORABLE_ERRORS) {
-                                        throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
-                                    } else {
-                                        str = null;
-                                    }
+                                    throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                                 } else {
                                     Type st = def.getSuper(this);
                                     ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
@@ -1957,12 +2551,10 @@ public class Context {
                             if (!object.equals(NullValue.NULL_VALUE)) {
                                 str = ((Value) object).getString();
                             }
-                        } else if (object instanceof Chunk) {
-                            str = ((Chunk) object).getText(this);
                         } else if (object instanceof ValueGenerator) {
                             str = ((ValueGenerator) object).getValue(this).getString();
                         } else if (object != null) {
-                            str = object.toString();
+                            str = object.getText(this);
                         }
                         if (str != null && str.length() > 0) {
                             if (sb == null) {
@@ -1992,6 +2584,262 @@ public class Context {
             }
         }
         return data;
+    }
+
+    /** Returns data cached in the context via a keep statement.  
+     */
+    public Object getContextData(String name) {
+        return getContextData(name, false);
+    }
+    
+    public Holder getContextHolder(String name) {
+        return (Holder) getContextData(name, true);
+    }
+
+    private Object getContextData(String name, boolean getHolder) {
+        if (name == null || cache == null || keepMap == null) {
+            return null;
+        }
+        Object data = null;
+        Holder holder = null;
+        String key = name;
+        if (keepMap != null && keepMap.get(key) != null) {
+            Pointer p = keepMap.get(key);
+
+            // Problem: the cache map stored in the pointer might no longer be
+            // valid, depending on its scope and what has happened since the pointer
+            // was created.
+            //
+            // So, this is what we have to do: Instead of storing the map
+            // directly, we store the def name of the scope where it's locally
+            // cached and the key it's cached under.  
+    
+            Map<String, Object> keepTable = p.cache;
+            data = keepTable.get(p.getKey());
+
+            if (data instanceof Pointer) {
+                int i = 0;
+                do {
+                    p = (Pointer) data;
+                    data = p.cache.get(p.getKey());
+                    if (data instanceof Holder) {
+                        holder = (Holder) data;
+                        data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
+                    } else {
+                        holder = null;
+                    }
+                    i++;
+                    if (i >= MAX_POINTER_CHAIN_LENGTH) {
+                        throw new IndexOutOfBoundsException("Pointer chain in cache exceeds limit");
+                    }
+                } while (data instanceof Pointer);
+            } else if (data instanceof Holder) {
+                holder = (Holder) data;
+                data = (holder.data == CantoNode.UNINSTANTIATED ? null : holder.data);
+            }
+        }
+    
+        return getHolder ? holder : data;
+    }
+
+    /** Returns any cached data for a definition with the specified name
+     *  in the current frame of the current context, or null if there is none.
+     */
+    public Object getLocalData(String name, ArgumentList args, List<Index> indexes) throws Redirection {
+        return getData(null, name, args, indexes, true);
+    }    
+
+    /** Returns any cached data for a definition with the specified name
+     *  in the current context, or null if there is none.
+     */
+    public Object getData(Definition def, String name, ArgumentList args, List<Index> indexes) throws Redirection {
+        Object data = getData(def, name, args, indexes, false);
+        LOG.debug(" - - - getting " + name + " from cache: - - - ");
+        if (data == null) {
+            LOG.debug(" - - - (no data)");
+        } else {
+            LOG.debug(" - - - " + data.toString());
+        }
+        return data;
+    }    
+
+    synchronized private Object getData(Definition def, String name, ArgumentList args, List<Index> indexes, boolean local) throws Redirection {
+        if (name == null || name.length() == 0) {
+            return null;
+        }
+        String fullName = (def == null ? name : def.getFullNameInContext(this));
+
+        Object data = null;
+
+        if (topScope != null) {
+            // use indexes as part of the key otherwise a cached element may be confused with a cached array 
+            String key = addIndexesToKey(name, indexes);
+            data = topScope.get(key, fullName, args, local);
+        }
+
+        if (data == null) {
+
+            // TODO: modify fullName to match name if name is multipart
+            //
+    
+            // use indexes as part of the key otherwise a cached element may be confused with a cached array 
+            String key = addIndexesToKey(fullName, indexes);
+            data = getContextData(key);
+        }
+        return data;
+    }
+    
+
+    /** Returns the definition associated with cached data which is the same or the 
+     *  equivalent of the specified definition in the current context, or null if there is none.
+     */
+    
+    public Definition getKeepDefinition(Definition def, ArgumentList args) {
+        String name = def.getName();
+        String fullName = def.getFullNameInContext(this);
+        Definition defInKeep = getDefinition(name, fullName, args);
+        if (defInKeep == null) {
+            Definition defOwner = def.getOwner();
+            int numUnpushes = 0;
+            try {
+                for (Definition topDef = topScope.def; topDef != defOwner && size() > 1; topDef = topScope.def) {
+                    unpush();
+                    numUnpushes++;
+                }
+                if (numUnpushes > 0) {
+                    defInKeep = getDefinition(name, fullName, args);
+                }
+            } catch (Throwable t) {
+                String message = "Unable to find definition in cache for array " + name + ": " + t.toString();
+                LOG.debug(message);
+       
+            } finally {
+                while (numUnpushes-- > 0) {
+                    repush();
+                }
+            }
+        }
+        return defInKeep;
+    }
+    
+    
+    /** Returns the cached definition holder associated with the specified definition in the current context,
+     *  or null if there is none.
+     */
+    
+    public Holder getKeepdHolderForDef(Definition def, ArgumentList args, List<Index> indexes) throws Redirection {
+        String name = def.getName();
+        String fullName = def.getFullNameInContext(this);
+        Holder holder = getDefHolder(name, fullName, args, indexes, false);
+        if (holder == null) {
+            Definition defOwner = def.getOwner();
+            int numUnpushes = 0;
+            try {
+                for (Definition topDef = topScope.def; topDef != defOwner && size() > 1; topDef = topScope.def) {
+                    unpush();
+                    numUnpushes++;
+                }
+                if (numUnpushes > 0) {
+                    holder = getDefHolder(name, fullName, args, indexes, false);
+                }
+            } catch (Throwable t) {
+                String message = "Unable to find holder in cache for array " + name + ": " + t.toString();
+                LOG.debug(message);
+       
+            } finally {
+                while (numUnpushes-- > 0) {
+                    repush();
+                }
+            }
+        }
+        return holder;
+    }
+
+    /** Returns the definition associated with cached data for a specified name
+     *  in the current context, or null if there is none.
+     */
+    public Definition getDefinition(String name, String fullName, ArgumentList args) {
+        if (topScope == null || name == null || name.length() == 0) {
+            return null;
+        }
+        Definition def = topScope.getDefinition(name, Scope.makeGlobalKey(fullName), args);
+
+        return def;
+    }
+    
+    
+    /** Returns a Holder containing the definition and arguments associated with cached data for a 
+     *  specified name in the current context, or null if there is none.
+     */
+    synchronized public Holder getDefHolder(String name, String fullName, ArgumentList args, List<Index> indexes, boolean local) throws Redirection {
+        if (topScope == null || name == null || name.length() == 0) {
+            return null;
+        }
+
+        // use indexes as part of the key otherwise a cached element may be confused with a cached array 
+        String key = addIndexesToKey(name, indexes);
+        Holder holder = topScope.getDefHolder(key, Scope.makeGlobalKey(fullName), args, local);
+
+        // if we get back a global definition and we weren't passed a full name, we
+        // need to call getDefHolder again for it to check the global cache
+        if (fullName == null && holder != null && holder.nominalDef != null && holder.nominalDef.isGlobal()) {
+            fullName = holder.nominalDef.getFullNameInContext(this);
+            holder = topScope.getDefHolder(key, Scope.makeGlobalKey(fullName), args, local);
+        }
+
+        if (holder == null) {
+            holder = getContextHolder(name);
+        }
+
+        // if this is an identity, then use the definition of the passed argument, if available,
+        // else the superdefinition instead so children etc. resolve to it
+        if (holder != null && holder.nominalDef != null && holder.nominalDef.isIdentity()) {
+            Construction arg = (args != null && args.size() > 0 ? args.get(0) : null);
+            if (arg != null && arg instanceof Instantiation) {
+                Instantiation argInstance = ((Instantiation) arg).getUltimateInstance(this);
+                Definition argDef = argInstance.getDefinition(this);
+                if (argDef != null && !argDef.getType().isPrimitive()) {
+                    holder.def = argDef;
+                    holder.args = argInstance.getArguments();
+                }
+            }
+        }
+        return holder;
+    }
+
+    public void putDefinition(Definition def, String name, ArgumentList args, List<Index> indexes) throws Redirection {
+        putData(def, args, indexes, name, null); //CantoNode.UNINSTANTIATED);
+    }
+    
+    /** Keeps data associated with the specified name
+     *  in the current context.
+     */
+    public void putData(Definition def, ArgumentList args, List<Index> indexes, String name, Object data) throws Redirection {
+        putData(def, args, def, args, indexes, name, data, null);
+    }    
+    /** Keeps data associated with the specified name
+     *  in the current context.
+     */
+    public void putData(Definition nominalDef, ArgumentList nominalArgs, Definition def, ArgumentList args, List<Index> indexes, String name, Object data, ResolvedInstance resolvedInstance) throws Redirection {
+        Holder holder = new Holder(nominalDef, nominalArgs, def, args, this, data, resolvedInstance);
+        putData(name, holder, indexes);
+    }
+        
+    synchronized public void putData(String name, Holder holder, List<Index> indexes) throws Redirection {
+        if (holder.data != null || holder.resolvedInstance != null) {
+            LOG.debug(" - - - storing " + name + " in cache - - - ");
+        }
+        if (name.endsWith(".keep")) {
+            System.out.println(" ----- direct put of " + name + "," + " value is " + (holder.data == null ? "null" : (" a " + holder.data.getClass().getName())));
+            (new Throwable()).printStackTrace();
+        }
+        if (topScope != null && name != null && name.length() > 0) {
+            int maxKeepLevels = getMaxKeepLevels(holder.nominalDef);
+
+            // use indexes as part of the key otherwise a cached element may be confused with a cached array 
+            String key = addIndexesToKey(name, indexes);
+            topScope.put(key, holder, this, maxKeepLevels);
+        }
     }
 
     
@@ -2048,6 +2896,143 @@ public class Context {
             topScope.setLoopIndex(index);
         }
     }
+
+    /** Modify the name used to cache a value with indexes, to discriminate
+     *  cached collections from cached elements.
+     */
+    private String addIndexesToKey(String key, List<Index> indexes) {
+        if (indexes != null && indexes.size() > 0) {
+            Iterator<Index> it = indexes.iterator();
+            while (it.hasNext()) {
+                key = key + it.next().getModifierString(this);
+            }
+        }
+        return key;
+    }
+
+    private Object getElement(Object collection, Index index) throws Redirection {
+        Object data = null;
+
+        // this occurs with anonymous collections in the input
+        if (collection instanceof CollectionDefinition) {
+            collection = ((CollectionDefinition) collection).getCollectionInstance(this, null, null);
+        }
+
+        if (collection instanceof CollectionInstance) {
+            collection = ((CollectionInstance) collection).getCollectionObject();
+        }
+
+        if (collection instanceof Value) {
+            collection = ((Value) collection).getValue();
+
+        } else if (collection instanceof ValueGenerator) {
+            collection = ((ValueGenerator) collection).getData(this);
+        }
+
+        if (collection instanceof CantoArray) {
+            collection = ((CantoArray) collection).getArrayObject();
+        }
+
+        boolean isArray = collection.getClass().isArray();
+        boolean isList = (collection instanceof List<?>);
+        if (!index.isNumericIndex(this)) {
+            String key = index.getIndexValue(this).getString();
+            if (isArray || isList) {
+                // NOTE: the following is the comment accompanying the related logic
+                // in the method getElement in ArrayDefinition:
+                //
+                //     retrieve the element which matches the index key value.  There
+                //     are two ways an element can match the key:
+                //
+                //     -- if the element is a definition which owns a child named "key"
+                //        compare its instantiated string value to the index key
+                //
+                //     -- if the element doesn't have such a "key" field, compare the
+                //        string value of the element itself to the index key.
+                //
+                // The logic below is operating on an instantiated array, so it contains
+                // instantiated elements, and as a result the element definitions are
+                // not available.  Therefore only the second of the two methods
+                // described above can be implemented.
+                //
+                // This inconsistency between the logic here and in ArrayDefinition
+                // is a bug and needs to be corrected, preferably by finding a way to
+                // put the logic in one place.
+
+                if (key == null) {
+                    return null;
+                }
+                int size = (isArray ? Array.getLength(collection) : ((List<?>) collection).size());
+                int ix = -1;
+                for (int i = 0; i < size; i++) {
+                    Object element = (isArray ? Array.get(collection, i) : ((List<?>) collection).get(i));
+                    try {
+                        String elementKey;
+                        if (element instanceof String) {
+                            elementKey = (String) element;
+                        } else if (element instanceof Value) {
+                            elementKey = ((Value) element).getString();
+                        } else if (element instanceof Construction) {
+                            elementKey = ((Construction) element).getText(this);
+                        } else if (element instanceof ValueGenerator) {
+                            elementKey = ((ValueGenerator) element).getString(this);
+                        } else {
+                            elementKey = element.toString();
+                        }
+
+                        if (key.equals(elementKey)) {
+                            ix = i;
+                            break;
+                        }
+
+                    } catch (Redirection r) {
+                        // don't redirect, we're only checking
+                        continue;
+                    }
+                }
+                data = new PrimitiveValue(ix);
+
+            } else if (collection instanceof Map<?,?>) {
+                data = ((Map<?,?>) collection).get(key);
+            }
+        } else {    // must be an array
+            int i = index.getIndexValue(this).getInt();
+            if (collection.getClass().isArray()) {
+                data = Array.get(collection, i);
+
+            } else if (collection instanceof List<?>) {
+                data = ((List<?>) collection).get(i);
+
+            } else if (collection instanceof Map<?,?>) {
+                Object[] keys = ((Map<?,?>) collection).keySet().toArray();
+                Arrays.sort(keys);
+                data = ((Map<?,?>) collection).get(keys[i]);
+            }
+        }
+        while (data instanceof Holder) {
+            data = ((Holder) data).data;
+        }
+        if (data instanceof ElementDefinition) {
+            data = ((ElementDefinition) data).getElement();
+        }
+        return data;
+    }
+
+    public Object constructDef(Definition definition, ArgumentList args, List<Index> indexes) throws Redirection {
+        // initialization expressions
+        if (definition instanceof DynamicObject) {
+            definition = (Definition) ((DynamicObject) definition).initForContext(this, args, indexes);
+        }
+
+        if (definition instanceof CollectionDefinition) {
+            CollectionInstance collection = ((CollectionDefinition) definition).getCollectionInstance(this, args, indexes);
+            return collection.getCollectionObject();
+
+        } else {
+            return construct(definition, args);
+        }
+    }
+
     
     void addKeeps(Definition def) throws Redirection {
         if (def != null && def instanceof NamedDefinition) {
@@ -2140,7 +3125,6 @@ public class Context {
             ResolvedInstance ri = k.getResolvedDefInstance(this);
             ResolvedInstance riAs = k.getResolvedAsInstance(this);
             Name asName = k.getAsName();
-            Name byName = k.getByName();
             String key = null;
             boolean asthis = false;
             if (asName != null) {
@@ -2149,13 +3133,6 @@ public class Context {
                     key = definingDef.getName();
                     asthis = true;
                 }
-
-            } else if (byName != null) {
-                NameNode keepName = k.getDefName();
-                Definition owner = getDefiningDef();
-                KeepHolder keepHolder = new KeepHolder(keepName, owner, ri, riAs, (NameNode) byName, table, inContainer, asthis);
-                topScope.addDynamicKeep(keepHolder);
-                return;
             }
 
             containerKey = (asthis ? key : topScope.def.getName() + (key == null ? "." : "." + key));
@@ -2170,7 +3147,53 @@ public class Context {
     private void addKeepsFromScope(Scope scope) {
         topScope.addKeeps(scope);
     }
+
+    /** Determine how far down the context stack to go looking to see if a value should
+     *  be cached, whether by a keep statement or because the definition resides at
+     *  that level.
+     */
+    private int getMaxKeepLevels(Definition def) {
+        int levels = 0;
+        if (def == null) {
+            return -1;
+        }
+        Definition owner = def.getOwner();
+        while (owner != null) {
+            if (owner instanceof ComplexDefinition) {
+                break;
+            }
+            owner = owner.getOwner();
+        }
+        ComplexDefinition scopeOwner = owner instanceof ComplexDefinition ? (ComplexDefinition) owner : null;
+        Scope scope = topScope;
+        Definition scopeDef = scope.def;
+        boolean reachedScope = (scopeOwner == null || scopeOwner.equals(scopeDef) || scopeOwner.isSubDefinition(scopeDef));
+        while (true) {
+            levels++;
+            scope = scope.previous;
+            if (scope == null) {
+                // may have been obtained by reflection or some other out-of-scope mechanism; don't try to
+                // cache beyond local level
+                if (!reachedScope) {
+                    levels = 0;
+                }
+                break;
+            }
+            if (reachedScope) {
+                if (!scope.def.equals(scopeDef)) {
+                    break;
+                }
+            } else {
+                scopeDef = scope.def;
+                reachedScope = (scopeOwner.equals(scopeDef) || 
+                                scopeOwner.isSubDefinition(scopeDef));
+            }
+        }
+
+        return levels;
+    }
     
+
     @SuppressWarnings("unchecked")
     static Object getKeepData(Map<String, Object> cache, String key, String fullKey) {
         Object data = null;

@@ -108,7 +108,7 @@ literalBlock
     ;
 
 topDefinition
-    : doc = DOC_COMMENT? pub = PUBLIC? dur = topDurability?
+    : doc = DOC_COMMENT? keep = keepPrefix? pub = PUBLIC? dur = topDurability?
     ( def = collectionElementDefinition
     | def = collectionDefinition
     | def = elementDefinition
@@ -117,12 +117,28 @@ topDefinition
     ;
 
 definition
-    : doc = DOC_COMMENT? loc = LOCAL? dur = durability?
+    : doc = DOC_COMMENT? keep = keepPrefix? loc = LOCAL? dur = durability?
     ( def = collectionElementDefinition
     | def = collectionDefinition
     | def = elementDefinition
     | def = blockDefinition
     )
+    ;
+
+topKeepPrefix
+    : KEEP keepAs? keepIn SEMICOLON
+    ;
+
+keepPrefix
+    : KEEP keepAs? keepIn? SEMICOLON
+    ;
+
+keepAs
+    : AS identifier
+    ;
+    
+keepIn
+    : IN (qualifiedName | identifier)
     ;
 
 topDurability
