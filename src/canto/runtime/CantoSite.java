@@ -285,7 +285,7 @@ public class CantoSite extends CantoDomain {
     }
     
     
-    public int respond(String pageName, Construction paramsArg, Construction requestArg, Construction sessionArg, Context context, OutputStream out) throws Redirection {
+    public int respond(String pageName, Construction paramsArg, Construction requestArg, Construction sessionArg, Context context, PrintStream out) throws Redirection {
         ArgumentList[] argLists = getArgumentLists(paramsArg, requestArg, sessionArg);
         Instantiation page = getPageInstance(cleanForCanto(pageName), argLists, context);
         boolean respondWithPage = true;
@@ -304,9 +304,9 @@ public class CantoSite extends CantoDomain {
                 recordRequest("$stat", pageTracker);
                 printStatus(out);
 
-            } else if (pageName.equalsIgnoreCase("$source")) {
-                recordRequest("$source", pageTracker);
-                printSource(out);
+            //} else if (pageName.equalsIgnoreCase("$source")) {
+            //    recordRequest("$source", pageTracker);
+            //    printSource(out);
 
             } else if (hasGeneralResponse || handleAsObj || pageName.indexOf(".$") > -1) {
                 respondWithPage = false;
@@ -396,12 +396,12 @@ public class CantoSite extends CantoDomain {
                     String str = getStringForData(data);
                     out.println(str);
                     currentSiteName = siteName; //for logging
-                    mLOG.info("----------------- requested object: " + pageName + " ------------------");
-                    mLOG.info("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
-                    mLOG.info("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
-                    mLOG.info("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
+                    LOG.info("----------------- requested object: " + pageName + " ------------------");
+                    LOG.info("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
+                    LOG.info("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
+                    LOG.info("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
                     long consumedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - loadedConsumedMemory;
-                    mLOG.info(consumedMemory + " additional bytes of memory consumed since site was loaded.");
+                    LOG.info(consumedMemory + " additional bytes of memory consumed since site was loaded.");
 
                 } catch (Redirection r) {
                     String location = r.getLocation();
@@ -423,7 +423,7 @@ public class CantoSite extends CantoDomain {
         return CantoServer.OK;
     }
 
-    public int respond(Instantiation page, Context context, OutputStream out) throws Redirection {
+    public int respond(Instantiation page, Context context, PrintStream out) throws Redirection {
         
         String pageName = page.getName();
         recordRequest(pageName, pageTracker);
@@ -433,7 +433,7 @@ public class CantoSite extends CantoDomain {
             if (pageDef == null) {
                 LOG.info("Page " + pageName + " is undefined.");
                 return CantoServer.NOT_FOUND;
-            } else if (pageDef.getAccess() != Definition.PUBLIC_ACCESS) {
+            } else if (pageDef.getAccess() != Definition.Access.PUBLIC) {
                 LOG.info("Page " + pageName + " is not public.");
                 return CantoServer.NOT_FOUND;
             }
@@ -459,12 +459,12 @@ public class CantoSite extends CantoDomain {
                 out.println(str);
             }
             currentSiteName = siteName; //for logging
-            mLOG.info("----------------- requested page: " + pageName + " ------------------");
-            mLOG.info("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
-            mLOG.info("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
-            mLOG.info("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
+            LOG.info("----------------- requested page: " + pageName + " ------------------");
+            LOG.info("Created " + Context.getNumContextsCreated() + " Contexts (" + Context.getNumClonedContexts() + " of them cloned) and " + Context.getNumEntriesCreated() + " entries (" + Context.getNumEntriesCloned() + " of them cloned).");
+            LOG.info("Created " + Context.getNumHashMapsCreated() + " HashMaps.");
+            LOG.info("Created " + Context.getNumArrayListsCreated() + " ArrayLists, " + Context.getTotalListSize() + " total initial allocation.");
             long consumedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory() - loadedConsumedMemory;
-            mLOG.info(consumedMemory + " bytes of memory consumed since site was loaded.");
+            LOG.info(consumedMemory + " bytes of memory consumed since site was loaded.");
 
         } catch (Redirection r) {
             String location = r.getLocation();
@@ -735,230 +735,5 @@ public class CantoSite extends CantoDomain {
         }
     }
 
-    private void printSource(OutputStream out) {
-        PrintWriter writer = new PrintWriter(out);
-        SourceReporter reporter = new SourceReporter(writer);
-        reporter.handleSite(site);
-        writer.println();
-        reporter.handleSite(core);
-        writer.println();
-    }
-
-
-    public class SourceReporter extends CantoVisitor {
-
-        String indent = "    ";
-        PrintWriter out;
-
-        public SourceReporter(PrintWriter out) {
-            this.out = out;
-        }
-
-        public void handleSite(Site site) {
-
-            if (site instanceof Core) {
-                out.println("/---------------- Core ----------------/\n");
-                out.print("core ");
-            } else {
-                out.println("/----------- Site " + site.getName() + " --------------/\n");
-                out.print("site ");
-            }
-
-            // print the site's immediate children, remembering them
-            // in a hashmap
-            HashMap<CantoNode, String> childmap = new HashMap<CantoNode, String>(site.getNumChildren());
-            Iterator<CantoNode> it = site.getChildren();
-            while (it.hasNext()) {
-                CantoNode node = it.next();
-                childmap.put(node, "x");
-
-                // handle the top-level block up here, to preserve child order order
-                if (node instanceof Block) {
-                    Iterator<CantoNode> blockIt = node.getChildren();
-                    while (blockIt.hasNext()) {
-                        CantoNode blockChild = blockIt.next();
-                        childmap.put(blockChild, "x");
-                    }
-                    handleNode(node, indent);
-                } else {
-                    handleNode(node, "");
-                }
-            }
-
-            // now handle any definitions that were added from elsewhere
-
-            Definition[] defs = site.getDefinitions();
-            ArrayList<CantoNode> list = new ArrayList<CantoNode>();
-            for (int i = 0; i < defs.length; i++) {
-                if (defs[i].getOwner().equals(site) && childmap.get((CantoNode) defs[i]) == null) {
-                    list.add((CantoNode) defs[i]);
-                }
-            }
-            int n = list.size();
-            if (n > 0) {
-                it = list.iterator();
-                while (it.hasNext()) {
-                    CantoNode node = it.next();
-                    handleNode(node, indent);
-                }
-            }
-
-            if (site instanceof Core) {
-                out.println("/------------- end of core ------------/");
-            } else {
-                out.println("/----------- end of " + site.getName() + " --------------/");
-            }
-            out.println();
-        }
-
-        public Object handleNode(CantoNode node, Object data) {
-
-            String prefix = (String) data;
-
-            // space out all definitions
-            if (node instanceof Definition) {
-                out.println();
-                out.print(prefix);
-            }
-
-            if (node instanceof ComplexDefinition) {
-                data = super.handleNode(node, prefix);
-                out.println();
-
-            } else if (node instanceof CantoBlock) {
-                out.println("{=");
-                data = super.handleNode(node, prefix + indent);
-                out.println(prefix + "=}");
-
-            } else if (node instanceof StaticBlock) {
-                out.println("[/");
-                data = super.handleNode(node, prefix);
-                out.println(prefix + "/]");
-
-            } else if (node instanceof DynamiCantoBlock || node instanceof DynamicElementBlock) {
-                out.println("[[");
-                data = super.handleNode(node, prefix);
-                out.println(prefix + "]]");
-
-            } else if (node instanceof ConcurrentCantoBlock) {
-                out.println("{+");
-                data = super.handleNode(node, prefix);
-                out.println(prefix + "+}");
-
-            } else {
-                printNode(node, prefix);
-            }
-            return data;
-        }
-
-        public void printNode(CantoNode node, String prefix) {
-            Token first = ((AbstractNode) node).getFirstToken();
-            Token last = ((AbstractNode) node).getLastToken();
-            for (Token t = first; t != null; t = t.next) {
-//                Token st = t.specialToken;
-//                if (st != null) {
-//                    while (st.specialToken != null) {
-//                        st = st.specialToken;
-//                    }
-//                    while (st != null) {
-//                        out.print(st.image);
-//                        st = st.next;
-//                    }
-//                }
-                switch (t.kind) {
-                    case CantoParserConstants.LSTATIC:
-                    case CantoParserConstants.LSTATICW:
-                    case CantoParserConstants.LLITERAL:
-                    case CantoParserConstants.STATIC_0:
-                    case CantoParserConstants.STATIC_1:
-                    case CantoParserConstants.STATIC_2:
-                    case CantoParserConstants.STATIC_4:
-                    case CantoParserConstants.STATIC_5:
-                        out.println(t.image);
-                        prefix = prefix + indent;
-                        out.print(prefix);
-                        break;
-
-                    case CantoParserConstants.RSTATIC:
-                    case CantoParserConstants.RSTATICW:
-                    case CantoParserConstants.RLITERAL:
-                    case CantoParserConstants.STATIC_3:
-                    case CantoParserConstants.LITERAL_1:
-                        out.println();
-                        if (prefix.length() > 4) {
-                            prefix = prefix.substring(4);
-                        } else {
-                            prefix = "";
-                        }
-                        if (prefix.length() > 0) {
-                            prefix = prefix.substring(4);
-                            out.print(prefix);
-                        }
-                        out.println(t.image);
-                        break;
-
-                    case CantoParserConstants.DOT:
-                    case CantoParserConstants.LPAREN:
-                    case CantoParserConstants.LCODE:
-                    case CantoParserConstants.LBRACKET:
-                        out.print(t.image);
-                        break;
-
-                    case CantoParserConstants.SEMICOLON:
-                    case CantoParserConstants.NULL_BLOCK:
-                    case CantoParserConstants.ABSTRACT_NULL:
-                    case CantoParserConstants.EXTERNAL_BLOCK:
-                        out.println(t.image);
-                        if (prefix.length() > 0) {
-                            out.print(prefix);
-                        }
-                        break;
-
-                    default:
-                        out.print(t.image);
-                        if (t.next != null) {
-                            switch (t.next.kind) {
-                                case CantoParserConstants.DOT:
-                                case CantoParserConstants.COMMA:
-                                case CantoParserConstants.LPAREN:
-                                case CantoParserConstants.RPAREN:
-                                case CantoParserConstants.LBRACKET:
-                                case CantoParserConstants.RBRACKET:
-                                case CantoParserConstants.LCODE:
-                                case CantoParserConstants.RCODE:
-                                    break;
-                                case CantoParserConstants.EXTERN:
-                                case CantoParserConstants.KEEP:
-                                case CantoParserConstants.FOR:
-                                case CantoParserConstants.IF:
-                                case CantoParserConstants.ELSE:
-                                case CantoParserConstants.SUB:
-                                case CantoParserConstants.SUPER:
-                                case CantoParserConstants.OWNER:
-                                case CantoParserConstants.CONTAINER:
-                                case CantoParserConstants.THIS:
-                                case CantoParserConstants.CATCH:
-                                    out.println();
-                                    if (prefix.length() > 0) {
-                                        out.print(prefix);
-                                    }
-                                    break;
-                                default:
-                                    out.print(' ');
-                                    break;
-                            }
-                        }
-                        break;
-                }
-                if (t == last) {
-                    break;
-                }
-            }
-
-            if (node instanceof Definition) {
-                out.println();
-            }
-        }
-    }
 }
 

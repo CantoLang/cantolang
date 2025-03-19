@@ -319,7 +319,7 @@ public class CantoDomain implements canto_domain {
             String prop = getPropertyInContext(name, null);
             return (prop == null ? notFound : prop);
         } catch (Redirection r) {
-            log("Unable to get property " + name + ": " +  r.getMessage());
+            LOG.error("Unable to get property " + name + ": " +  r.getMessage());
             return notFound;
         }
     }        
@@ -443,7 +443,7 @@ public class CantoDomain implements canto_domain {
             }
       
         } catch (Redirection r) {
-            log("Problem getting property " + name + ", redirects to " +  r.getLocation());
+            LOG.error("Problem getting property " + name + ", redirects to " +  r.getLocation());
         }
 
         return collectionObj;
@@ -592,19 +592,13 @@ public class CantoDomain implements canto_domain {
             // no main or default site context exists, clone the core context
             context = coreContext.clone(true);
         } else {
-            // no context of any sort exists, make a new one.
-            try {
-                context = new Context(site);
-                context.setErrorThreshhold(loadOptions.errorThreshhold);
-            } catch (Redirection r) {
-                log("Unable to instantiate new context: " + r.getMessage());
-            }
+            context = new Context(site);
         }
         
         try {
             context.addKeeps(getMainOwner());
         } catch (Redirection r) {
-            log("Unable to instantiate new context; addKeeps failed: " + r.getMessage());
+            LOG.error("Unable to instantiate new context; addKeeps failed: " + r.getMessage());
         }
 
         return context;
@@ -658,44 +652,44 @@ public class CantoDomain implements canto_domain {
     //
     
     public Object get(String expression) throws Redirection {
-        try {
-            CantoParser parser = new CantoParser(new StringReader(expression));
-            Instantiation instance = parser.parseInstance();
-            instance.setOwner(site);
-            Object data = instance.getData(siteContext);
-            return data;
-        } catch (Exception e) {
-            System.out.println("Exception parsing get expression: " + e);
-            System.out.println("Expression:\n" + expression);
+//        try {
+//            CantoParser parser = new CantoParser(new StringReader(expression));
+//            Instantiation instance = parser.parseInstance();
+//            instance.setOwner(site);
+//            Object data = instance.getData(siteContext);
+//            return data;
+//        } catch (Exception e) {
+//            System.out.println("Exception parsing get expression: " + e);
+//            System.out.println("Expression:\n" + expression);
             return null;
-        }
+//        }
     }
     
     public Definition get_definition(String expression) throws Redirection {
-        try {
-            CantoParser parser = new CantoParser(new StringReader(expression));
-            Instantiation instance = parser.parseInstance();
-            instance.setOwner(site);
-            return instance.getDefinition(siteContext);
-        } catch (Exception e) {
-            System.out.println("Exception getting definition: " + e);
-            System.out.println("Expression:\n" + expression);
+//        try {
+//            CantoParser parser = new CantoParser(new StringReader(expression));
+//            Instantiation instance = parser.parseInstance();
+//            instance.setOwner(site);
+//            return instance.getDefinition(siteContext);
+//        } catch (Exception e) {
+//            System.out.println("Exception getting definition: " + e);
+//            System.out.println("Expression:\n" + expression);
             return null;
-        }
+//        }
     }
     
     public Object get_instance(String expression) throws Redirection {
-        try {
-            CantoParser parser = new CantoParser(new StringReader(expression));
-            Instantiation instance = parser.parseInstance();
-            instance.setOwner(site);
-            Construction construction = new ResolvedInstance(instance, siteContext, false);
-            return new CantoObjectWrapper(construction, this);
-        } catch (Exception e) {
-            System.out.println("Exception getting definition: " + e);
-            System.out.println("Expression:\n" + expression);
+//        try {
+//            CantoParser parser = new CantoParser(new StringReader(expression));
+//            Instantiation instance = parser.parseInstance();
+//            instance.setOwner(site);
+//            Construction construction = new ResolvedInstance(instance, siteContext, false);
+//            return new CantoObjectWrapper(construction, this);
+//        } catch (Exception e) {
+//            System.out.println("Exception getting definition: " + e);
+//            System.out.println("Expression:\n" + expression);
             return null;
-        }
+//        }
     }
     
     @SuppressWarnings("unchecked")

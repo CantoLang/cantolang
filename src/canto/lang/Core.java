@@ -147,12 +147,12 @@ public class Core extends Site {
             return (externs.size() > 0 ? externs : null);
         }
         
-        public List<KeepStatement> getKeeps() {
-            List<KeepStatement> keeps = new ArrayList<KeepStatement>();
+        public List<KeepNode> getKeeps() {
+            List<KeepNode> keeps = new ArrayList<KeepNode>();
             Iterator<Site> it = siteList.iterator();
             while (it.hasNext()) {
                 Site site = it.next();
-                List<KeepStatement> siteKeeps = site.getKeeps();
+                List<KeepNode> siteKeeps = site.getKeeps();
                 if (siteKeeps != null) {
                     keeps.addAll(siteKeeps);
                 }

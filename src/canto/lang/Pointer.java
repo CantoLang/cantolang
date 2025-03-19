@@ -17,15 +17,14 @@ public class Pointer {
     Object containerKey;
     Map<String, Object> cache;
 
-    public Pointer(ResolvedInstance ri, Object key, Object containerKey, Map<String, Object> cache) {
-        this(ri, ri, key, containerKey, cache);
+    public Pointer(ResolvedInstance ri, Object key, Map<String, Object> cache) {
+        this(ri, ri, key, cache);
     }
 
-    public Pointer(ResolvedInstance ri, ResolvedInstance riAs, Object key, Object containerKey, Map<String, Object> cache) {
+    public Pointer(ResolvedInstance ri, ResolvedInstance riAs, Object key, Map<String, Object> cache) {
         this.ri = ri;
         this.riAs = (riAs == null ? ri : riAs);
         this.key = key;
-        this.containerKey = containerKey;
         this.cache = cache;
     }
 
@@ -34,14 +33,6 @@ public class Pointer {
             return ((Value) key).getString();
         } else {
             return key.toString();
-        }
-    }
-
-    public String getContainerKey() {
-        if (containerKey instanceof Value) {
-            return ((Value) containerKey).getString();
-        } else {
-            return containerKey.toString();
         }
     }
 

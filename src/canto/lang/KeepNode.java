@@ -1,6 +1,6 @@
 /* Canto Compiler and Runtime Engine
  * 
- * KeepStatement.java
+ * KeepNode.java
  *
  * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
@@ -11,40 +11,23 @@ package canto.lang;
 import canto.runtime.Log;
 
 /**
- * KeepStatement provides caching instructions to the Canto processor.
+ * KeepNode provides caching instructions to the Canto processor.
  */
-public class KeepStatement extends CantoNode {
-    private static final Log LOG = Log.getLogger(KeepStatement.class);
+public class KeepNode extends CantoNode {
+    private static final Log LOG = Log.getLogger(KeepNode.class);
     
     private Instantiation defInstance;
     private Instantiation asInstance;
     private NameNode defName;
     private NameNode asName = null;
-    private NameNode byName = null;
     private boolean asIncluded = false;
     private Instantiation tableInstance;
-    private boolean inContainer = false;
 
-    public KeepStatement() {
+    public KeepNode() {
         super();
     }
 
     public boolean isDynamic() {
-        return false;
-    }
-
-    protected void setInContainer(boolean inContainer) {
-        this.inContainer = inContainer;
-    }
-
-    public boolean isInContainer() {
-        return inContainer;
-    }
-
-    public boolean isInContainer(Context context) {
-        if (inContainer) {
-            return true;
-        }
         return false;
     }
 
@@ -67,10 +50,6 @@ public class KeepStatement extends CantoNode {
         }
     }
 
-    protected void setByName(NameNode name) {
-        byName = name;
-    }
-    
     public NameNode getDefName() {
         return defName;
     }
@@ -83,10 +62,6 @@ public class KeepStatement extends CantoNode {
         return asIncluded;
     }
     
-    public NameNode getByName() {
-        return byName;
-    }
-
     public boolean contains(String name) {
         if (defName != null && defName.getName().equals(name)) {
             return true;
@@ -189,9 +164,6 @@ public class KeepStatement extends CantoNode {
         if (asName != null) {
             sb.append(" as ");
             sb.append(asName.getName());
-        } else if (byName != null) {
-            sb.append(" by ");
-            sb.append(byName.getName());
         }
         if (tableInstance != null) {
             sb.append(" in ");

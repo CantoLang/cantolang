@@ -552,7 +552,7 @@ public class CantoServer implements canto_server {
             // in Canto, so that it won't collide with cached Canto values.
             cantoContext = (CantoContext) session.getAttribute("@");
 
-            OutputStream out = Response.asBufferedOutputStream(request, response);
+            PrintStream out = new PrintStream(Response.asBufferedOutputStream(request, response));
             
             // if the CantoContext for this session is null, then it's a new
             // session; create a new context, save it in the current session

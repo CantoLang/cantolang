@@ -53,8 +53,8 @@ public class NamedDefinition extends Definition {
     private boolean ownerOfNext = false;
     private boolean ownerOfSub = false;
     private boolean ownerOfDefs = false;
-    private List<KeepStatement> keeps = null;
-    transient private List<KeepStatement> keepsAndSuperKeeps = null;
+    private List<KeepNode> keeps = null;
+    transient private List<KeepNode> keepsAndSuperKeeps = null;
 
     public NamedDefinition() {
         super();
@@ -2081,11 +2081,11 @@ public class NamedDefinition extends Definition {
         return (generate ? UNDEFINED : null);
     }
 
-    public KeepStatement getKeep(String key) {
+    public KeepNode getKeep(String key) {
         if (keepsAndSuperKeeps != null) {
-            Iterator<KeepStatement> it = keepsAndSuperKeeps.iterator();
+            Iterator<KeepNode> it = keepsAndSuperKeeps.iterator();
             while (it.hasNext()) {
-                KeepStatement keep = it.next();
+                KeepNode keep = it.next();
                 if (keep.contains(key)) {
                     return keep;
                 }
@@ -2095,9 +2095,9 @@ public class NamedDefinition extends Definition {
     }
 
 
-    public void addKeep(KeepStatement keep) {
+    public void addKeep(KeepNode keep) {
         if (keeps == null) {
-            keeps = Context.newArrayList(1, KeepStatement.class);
+            keeps = Context.newArrayList(1, KeepNode.class);
         }
         keeps.add(keep);
     }
@@ -2106,11 +2106,11 @@ public class NamedDefinition extends Definition {
         return ((keepsAndSuperKeeps != null && keepsAndSuperKeeps.size() > 0) || (keeps != null && keeps.size() > 0));
     }
     
-    public List<KeepStatement> getKeeps() {
+    public List<KeepNode> getKeeps() {
         return (keepsAndSuperKeeps != null ? keepsAndSuperKeeps : keeps);
     }
 
-    protected void setKeeps(List<KeepStatement> keeps) {
+    protected void setKeeps(List<KeepNode> keeps) {
         this.keeps = keeps;
     }
 
@@ -2118,11 +2118,11 @@ public class NamedDefinition extends Definition {
      *  list returned by getKeeps is in order from subclass up through superclasses.
      **/
     public Definition[] keep_defs(Context context) {
-        List<KeepStatement> keeps = getKeeps();
+        List<KeepNode> keeps = getKeeps();
         int size = (keeps == null ? 0 : keeps.size());
         HashMap<String, Definition> defMap = new HashMap<String, Definition>(size);
         if (keeps != null) {
-            for (KeepStatement k : keeps) {
+            for (KeepNode k : keeps) {
                 try {
                     Definition[] kdefs = k.getDefs(context);
                     for (Definition d : kdefs) {
@@ -2150,7 +2150,7 @@ public class NamedDefinition extends Definition {
         }
         NamedDefinition sdef = getSuperDefinition();
         if (sdef != null) {
-            List<KeepStatement> superKeeps = sdef.getKeeps();
+            List<KeepNode> superKeeps = sdef.getKeeps();
             if (superKeeps != null) {
                 if (keepsAndSuperKeeps != null) {
                     keepsAndSuperKeeps.addAll(superKeeps);

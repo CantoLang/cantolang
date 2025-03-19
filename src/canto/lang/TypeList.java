@@ -621,15 +621,15 @@ class MultiDefinition extends NamedDefinition {
     }
 
     /** Returns the keeps in all the definitions. */
-    public List<KeepStatement> getKeeps() {
-        List<KeepStatement> allKeeps = super.getKeeps();
+    public List<KeepNode> getKeeps() {
+        List<KeepNode> allKeeps = super.getKeeps();
         if (allKeeps == null) {
-            allKeeps = new ArrayList<KeepStatement>(0);
+            allKeeps = new ArrayList<KeepNode>(0);
             Iterator<Definition> it = definitions.iterator();
             while (it.hasNext()) {
                 Definition def = it.next();
                 if (def instanceof NamedDefinition) {
-                    List<KeepStatement> keeps = ((NamedDefinition) def).getKeeps();
+                    List<KeepNode> keeps = ((NamedDefinition) def).getKeeps();
                     if (keeps != null) {
                         allKeeps.addAll(keeps);
                     }

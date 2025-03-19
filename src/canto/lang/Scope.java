@@ -51,8 +51,8 @@ public class Scope {
     private int contextState = -1;
     private int loopIx = -1;
     private StateFactory loopIndexFactory;
-
-    private Map<String, Object> getGlobalKeep90;
+    int origParamsSize;
+    int origArgsSize;
 
     
     public Scope(Definition def, ParameterList params, ArgumentList args) {
@@ -62,6 +62,8 @@ public class Scope {
         this.superdef = null;
         this.params = params;
         this.args = args;
+        origParamsSize = params.size();
+        origArgsSize = args.size();
         loopIndexFactory = new StateFactory();
     }
     
@@ -73,8 +75,8 @@ public class Scope {
         this.superdef = superdef;
         this.params = (params != null ? (ParameterList) params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
         this.args = (args != null ? (ArgumentList) args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
-        int origParamsSize = this.params.size();
-        int origArgsSize = this.args.size();
+        origParamsSize = this.params.size();
+        origArgsSize = this.args.size();
 
         // fill out the argument list with nulls if it's shorter than the parameter list
         while (origArgsSize < origParamsSize) {
@@ -121,8 +123,8 @@ public class Scope {
         this.params = (params != null ? (ParameterList) params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
         this.args = (args != null ? (ArgumentList) args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
 
-        int origParamsSize = this.params.size();
-        int origArgsSize = this.args.size();
+        origParamsSize = this.params.size();
+        origArgsSize = this.args.size();
 
         // fill out the argument list with nulls if it's shorter than the parameter list
         while (origArgsSize < origParamsSize) {
@@ -252,6 +254,9 @@ public class Scope {
         if (args != null) {
             args.clear();
         }
+        origParamsSize = 0;
+        origArgsSize = 0;
+        
         setPrevious(null);
 
         keepMap = null;
@@ -259,9 +264,11 @@ public class Scope {
         keepKeep = null;
     }
 
-    public void addKeep(ResolvedInstance ri, ResolvedInstance riAs, Object keyObj, Map<String, Object> table, String containerKey, Map<String, Object> containerTable, Map<String, Pointer> contextKeepMap, Map<String, Object> contextKeep) {
-        boolean inContainer = (containerTable != null);
+    private Map<String, Object> getGlobalKeep() {
+        return globalKeep;
+    }
 
+    public void addKeep(ResolvedInstance ri, ResolvedInstance riAs, Object keyObj, Map<String, Object> table, Map<String, Pointer> contextKeepMap, Map<String, Object> contextKeep) {
         if (def.isGlobal()) {
             contextKeep = getGlobalKeep();
         }
@@ -275,66 +282,33 @@ public class Scope {
             if (key != null) {
                 if (!key.endsWith(".")) {
                     if (ri != null) {
-                        Pointer p = new Pointer(ri, riAs, keyObj, containerKey, table);
+                        Pointer p = new Pointer(ri, riAs, keyObj, table);
                         String keepKey = ri.getName();
                         keepMap.put(keepKey, p);
                         keepMap.put(key, p);
 
-                        if (inContainer) {
-                            p = new Pointer(ri, keyObj, containerKey, containerTable);
-                            keepMap.put("+" + keepKey, p);
-                            keepMap.put("+" + key, p);
-                        }
-                        
                         String contextKey = def.getFullName() + '.' + keepKey;
                         contextKey = contextKey.substring(contextKey.indexOf('.') + 1);
-                        Pointer contextp = new Pointer(ri, riAs, contextKey, containerKey, contextKeep);
+                        Pointer contextp = new Pointer(ri, riAs, contextKey, contextKeep);
                         contextKeepMap.put(contextKey, contextp);
                     }
                 } else {
                     if (ri != null) {
                         String name = ri.getName();
                         String keepKey = key + name;
-                        Pointer p = new Pointer(ri, keepKey, containerKey, table);
+                        Pointer p = new Pointer(ri, keepKey, table);
                         keepMap.put(keepKey, p);
 
-                        if (inContainer) {
-                            p = new Pointer(ri, keepKey, containerKey, containerTable);
-                            keepMap.put(containerKey + name, p);
-                        }
-                
                         String contextKey = def.getFullName() + '.' + keepKey;
                         contextKey = contextKey.substring(contextKey.indexOf('.') + 1);
-                        Pointer contextp = new Pointer(ri, contextKey, containerKey, contextKeep);
+                        Pointer contextp = new Pointer(ri, contextKey, contextKeep);
                         contextKeepMap.put(contextKey, contextp);
                     }
                 }
 
-            } else {
-                if (ri != null) {
-                    String name = ri.getName();
-                    Pointer p = new Pointer(ri, name, containerKey, table);
-                    keepMap.put(name, p);
-            
-                    if (inContainer) {
-                        p = new Pointer(ri, containerKey + name, containerKey, containerTable);
-                        keepMap.put("+" + name, p);
-                    }
-
-                    String contextKey = def.getFullName() + '.' + name;
-                    contextKey = contextKey.substring(contextKey.indexOf('.') + 1);
-                    Pointer contextp = new Pointer(ri, contextKey, containerKey, contextKeep);
-                    contextKeepMap.put(contextKey, contextp);
-                }
             }
         }
     }
-
-    private Map<String, Object> getGlobalKeep() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 
     public void removeKeep(String name) {
         synchronized (keepMap) {
@@ -612,7 +586,7 @@ public class Scope {
 
         Definition.Access access = (nominalDef != null ? nominalDef.getAccess() : Definition.Access.LOCAL);
         if (previous != null && access != Definition.Access.LOCAL) {
-            KeepStatement keep = this.def.getKeep(key);
+            KeepNode keep = this.def.getKeep(key);
             String ownerName = this.def.getName();
             if (ownerName != null && nominalDef != null && !nominalDef.isFormalParam()) { 
                 // should this be def or nominalDef?
@@ -659,7 +633,7 @@ public class Scope {
             if (maxLevels > 0) maxLevels--;
             if (!kept && maxLevels != 0) {
                 if (this.def.hasChildDefinition(key, true)) {
-                    if (keep == null || !(keep.isInContainer() || keep.getTableInstance() != null /* || this.def.equals(previous.def) */ )) {
+                    if (keep == null || keep.getTableInstance() == null) {
                         return;
                     }
                 }
@@ -707,17 +681,10 @@ public class Scope {
             if (keepMap != null) {
                 p = keepMap.get(key);
                 if (p != null) {
-                    // first check for a pointer to the container.  If there is one it will have
-                    // the same key but prepended with a "+"
-                    Pointer pContainer = keepMap.get("+" + key);
-                    if (pContainer != null) {
-                        Map<String, Object> containerTable = pContainer.cache;
-                        containerTable.put(pContainer.getContainerKey(), newData);
-                    }
                     Map<String, Object> keepTable = p.cache;
                     if (keepTable != cache || !key.equals(p.getKey())) {
                         synchronized (keepTable) {
-                            p = new Pointer(p.ri, p.riAs, p.getKey(), p.containerKey, keepTable);
+                            p = new Pointer(p.ri, p.riAs, p.getKey(), keepTable);
 
                             // two scenarios: keep as and cached identity.  With keep as, we want the
                             // pointer def; with cached identity, we want the holder def.  We can tell
@@ -747,7 +714,7 @@ public class Scope {
                 p = (Pointer) oldData;
                 Map<String, Object> keepTable = p.cache;
                 if (keepTable != cache || !key.equals(p.getKey())) {
-                    p = new Pointer(p.ri, p.riAs, p.getKey(), p.containerKey, keepTable);
+                    p = new Pointer(p.ri, p.riAs, p.getKey(), keepTable);
 
                     // two scenarios: keep as and cached identity.  With keep as, we want the
                     // pointer def; with cached identity, we want the holder def.  We can tell
@@ -777,16 +744,6 @@ public class Scope {
                 nextKeep.put(nextKey, holder);
             }
     
-            // Finally look for a container cache pointer.  nextKey at this point
-            // should have the unmodified, unaliased version of the key
-            p = (Pointer) cache.get("+" + nextKey);
-            if (p != null) {
-                nextKeep = p.cache;
-                nextKey = p.getContainerKey();
-                synchronized (nextKeep) {
-                    nextKeep.put(nextKey, holder);
-                }
-            }
         }
         // if the key has multiple parts, it represents a container and child.  If we 
         // need to update container children (specified by a boolean parameter to this 

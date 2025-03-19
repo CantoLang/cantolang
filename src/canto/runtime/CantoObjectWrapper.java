@@ -97,7 +97,7 @@ public class CantoObjectWrapper {
         if (data instanceof CantoObjectWrapper) {
             return null;
         } else {
-            return AbstractConstruction.getStringForData(data);
+            return Construction.getStringForData(data);
         }
     }
 

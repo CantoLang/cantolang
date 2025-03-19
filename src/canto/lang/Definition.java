@@ -857,7 +857,7 @@ abstract public class Definition extends CantoNode implements Name {
         
     /** Returns the keep statement in this definition for the specified key.
      */
-    public KeepStatement getKeep(String key) {
+    public KeepNode getKeep(String key) {
         return null;
     }
 

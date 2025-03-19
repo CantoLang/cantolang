@@ -132,7 +132,7 @@ public class BoundDefinition extends NamedDefinition {
         return def.hasChildDefinition(name, localAllowed);
     }
 
-    public KeepStatement getKeep(String key)   { return def.getKeep(key); }
+    public KeepNode getKeep(String key)   { return def.getKeep(key); }
 
     public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) throws Redirection {
         return def.getChildData(childName, type, boundContext, args);

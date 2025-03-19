@@ -225,11 +225,11 @@ public class Context {
                 if (sharesKeeps(scope, prev, true)) {
                     setKeepsFromScope(prev);
                 } else {
-                    List<KeepStatement> keeps = scopedef.getKeeps();
+                    List<KeepNode> keeps = scopedef.getKeeps();
                     if (keeps != null) {
-                        Iterator<KeepStatement> it = keeps.iterator();
+                        Iterator<KeepNode> it = keeps.iterator();
                         while (it.hasNext()) {
-                            KeepStatement k = it.next();
+                            KeepNode k = it.next();
                             try {
                                 keep(k);
                             } catch (Redirection r) {
@@ -253,11 +253,11 @@ public class Context {
                 }
 
             } else if (newScope) {
-                List<KeepStatement> keeps = scopedef.getKeeps();
+                List<KeepNode> keeps = scopedef.getKeeps();
                 if (keeps != null) {
-                    Iterator<KeepStatement> it = keeps.iterator();
+                    Iterator<KeepNode> it = keeps.iterator();
                     while (it.hasNext()) {
-                        KeepStatement k = it.next();
+                        KeepNode k = it.next();
                         try {
                             keep(k);
                         } catch (Redirection r) {
@@ -366,6 +366,29 @@ public class Context {
         }
     }
 
+    public void pushParam(DefParameter param, Construction arg) {
+        if (size >= maxSize) {
+            throw new RuntimeException("blown context");
+        } else if (size < 1) {
+            throw new NoSuchElementException("Cannot push a parameter onto an empty context");
+        }
+
+        Scope scope = topScope;
+        if (scope.params == null || scope.params.size() == 0) {
+            scope.params = new ParameterList(newArrayList(1, DefParameter.class));
+        } else if (scope.params.size() == scope.origParamsSize) {
+            scope.params = new ParameterList(newArrayList(scope.params));
+        }
+        if (scope.args == null || scope.args.size() == 0) {
+            scope.args = new ArgumentList(newArrayList(1, Construction.class));
+        } else if (scope.args.size() == scope.origArgsSize) {
+            scope.args = new ArgumentList(newArrayList(scope.args));
+        }
+
+        scope.params.add(param);
+        scope.args.add(arg);
+    }
+
     public void popParam() {
         Scope scope = topScope;
         int n = scope.params.size();
@@ -424,7 +447,11 @@ public class Context {
             return null;
         }
     }
-    
+
+    public Definition getDefiningDef() {
+        return definingDef;
+    }
+
     void setTop(Scope scope) {
         if (topScope != null) {
             topScope.decRefCount();
@@ -3034,13 +3061,13 @@ public class Context {
     }
 
     
-    void addKeeps(Definition def) throws Redirection {
+    public void addKeeps(Definition def) throws Redirection {
         if (def != null && def instanceof NamedDefinition) {
-            List<KeepStatement> keeps = ((NamedDefinition) def).getKeeps();
+            List<KeepNode> keeps = ((NamedDefinition) def).getKeeps();
             if (keeps != null) {
-                Iterator<KeepStatement> it = keeps.iterator();
+                Iterator<KeepNode> it = keeps.iterator();
                 while (it.hasNext()) {
-                    KeepStatement k = it.next();
+                    KeepNode k = it.next();
                     try {
                         keep(k);
                     } catch (Redirection r) {
@@ -3053,30 +3080,12 @@ public class Context {
     }
 
     @SuppressWarnings("unchecked")
-    private void keep(KeepStatement k) throws Redirection {
+    private void keep(KeepNode k) throws Redirection {
         
         Map<String, Object> table = null;
         Instantiation instance = k.getTableInstance();
 
-        // the current container scope; this is the scope corresponding to the code
-        // block containing the instantiation being constructed.
-        Scope containerScope = null;
-        Map<String, Object> containerTable = null;
-        String containerKey = null;
-        boolean inContainer = k.isInContainer(this);
-        if (inContainer) {
-            // back up to the new frame scope
-            for (Scope scope = topScope; scope.getPrevious() != null; scope = scope.getPrevious()) {
-                if (scope.superdef == null) {
-                    containerScope = scope.getPrevious();
-                    containerTable = containerScope.getKeepKeep();
-                    break;
-                }
-            }
-            table = containerTable;
-
-        } else if (instance == null) {
-    
+        if (instance == null) {
             table = topScope.getKeepKeep();
 
         } else {
@@ -3135,8 +3144,7 @@ public class Context {
                 }
             }
 
-            containerKey = (asthis ? key : topScope.def.getName() + (key == null ? "." : "." + key));
-            topScope.addKeep(ri, riAs, key, table, containerKey, containerTable, keepMap, cache);
+            topScope.addKeep(ri, riAs, key, table, keepMap, cache);
         }
     }
 
