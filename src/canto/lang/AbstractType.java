@@ -139,7 +139,7 @@ abstract public class AbstractType extends NameNode implements Type {
                 Value val = valgen.getValue(context);
                 Class<?> c = val.getValueClass();
                 return (c != null && name.equals(c.getName()));
-            } catch (Redirection r) {
+            } catch (Throwable t) {
                 return false;
             }
 

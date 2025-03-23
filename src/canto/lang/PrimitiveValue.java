@@ -2,7 +2,7 @@
  * 
  * PrimitiveValue.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import canto.runtime.Log;
+import canto.util.EmptyList;
 import canto.util.StringReference;
 import canto.runtime.CantoObjectWrapper;
 
@@ -23,9 +24,6 @@ import java.lang.reflect.Array;
 
 /**
  * Value implementation for simple values.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.38 $
  */
 
 public class PrimitiveValue extends Construction implements Value {
@@ -42,7 +40,7 @@ public class PrimitiveValue extends Construction implements Value {
     public PrimitiveValue(Object value) {
         this.value = value;
         if (value instanceof Value) {
-            this.value = ((Value) value).getValue();
+            this.value = ((Value) value).getData();
             nativeClass = ((Value) value).getValueClass();
         } else if (value instanceof Boolean) {
             nativeClass = Boolean.TYPE;
@@ -64,7 +62,7 @@ public class PrimitiveValue extends Construction implements Value {
     }
 
     public PrimitiveValue(Object value, Class<?> valueClass) {
-        Object obj = (value instanceof Value ? ((Value) value).getValue() : value);
+        Object obj = (value instanceof Value ? ((Value) value).getData() : value);
         if (valueClass == null || valueClass == Void.TYPE) {
             nativeClass = Void.TYPE;
         } else if (valueClass.equals(Boolean.class) || valueClass.equals(Boolean.TYPE)) {
@@ -604,7 +602,7 @@ public class PrimitiveValue extends Construction implements Value {
     }
 
     @Override
-    public Object getObject() {
+    public Object getData() {
         return value;
     }
 

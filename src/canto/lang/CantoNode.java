@@ -227,15 +227,18 @@ abstract public class CantoNode {
     /** Static utility method to retrieve the value of an arbitrary object. */
     public static Object getObjectValue(Context context, Object obj) {
         Object data = null;
-        if (obj instanceof ValueGenerator) {
+        if (obj instanceof ValueSource) {
+            
+            Value value = ((ValueSource) obj).getValue(context);
+            
+            
+            
             try {
                 data = ((ValueGenerator) obj).getData(context);
             } catch (Redirection r) {
                 data = null;
             }
 
-        } else if (obj instanceof Value) {
-            data = ((Value) obj).getValue();
         } else {
             data = obj;
         }

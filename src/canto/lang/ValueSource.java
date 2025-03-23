@@ -35,6 +35,6 @@ public interface ValueSource {
     public final static int CHAR = 6;
     public final static int STRING = 7;
 
-    public Value getValue(Context context) throws Redirection;
+    public Value getValue(Context context);
 
 }

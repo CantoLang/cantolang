@@ -2,7 +2,7 @@
  * 
  * Value.java
  *
- * Copyright (c) 2024 by cantolang.org
+ * Copyright (c) 2024-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,12 +10,11 @@ package canto.lang;
 
 import java.util.HashMap;
 
-import canto.runtime.Context;
 
 /**
  * 
  */
-public class ValueInstance implements Value, ValueSource {
+public class ValueInstance implements Value {
 
     public static final ValueInstance NULL = new ValueInstance(null);
     public static final ValueInstance TRUE = new ValueInstance(Boolean.TRUE);
@@ -58,11 +57,6 @@ public class ValueInstance implements Value, ValueSource {
 
     public String getString() {
         return (value == null ? null : value.toString());
-    }
-
-    @Override
-    public ValueInstance getValue(Context context) throws Redirection {
-        return this;
     }
 
     public boolean getBoolean() {
@@ -139,12 +133,18 @@ public class ValueInstance implements Value, ValueSource {
         }
     }
     
-    public Object getObject() {
+    @Override
+    public Object getData() {
         return value;
     }
 
     public Class<?> getValueClass() {
         return (value == null ? null : value.getClass());
+    }
+
+    @Override
+    public Value getValue(Context context) {
+        return this;
     }
 
 }

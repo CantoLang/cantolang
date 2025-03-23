@@ -87,6 +87,7 @@ public class NullValue extends Block implements Value {
         return type;
     }
 
+    @Override
     public Class<?> getValueClass() {
         switch (type) {
             case LITERAL_STRING:
@@ -101,11 +102,13 @@ public class NullValue extends Block implements Value {
     }
 
     /** ValueSource interface method; returns this Value. **/
+    @Override
     public Value getValue(Context context) {
     	return this;
     }
     	         
-    public Object getValue() {
+    @Override
+    public Object getData() {
         return null;
     }
 
@@ -167,14 +170,9 @@ public class NullValue extends Block implements Value {
     }
 
     @Override
-    public Object getObject() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public Object generateData(Context context, Definition def) {
         // TODO Auto-generated method stub
         return null;
     }
+
 }

@@ -17,31 +17,26 @@ public interface Value extends ValueSource {
     public static Value createValue(Object value) {
         return new Value() {
             @Override
-            public Value getValue() {
-                return this;
-            }
-
-            @Override
             public Value getValue(Context context) {
                 return this;
             }
 
             @Override
-            public Object getObject() {
+            public Object getData() {
                 return value;
             }
         };
     }
 
-    public Object getObject();
+    public Object getData();
 
     default public String getString() {
-        Object value = getObject();
+        Object value = getData();
         return (value == null ? null : value.toString());
     }
 
     default public boolean getBoolean() {
-        Object value = getObject();
+        Object value = getData();
         if (value == null) {
             return false;
         } else if (value instanceof Boolean) {
@@ -54,7 +49,7 @@ public interface Value extends ValueSource {
     }
 
     default public byte getByte() {
-        Object value = getObject();
+        Object value = getData();
         if (value == null) {
             return 0;
         } else if (value instanceof Number) {
@@ -67,7 +62,7 @@ public interface Value extends ValueSource {
     }
 
     default public char getChar() {
-        Object value = getObject();
+        Object value = getData();
         if (value == null) {
             return 0;
         } else if (value instanceof Character) {
@@ -82,7 +77,7 @@ public interface Value extends ValueSource {
     }
 
     default public int getInt() {
-        Object value = getObject();
+        Object value = getData();
         if (value == null) {
             return 0;
         } else if (value instanceof Number) {
@@ -95,7 +90,7 @@ public interface Value extends ValueSource {
     }
 
     default public long getLong() {
-        Object value = getObject();
+        Object value = getData();
         if (value == null) {
             return 0;
         } else if (value instanceof Number) {
@@ -108,7 +103,7 @@ public interface Value extends ValueSource {
     }
 
     default public double getDouble() {
-        Object value = getObject();
+        Object value = getData();
         if (value == null) {
             return 0;
         } else if (value instanceof Number) {
@@ -121,16 +116,8 @@ public interface Value extends ValueSource {
     }
     
     default public Class<?> getValueClass() {
-        Object value = getObject();
+        Object value = getData();
         return (value == null ? null : value.getClass());
-    }
-
-    default public Value getValue(Context context) {
-        return this;
-    }
-
-    default public Object getValue() {
-        return getObject();
     }
 
 }

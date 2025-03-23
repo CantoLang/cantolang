@@ -21,15 +21,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 
-import canto.lang.CantoNode;
-import canto.lang.CompilationUnit;
-import canto.lang.Context;
-import canto.lang.Core;
-import canto.lang.DuplicateDefinitionException;
-import canto.lang.Name;
-import canto.lang.Redirection;
-import canto.lang.Site;
-import canto.lang.site_config;
+import canto.lang.*;
 import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
 import canto.runtime.CantoServer;
@@ -42,7 +34,6 @@ import cantocore.CoreSource;
  *
  */
 public class SiteLoader {
-
     private static final Log LOG = Log.getLogger(SiteLoader.class);
     
     private static final long LOAD_SLEEP = 200L;
@@ -281,7 +272,7 @@ public class SiteLoader {
         try {
             prop = instance.getText(context);
         } catch (Redirection r) {
-            log("Problem getting property " + name + ", redirects to " +  r.getLocation());
+            LOG.error("Problem getting property " + name + ", redirects to " +  r.getLocation());
         }
 
         return prop;
@@ -306,7 +297,7 @@ public class SiteLoader {
                 prop = (CantoObjectWrapper) obj;
         	}
         } catch (Redirection r) {
-            log("Problem getting property " + name + ", redirects to " +  r.getLocation());
+            LOG.error("Problem getting property " + name + ", redirects to " +  r.getLocation());
         }
 
         return prop;
@@ -350,7 +341,7 @@ public class SiteLoader {
             }
       
         } catch (Redirection r) {
-            log("Problem getting property " + name + ", redirects to " +  r.getLocation());
+            LOG.error("Problem getting property " + name + ", redirects to " +  r.getLocation());
         }
 
         return collectionObj;
@@ -473,7 +464,7 @@ public class SiteLoader {
 
                 if (load) {
                     LOG.info("Loading " + abspath + "...");
-                    CantoSourceLoader fileLoader = new CantoSourceLoader(path, actions);
+                    CantoSourceLoader fileLoader = new CantoSourceLoader(path);
                     fileLoader.load(wait);
                     loaders.add(fileLoader);
                     System.out.flush();
@@ -500,7 +491,7 @@ public class SiteLoader {
 
             if (load) {
                 LOG.info("Loading " + url.toString() + "...");
-                CantoSourceLoader urlLoader = new CantoSourceLoader(url, actions);
+                CantoSourceLoader urlLoader = new CantoSourceLoader(url);
                 urlLoader.load(wait);
                 loaders.add(urlLoader);
             }
@@ -524,7 +515,7 @@ public class SiteLoader {
                 }
             }
 
-            CantoSourceLoader srcLoader = new CantoSourceLoader(reader, actions);
+            CantoSourceLoader srcLoader = new CantoSourceLoader(reader);
             srcLoader.load(wait);
             loaders.add(srcLoader);
 

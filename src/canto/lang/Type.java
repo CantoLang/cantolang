@@ -2,7 +2,7 @@
  * 
  * Type.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,14 +10,9 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
-
 /**
  * A Type is a reference to a definition, which may be built-in (primitive types),
  * external (declared in an extern statement) or explicit.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.18 $
  */
 
 public interface Type extends Name {

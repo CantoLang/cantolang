@@ -2,7 +2,7 @@
  * 
  * PrimitiveType.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,7 +11,8 @@ package canto.lang;
 import java.util.ArrayList;
 import java.util.List;
 
-import canto.runtime.Context;
+import canto.util.EmptyList;
+
 
 /**
  * A built-in type name.
@@ -267,14 +268,14 @@ public class PrimitiveType extends AbstractType {
             return true;
         }
 
-        /** Returns <code>PUBLIC_ACCESS</code>. */
-        public int getAccess() {
-            return PUBLIC_ACCESS;
+        /** Returns <code>PUBLIC</code>. */
+        public Access getAccess() {
+            return Access.PUBLIC;
         }
 
         /** Returns <code>STATIC</code>. */
-        public int getDurability() {
-            return STATIC;
+        public Durability getDurability() {
+            return Durability.STATIC;
         }
 
         /** Returns the associated PrimitiveType object. */
