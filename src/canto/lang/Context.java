@@ -725,7 +725,7 @@ public class Context {
                 argDef = childDef;
 
                 if (arg instanceof PrimitiveValue && CantoObjectWrapper.class.equals(((PrimitiveValue) arg).getValueClass())) {
-                    CantoObjectWrapper wrapper = (CantoObjectWrapper) ((Value) arg).getValue();
+                    CantoObjectWrapper wrapper = (CantoObjectWrapper) ((Value) arg).getData();
                     Context argContext = wrapper.getContext();
                     argDef = new BoundDefinition(argDef, argContext);
                 }
@@ -849,7 +849,7 @@ public class Context {
     public Object dereference(Object data, List<Index> indexes) throws Redirection {
         // dereference collections represented as values
         if (data instanceof Value) {
-            data = ((Value) data).getValue();
+            data = ((Value) data).getData();
             if (data == null) {
                 return null;
             }
@@ -1216,11 +1216,11 @@ public class Context {
     
                     } else {
                         if (element instanceof Value) {
-                            data = ((Value) element).getValue();
+                            data = ((Value) element).getData();
                         } else if (element instanceof Construction) {
                             data = ((Construction) element).getData(this);
                         } else if (element instanceof ValueGenerator) {
-                            data = ((ValueGenerator) element).getData(this);
+                            data = ((ValueGenerator) element).getValue(this).getData();
                         }  else {
                             data = element;
                             //throw new Redirection(Redirection.STANDARD_ERROR, "unrecognized element class: " + element.getClass().getName());
@@ -1279,10 +1279,10 @@ public class Context {
                             }
                     
                         } else if (arg instanceof PrimitiveValue) {
-                            data = arg; //((PrimitiveValue) arg).getValue();
+                            data = arg; //((PrimitiveValue) arg).getData();
                     
                         } else if (arg instanceof Expression) {
-                            data = ((ValueGenerator) arg).getData(this);
+                            data = ((ValueGenerator) arg).getValue(this).getData();
                 
                         } else if (arg instanceof Construction) { 
                             argDef = param.getDefinitionFor(this, (Construction) arg);
@@ -1303,7 +1303,7 @@ public class Context {
                             }
 
                         } else if (arg instanceof ValueGenerator) {
-                            data = ((ValueGenerator) arg).getData(this);
+                            data = ((ValueGenerator) arg).getValue(this).getData();
     
                         } else {
                             data = arg;
@@ -1420,7 +1420,7 @@ public class Context {
     
     private Object instantiateParameterChild(ComplexName childName, DefParameter param, Object arg, List<Index> indexes) throws Redirection {
         if (arg instanceof Value && !(arg instanceof Instantiation)) {
-            Object val = ((Value) arg).getValue();
+            Object val = ((Value) arg).getData();
             if (val instanceof CantoObjectWrapper) {
                 arg = val;
             }
@@ -1548,7 +1548,7 @@ public class Context {
                         }
                 
                         if (a instanceof Value && !(a instanceof Instantiation)) {
-                            Object o = ((Value) a).getValue();
+                            Object o = ((Value) a).getData();
                             a = o;
                         }
                 
@@ -2024,14 +2024,14 @@ public class Context {
                         data = object;
 
                     } else if (object instanceof ValueGenerator) {
-                        data = ((ValueGenerator) object).getData(this);
+                        data = ((ValueGenerator) object).getValue(this).getData();
 
                     } else {
                         data = object.getData(this);
                     }
             
                     if (data instanceof Value) {
-                        data = ((Value) data).getValue();
+                        data = ((Value) data).getData();
                     } else if (data instanceof CantoNode) {
                         ((CantoNode) instantiatedDef).initNode((CantoNode) data);
                     }
@@ -2055,9 +2055,9 @@ public class Context {
                                 Object subData = (sub == null ? null : constructSub(sub, instantiatedDef));
                                 if (subData != null) {
                                     if (subData instanceof Value) {
-                                        chunkData = ((Value) subData).getValue();
+                                        chunkData = ((Value) subData).getData();
                                     } else if (subData instanceof ValueGenerator) {
-                                        chunkData = ((ValueGenerator) subData).getValue(this);
+                                        chunkData = ((ValueGenerator) subData).getValue(this).getData();
                                     } else {
                                         chunkData = subData;
                                     }
@@ -2070,9 +2070,9 @@ public class Context {
                                 Object superData = constructSuper(superFlavor, superArgs, instantiatedDef);
                                 if (superData != null) {
                                     if (superData instanceof Value) {
-                                        chunkData = ((Value) superData).getValue();
+                                        chunkData = ((Value) superData).getData();
                                     } else if (superData instanceof ValueGenerator) {
-                                        chunkData = ((ValueGenerator) superData).getValue(this);
+                                        chunkData = ((ValueGenerator) superData).getValue(this).getData();
                                     } else {
                                         chunkData = superData;
                                     }
@@ -2084,7 +2084,7 @@ public class Context {
                             } else {
                                 chunkData = chunk.getData(this);
                                 if (chunkData != null && chunkData instanceof Value) {
-                                    chunkData = ((Value) chunkData).getValue();
+                                    chunkData = ((Value) chunkData).getData();
                                 }
                             }
                             if (chunkData != null) {
@@ -2200,12 +2200,12 @@ public class Context {
                     } else if (object instanceof Value) {
                         data =  object;
                     } else if (object instanceof ValueGenerator) {
-                        data = ((ValueGenerator) object).getData(this);
+                        data = ((ValueGenerator) object).getValue(this).getData();
                     } else {
                         data = object.getData(this);
                     }
                     if (data instanceof Value) {
-                        data = ((Value) data).getValue();
+                        data = ((Value) data).getData();
                     } else if (data instanceof CantoNode) {
                         instantiatedDef.initNode((CantoNode) data);
                     }
@@ -2244,9 +2244,9 @@ public class Context {
                                 }
                                 if (subData != null) {
                                     if (subData instanceof Value) {
-                                        chunkData = ((Value) subData).getValue();
+                                        chunkData = ((Value) subData).getData();
                                     } else if (subData instanceof ValueGenerator) {
-                                        chunkData = ((ValueGenerator) subData).getValue(this);
+                                        chunkData = ((ValueGenerator) subData).getValue(this).getData();
                                     } else {
                                         chunkData = subData;
                                     }
@@ -2257,9 +2257,9 @@ public class Context {
                                 Object subData = (sub == null ? null : constructSub(sub, instantiatedDef));
                                 if (subData != null) {
                                     if (subData instanceof Value) {
-                                        chunkData = ((Value) subData).getValue();
+                                        chunkData = ((Value) subData).getData();
                                     } else if (subData instanceof ValueGenerator) {
-                                        chunkData = ((ValueGenerator) subData).getValue(this);
+                                        chunkData = ((ValueGenerator) subData).getValue(this).getData();
                                     } else {
                                         chunkData = subData;
                                     }
@@ -2276,9 +2276,9 @@ public class Context {
                                     Object superData = constructSuper(superFlavor, superArgs, instantiatedDef);
                                     if (superData != null) {
                                         if (superData instanceof Value) {
-                                            chunkData = ((Value) superData).getValue();
+                                            chunkData = ((Value) superData).getData();
                                         } else if (superData instanceof ValueGenerator) {
-                                            chunkData = ((ValueGenerator) superData).getValue(this);
+                                            chunkData = ((ValueGenerator) superData).getValue(this).getData();
                                         } else {
                                             chunkData = superData;
                                         }
@@ -2287,7 +2287,7 @@ public class Context {
                             } else {
                                 chunkData = chunk.getData(this);
                                 if (chunkData != null && chunkData instanceof Value) {
-                                    chunkData = ((Value) chunkData).getValue();
+                                    chunkData = ((Value) chunkData).getData();
                                 }
                             }
                             if (chunkData != null) {
@@ -2403,7 +2403,7 @@ public class Context {
                     } else if (aliasInstance != null) {
                         data = aliasInstance.getData(this, aliasDef);
                     } else if (construction instanceof ValueGenerator) {
-                        data = ((ValueGenerator) construction).getData(this);
+                        data = ((ValueGenerator) construction).getValue(this).getData();
                     } else {
                         data = construction.getData(this);
                     }
@@ -2413,7 +2413,7 @@ public class Context {
             }
     
             if (data instanceof Value) {
-                data = ((Value) data).getValue();
+                data = ((Value) data).getData();
 
             } else if (data instanceof CantoNode) {
                 instantiatedDef.initNode((CantoNode) data);
@@ -2529,7 +2529,7 @@ public class Context {
                         }
                 
                         if (data instanceof Value) {
-                            data = ((Value) data).getValue();
+                            data = ((Value) data).getData();
                         } else if (data instanceof CantoNode) {
                             if (instantiatedDef != null) {
                                 instantiatedDef.initNode((CantoNode) data);
@@ -2924,6 +2924,25 @@ public class Context {
         }
     }
 
+    public ArgumentList getArguments() {
+        if (topScope != null) {
+            return topScope.args;
+        }
+        return null;
+    }
+
+    public ParameterList getParameters() {
+        if (topScope != null) {
+            return topScope.params;
+        }
+        return null;
+    }
+
+    public Iterator<Scope> iterator() {
+        return new ContextIterator();
+    }
+
+
     /** Modify the name used to cache a value with indexes, to discriminate
      *  cached collections from cached elements.
      */
@@ -2950,10 +2969,10 @@ public class Context {
         }
 
         if (collection instanceof Value) {
-            collection = ((Value) collection).getValue();
+            collection = ((Value) collection).getData();
 
         } else if (collection instanceof ValueGenerator) {
-            collection = ((ValueGenerator) collection).getData(this);
+            collection = ((ValueGenerator) collection).getValue(this).getData();
         }
 
         if (collection instanceof CantoArray) {
@@ -3002,7 +3021,7 @@ public class Context {
                         } else if (element instanceof Construction) {
                             elementKey = ((Construction) element).getText(this);
                         } else if (element instanceof ValueGenerator) {
-                            elementKey = ((ValueGenerator) element).getString(this);
+                            elementKey = ((ValueGenerator) element).getValue(this).getString();
                         } else {
                             elementKey = element.toString();
                         }
@@ -3405,6 +3424,32 @@ public class Context {
     public Object getRootScope() {
         return rootScope;
     }
+
+    class ContextIterator implements Iterator<Scope> {
+        private Scope nextScope;
+
+        public ContextIterator() {
+            nextScope = topScope;
+        }
+
+        public boolean hasNext() {
+            return (nextScope != null);
+        }
+
+        public Scope next() {
+            if (nextScope == null) {
+                throw new NoSuchElementException();
+            }
+            Scope scope = nextScope;
+            nextScope = nextScope.getPrevious();
+            return scope;
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException("ReverseIterator does not support remove");
+        }
+    }
+
 }
 
 class ContextMarker {

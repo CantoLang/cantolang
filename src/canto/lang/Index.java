@@ -66,11 +66,7 @@ public class Index extends CantoNode {
         if (node instanceof Value) {
             return (Value) node;
         } else {
-            try {
-                return ((ValueGenerator) node).getValue(context);
-            } catch (Redirection r) {
-                return new PrimitiveValue();
-            }
+            return ((ValueGenerator) node).getValue(context);
         }
     }
     

@@ -65,14 +65,6 @@ public class BoundDefinition extends NamedDefinition {
         return def.getSuperDefinition();
     }
 
-    public Definition getImmediateSubdefinition(Context context) {
-        return def.getImmediateSubdefinition(boundContext);
-    }
-
-    public NamedDefinition getUnderDefinition(Context context) {
-        return def.getUnderDefinition(boundContext);
-    }
-
     public Definition getSubdefInContext(Context context) {
         return def.getSubdefInContext(boundContext);
     }

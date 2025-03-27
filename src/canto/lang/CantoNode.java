@@ -228,22 +228,12 @@ abstract public class CantoNode {
     public static Object getObjectValue(Context context, Object obj) {
         Object data = null;
         if (obj instanceof ValueSource) {
-            
             Value value = ((ValueSource) obj).getValue(context);
-            
-            
-            
-            try {
-                data = ((ValueGenerator) obj).getData(context);
-            } catch (Redirection r) {
-                data = null;
-            }
-
+            data = value.getData();
         } else {
             data = obj;
         }
         return data;
     }
-
 
 }

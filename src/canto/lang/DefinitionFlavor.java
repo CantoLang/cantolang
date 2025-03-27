@@ -92,12 +92,12 @@ public class DefinitionFlavor extends ComplexDefinition {
     }
 
     /** Returns the access modifier. */
-    public int getAccess() {
+    public Access getAccess() {
         return def.getAccess();
     }
 
     /** Returns the durability modifier. */
-    public int getDurability() {
+    public Durability getDurability() {
         return def.getDurability();
     }
 
@@ -144,23 +144,6 @@ public class DefinitionFlavor extends ComplexDefinition {
     /** Returns the superdefinition, or null if unspecified. */
     public NamedDefinition getSuperDefinition() {
         return def.getSuperDefinition();
-    }
-
-    /** Returns the immediate subdefinition of this definition in the current context,
-     *  or null if not found.  This method assumes that this definition or a subdefinition
-     *  is currently being constructed, so the top of the context stack will contain this
-     *  definition or a subdefintion.
-     */
-    public Definition getImmediateSubdefinition(Context context) {
-        return def.getImmediateSubdefinition(context);
-    }
-    
-    /** Returns the underdefinition, or null if unspecified.  The underdefinition is the
-     *  one this definition overrides -- i.e., the child definition by the same name as
-     *  this definition in the superdefinition of this definition's owner.  
-     */
-    public NamedDefinition getUnderDefinition(Context context) {
-        return def.getUnderDefinition(context);
     }
 
     /** Returns true if this definition contains a <code>sub</code> statement,

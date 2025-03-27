@@ -16,17 +16,17 @@ import org.antlr.v4.runtime.TokenStream;
 
 import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
+import canto.runtime.Log;
+import canto.util.SingleItemList;
 
 import java.io.StringReader;
 
 /**
  * Base class for compound names.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.14 $
  */
 
 public class ComplexName extends NameNode implements Name, Initializable {
+    private static final Log LOG = Log.getLogger(ComplexName.class);
 
     public ComplexName() {
         super();
@@ -395,9 +395,9 @@ public class ComplexName extends NameNode implements Name, Initializable {
         StringBuffer sb = new StringBuffer(prefix);
         
         Iterator<CantoNode> it = getChildren();
-        AbstractNode node = null;
+        CantoNode node = null;
         while (it.hasNext()) {
-            node = (AbstractNode) it.next();
+            node = (CantoNode) it.next();
             sb.append(node.toString(""));
             if (it.hasNext()) {
                 sb.append('.');

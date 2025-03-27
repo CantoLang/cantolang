@@ -13,6 +13,7 @@ import java.util.*;
 import canto.runtime.CantoObjectWrapper;
 import canto.runtime.Log;
 import canto.util.Holder;
+import canto.util.SingleItemIterator;
 
 /**
 * NamedDefinition is a definition which can be looked up by name, allowing it to be
@@ -56,8 +57,8 @@ public class NamedDefinition extends Definition {
     private List<KeepNode> keeps = null;
     transient private List<KeepNode> keepsAndSuperKeeps = null;
 
-    public NamedDefinition() {
-        super();
+    public NamedDefinition(Name name) {
+        super(name);
     }
 
     public NamedDefinition(Definition def, Context context) {
@@ -401,7 +402,7 @@ public class NamedDefinition extends Definition {
      *  This method enables the identification of the specific chain of supertypes within a 
      *  multiple inheritance tree of supertypes which leads to the parent  
      */
-    public Type getSuperForChild(Context context, Definition childDef) throws Redirection {
+    public Type getSuperForChild(Context context, Definition childDef) {
         NameNode name = childDef.getNameNode();
         Type st = getSuper(context);
         if (st == null) {
@@ -414,11 +415,8 @@ public class NamedDefinition extends Definition {
                    Type nextType = it.next();
                 NamedDefinition sd = (NamedDefinition) nextType.getDefinition();
                 if (sd == null) {
-                    if (context.getErrorThreshhold() <= Context.IGNORABLE_ERRORS) {
-                        throw new Redirection(Redirection.STANDARD_ERROR, "Definition not found for " + nextType.getName());
-                    } else {
-                        continue;
-                    }
+                    LOG.error("Definition not found for " + nextType.getName());
+                    throw new IllegalArgumentException("Definition not found for " + nextType.getName());
                 }
                 try {
                     Definition def = ((DefinitionInstance) sd.getChild(name, name.getArguments(), name.getIndexes(), null, context, false, false, null, null)).def;
@@ -426,7 +424,7 @@ public class NamedDefinition extends Definition {
                         return nextType;
                     }
                 } catch (Exception e) {
-                    vlog("Exception getting super for child: " + e);
+                    LOG.error("Exception getting super for child: " + e);
                 } catch (Redirection r) {
                     ;
                 }
@@ -849,47 +847,7 @@ public class NamedDefinition extends Definition {
         return superdef;
     }
 
-    /** Returns the underdefinition, which is the definition, if any, that this definition
-     *  overrides, i.e., the child of this definition's owner's superclass that has the same
-     *  name as this definition.
-     **/
-    public NamedDefinition getUnderDefinition(Context context) {
-        NamedDefinition underDef = null;
-        NameNode name = getNameNode();
-        try {
-            Definition ownerDef = getOwner();
-            if (ownerDef != null) {
-                for (NamedDefinition superDef = ownerDef.getSuperDefinition(); superDef != null; superDef = superDef.getSuperDefinition()) {
-                    Definition childDef = superDef.getChildDefinition(name, context);
-                    if (childDef != null) {
-                        underDef = (NamedDefinition) childDef;
-                        break;
-                    }
-                }
-            }
-        } finally {
-            ;
-        }
-        return underDef;
-    }
-    
-   
-    /** Returns the immediate subdefinition of this definition in the current context,
-     *  or null if not found.  This method assumes that this definition or a subdefinition
-     *  is currently being constructed, so the top of the context stack will contain this
-     *  definition or a subdefintion.
-     */
-    public Definition getImmediateSubdefinition(Context context) {
-        NamedDefinition subDef = (NamedDefinition) context.peek().def;
-        for (NamedDefinition superDef = subDef.getSuperDefinition(); superDef != null; superDef = superDef.getSuperDefinition()) {
-            if (superDef.includes(this)) {
-                return subDef;
-            }
-        }
-        return null;
-    }
-
-    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) throws Redirection {
+    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
         if (isAlias()) {
             Instantiation aliasInstance = getAliasInstance();
             Definition aliasDef = aliasInstance.getDefinition(context, this, false);
@@ -927,7 +885,7 @@ public class NamedDefinition extends Definition {
         Definition defInKeep = null;
         Definition nominalDefInKeep = null;
 
-        if (getDurability() != Definition.DYNAMIC && (args == null || !args.isDynamic())) {
+        if (getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic())) {
             //cachevlog("  = = =]  collection: retrieving " + name + " from cache [= = = ");
 
             Object collectionObject = null;
@@ -1227,7 +1185,7 @@ public class NamedDefinition extends Definition {
                          if (aliasArg instanceof Instantiation) {
                              if (name.equals(((Instantiation) aliasArg).getDefinitionName())) {
                                  nameEqualsArg = true;
-                                 vlog(name + " is also an alias arg; skipping lookup");
+                                 LOG.debug(name + " is also an alias arg; skipping lookup");
                                  break;
                             }
                         }
@@ -1256,7 +1214,7 @@ public class NamedDefinition extends Definition {
                                     Holder holder = context.getDefHolder(nm, fullNm, partArgs, partIndexes, false);
                                     if (holder != null) {
                                         Definition nominalDef = holder.nominalDef;
-                                        if (nominalDef != null && !nominalDef.isCollection() && nominalDef.getDurability() != Definition.DYNAMIC) { 
+                                        if (nominalDef != null && !nominalDef.isCollection() && nominalDef.getDurability() != Durability.DYNAMIC) { 
                                             if (nominalDef.isIdentity()) {
                                                 partDef = holder.def;
                                                 if (partArgs == null) {
@@ -1308,7 +1266,7 @@ public class NamedDefinition extends Definition {
                 String nm = prefix.getName();
                 String fullNm = getFullNameInContext(context) + "." + nm;
                 Holder holder = context.getDefHolder(nm, fullNm, null, prefixIndexes, false);
-                if (holder != null && holder.def != null && holder.def.getDurability() != DYNAMIC && isDynamic() && !((CantoNode) holder.def).isDynamic() && !holder.def.equals(context.getDefiningDef())) {
+                if (holder != null && holder.def != null && holder.def.getDurability() != Durability.DYNAMIC && isDynamic() && !((CantoNode) holder.def).isDynamic() && !holder.def.equals(context.getDefiningDef())) {
                     prefixDef = holder.def;
                     prefixArgs = holder.args;
                 }
@@ -1334,8 +1292,8 @@ public class NamedDefinition extends Definition {
                     ArgumentList aliasArgs = alias.getArguments();
                     List<Index> aliasIndexes = alias.getIndexes();
                     Definition aliasDef = null;
-                    Context.Entry aliasEntry = context.getParameterEntry(alias, false);
-                    if (aliasEntry == null) {
+                    Scope aliasScope = context.getParameterScope(alias, false);
+                    if (aliasScope == null) {
                         for (Definition owner = prefixDef.getOwner(); owner != null; owner = owner.getOwner()) {
                             Definition ownerInContext = owner.getSubdefInContext(context);
                             if (ownerInContext != null && !ownerInContext.equalsOrExtends(this)) {
@@ -1348,10 +1306,10 @@ public class NamedDefinition extends Definition {
                         }
                     }
 
-                    if (aliasEntry != null) {
-                        prefixDef = aliasEntry.def;
-                        prefixParams = aliasEntry.params;
-                        prefixArgs = aliasEntry.args;
+                    if (aliasScope != null) {
+                        prefixDef = aliasScope.def;
+                        prefixParams = aliasScope.params;
+                        prefixArgs = aliasScope.args;
                         prefixIndexes = aliasIndexes;
 
                     } else if (aliasDef != null) {
@@ -1481,7 +1439,7 @@ public class NamedDefinition extends Definition {
                                      if (contentArg instanceof Instantiation) {
                                          if (name.getName().equals(((Instantiation) contentArg).getDefinitionName())) {
                                              nameEqualsArg = true;
-                                             vlog(name + " is also a content arg; skipping lookup");
+                                             LOG.debug(name + " is also a content arg; skipping lookup");
                                              break;
                                         }
                                     }
@@ -1549,7 +1507,7 @@ public class NamedDefinition extends Definition {
                             if (superArg instanceof Instantiation) {
                                 CantoNode ref = ((Instantiation) superArg).getReference();
                                 if (node.equals(ref)) {
-                                    vlog("...can't look up " + node.getName() + " in supertype " + st.getName());
+                                    LOG.debug("...can't look up " + node.getName() + " in supertype " + st.getName());
                                     foundSame = true;
                                     break;
                                 }
@@ -1561,8 +1519,8 @@ public class NamedDefinition extends Definition {
                         boolean unpushedSuper = false;
                         boolean pushedSuper = false;
                         if (!nd.equals(context.peek().superdef)) {
-                            //Context.Entry entry = context.doublePeek();
-                            //if (entry != null && nd.equals(entry.superdef)) {
+                            //Scope scope = context.doublePeek();
+                            //if (scope != null && nd.equals(scope.superdef)) {
                             //    context.unpush();
                             //    unpushedSuper = true;
                             //} else {
@@ -1703,10 +1661,10 @@ public class NamedDefinition extends Definition {
                         }
                         if (collectionDef == null) {
                             Definition owner = getOwner();
-                            Iterator<Context.Entry> it = context.iterator();
+                            Iterator<Scope> it = context.iterator();
                             while (it.hasNext()) {
-                                Context.Entry entry = (Context.Entry) it.next();
-                                Definition defcon = entry.def;
+                                Scope scope = (Scope) it.next();
+                                Definition defcon = scope.def;
                                 // avoid infinite recursion
                                 if (!defcon.equals(this)) {
                                     def = defcon.getChildDefinition(node, args, null, parentArgs, context, this);
@@ -1719,8 +1677,8 @@ public class NamedDefinition extends Definition {
                             if (collectionDef == null) {   // not in the class hierarchy, try the container hierarchy
                                 it = context.iterator();
                                 while (it.hasNext()) {
-                                    Context.Entry entry = (Context.Entry) it.next();
-                                    Definition defcon = entry.def;
+                                    Scope scope = (Scope) it.next();
+                                    Definition defcon = scope.def;
                                     // avoid infinite recursion
                                     if (!defcon.equals(this)) {
                                         for (owner = defcon.getOwner(); owner != null; owner = owner.getOwner()) {
@@ -1843,7 +1801,7 @@ public class NamedDefinition extends Definition {
             ComplexDefinition container = (ComplexDefinition) getOwner();
             if (container != null) {
                 while (def == null) {
-                    Iterator<Context.Entry> it = context.iterator();
+                    Iterator<Scope> it = context.iterator();
                     while (it.hasNext()) {
                         Definition cdef = it.next().def;
                         if (cdef instanceof NamedDefinition && (container.equals(cdef) || container.isSubDefinition((NamedDefinition) cdef))) {
@@ -1928,7 +1886,7 @@ public class NamedDefinition extends Definition {
                                     Holder holder = context.getDefHolder(nm, fullNm, partArgs, partIndexes, false);
                                     if (holder != null) {
                                         Definition nominalDef = holder.nominalDef;
-                                        if (nominalDef != null && !nominalDef.isCollection() && nominalDef.getDurability() != Definition.DYNAMIC) { 
+                                        if (nominalDef != null && !nominalDef.isCollection() && nominalDef.getDurability() != Durability.DYNAMIC) { 
                                             if (nominalDef.isIdentity()) {
                                                 partDef = holder.def;
                                                 if (partArgs == null) {
@@ -2171,14 +2129,14 @@ public class NamedDefinition extends Definition {
      */
     public Object get(Context context, ArgumentList args) throws Redirection {
         Object data = null;
-        if (getDurability() != DYNAMIC && (args == null || !args.isDynamic())) {
+        if (getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic())) {
             data = context.getData(this, getName(), args, null);
             if (data != null) {
                 return data;
             }
         }
         data = instantiate(context, args);
-        if (data != null && getDurability() != DYNAMIC && (args == null || !args.isDynamic())) {
+        if (data != null && getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic())) {
             context.putData(this, args, null, getName(), data);
         }
         return data;

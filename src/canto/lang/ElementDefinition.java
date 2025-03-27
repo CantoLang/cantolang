@@ -59,7 +59,7 @@ public class ElementDefinition extends Definition {
             }
             setContents((CantoNode) element);
             
-        } else if (element instanceof Chunk || element instanceof Definition) {
+        } else if (element instanceof Construction || element instanceof Definition) {
             setContents((CantoNode) element);
         } else {
             setContents(new PrimitiveValue(element));
@@ -72,7 +72,7 @@ public class ElementDefinition extends Definition {
         if (contents instanceof ResolvedInstance) {
             return ((ResolvedInstance) contents).getResolutionContext();
         } else {
-            return ((AnonymousDefinition) getOwner()).initContext;
+            return getOwner().initContext;
         }
     }
 
@@ -84,7 +84,7 @@ public class ElementDefinition extends Definition {
         CantoNode contents = getContents();
 
         if (wrapped) {
-            return ((Value) contents).getValue();
+            return ((Value) contents).getData();
 
         } else if (contents instanceof Instantiation && !(contents instanceof ResolvedInstance)) {
             if (context == null) {
@@ -101,7 +101,7 @@ public class ElementDefinition extends Definition {
     }
 
     public String getName() {
-        Context context = ((AnonymousDefinition) getOwner()).initContext;
+        Context context = getOwner().initContext;
         Object element = getElement(context);
         if (element == null) {
             return "";
@@ -123,7 +123,7 @@ public class ElementDefinition extends Definition {
     }
 
     public Definition getChildDefinition(NameNode name, Context context) {
-        Context elementContext = ((AnonymousDefinition) getOwner()).initContext;
+        Context elementContext = getOwner().initContext;
         if (elementContext != null) {
             context = elementContext;
         }
@@ -154,7 +154,7 @@ public class ElementDefinition extends Definition {
     }
 
 
-    public Object getChild(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         Object element = getElement(context);
         if (element instanceof Definition) {
             return ((Definition) element).getChild(name, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);

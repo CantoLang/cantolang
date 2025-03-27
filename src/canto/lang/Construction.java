@@ -89,11 +89,7 @@ public abstract class Construction extends CantoNode {
         if (val instanceof Value) {
             value = (Value) val;
         } else {
-            try {
-                value = ((ValueGenerator) val).getValue(context);
-            } catch (Redirection r) {
-                value = new PrimitiveValue(false);
-            }
+            value = ((ValueGenerator) val).getValue(context);
         }
         return value.getBoolean();
     }
@@ -498,7 +494,7 @@ public abstract class Construction extends CantoNode {
                         // if an object wrapper is itself wrapped in a Value,
                         // unwrap it
                         } else if (data instanceof Value) {
-                            Object val = ((Value) data).getValue();
+                            Object val = ((Value) data).getData();
                             if (val instanceof CantoObjectWrapper) {
                                 data = val;
                             }
