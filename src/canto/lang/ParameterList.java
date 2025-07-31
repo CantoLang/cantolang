@@ -105,7 +105,7 @@ public class ParameterList extends ListNode<DefParameter> {
 
                 // figure out the argument type
                 Type argType = null;
-                AbstractNode arg = (AbstractNode) argObj;
+                CantoNode arg = (CantoNode) argObj;
                 if (arg instanceof Instantiation) {
                     Instantiation argInstance = (Instantiation) arg;
                     NameNode argName = argInstance.getReferenceName();
@@ -227,7 +227,7 @@ public class ParameterList extends ListNode<DefParameter> {
                 }
                 return false;
             } else {
-                AbstractNode node = (AbstractNode) arg;
+                CantoNode node = (CantoNode) arg;
                 Iterator<DefParameter> it = iterator();
                 while (it.hasNext()) {
                     DefParameter param = it.next();
@@ -279,7 +279,7 @@ class NameChecker extends CantoVisitor {
                 return null;
             }
         }
-        AbstractNode[] children = ((AbstractNode) node).children;
+        CantoNode[] children = node.children;
         if (children != null) {
             for (int i = 0; i < children.length; i++) {
                 Object childData = children[i].jjtAccept(this, data);

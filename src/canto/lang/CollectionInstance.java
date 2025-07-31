@@ -2,7 +2,7 @@
  * 
  * CollectionInstance.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,13 +10,8 @@ package canto.lang;
 
 import java.util.Iterator;
 
-import canto.runtime.Context;
-
 /**
  * Interface for resolved collection instances.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.9 $
  */
 
 public interface CollectionInstance {
@@ -26,7 +21,7 @@ public interface CollectionInstance {
      *  individual items in the container are not necessarily instantiated.
      * @throws Redirection 
      */
-    public Object getCollectionObject() throws Redirection;
+    public Object getCollectionObject();
 
     public int getSize();
     

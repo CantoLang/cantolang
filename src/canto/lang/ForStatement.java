@@ -13,7 +13,7 @@ import java.util.*;
 
 import canto.runtime.CantoObjectWrapper;
 import canto.util.CollectionFactory;
-
+import canto.util.SingleItemIterator;
 import canto.runtime.Log;
 
 /**
@@ -128,7 +128,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                     } else {
                         Object data = body.getData(context);
                         //if (data instanceof Value && !(data instanceof ResolvedInstance)) {
-                        //    data = ((Value) data).getValue();
+                        //    data = ((Value) data).getData();
                         //}
                         if (data != null) {
                             if (data instanceof Construction) {
@@ -380,7 +380,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                     while (!instance.equals(lastInstance)) {
                         lastInstance = instance;
                         def = instance.getUltimateDefinition(context);
-                        if (def != null && def.getDurability() != Definition.DYNAMIC && !instance.isDynamic() && !instance.getReferenceName().hasIndexes()) {
+                        if (def != null && def.getDurability() != Definition.Durability.DYNAMIC && !instance.isDynamic() && !instance.getReferenceName().hasIndexes()) {
                             data = context.getData(def, instance.getName(), instance.getArguments(), instance.getIndexes());
                         }
                         if (data != null) {
@@ -408,7 +408,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                                 }
                             }
                         } else if (def == null) {
-                            log("Cannot find definition for instance " + instance.getName() + " in for statement.");
+                            LOG.error("Cannot find definition for instance " + instance.getName() + " in for statement.");
                         } 
                     }
                     
@@ -435,7 +435,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                             data = ((CantoObjectWrapper) data).getData();
                         }
                         if (data instanceof Value && !(data instanceof ResolvedCollection)) {
-                        	data = ((Value)data).getValue();
+                        	data = ((Value)data).getData();
                         }
                         if (data == null) {
                         	it = new EmptyIterator<Construction>();

@@ -2,7 +2,7 @@
  * 
  * ResolvedArray.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,14 +11,13 @@ package canto.lang;
 import java.util.Iterator;
 import java.util.List;
 
-import canto.runtime.Context;
 
 public class ResolvedArray extends ResolvedCollection {
 
     private CollectionDefinition collectionDef = null;
     protected CantoArray array = null;
 
-    public ResolvedArray(Definition def, Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public ResolvedArray(Definition def, Context context, ArgumentList args, List<Index> indexes) {
         super(def, context, args, indexes);
         context = getResolutionContext();
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -31,7 +30,7 @@ public class ResolvedArray extends ResolvedCollection {
         }
     }
 
-    public ResolvedArray(Definition def, Context context, ArgumentList args, List<Index> indexes, Object arrayData) throws Redirection {
+    public ResolvedArray(Definition def, Context context, ArgumentList args, List<Index> indexes, Object arrayData) {
         super(def, context, args, indexes);
         
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -39,7 +38,7 @@ public class ResolvedArray extends ResolvedCollection {
         if (arrayData instanceof Instantiation) {
             arrayData = ((Instantiation) arrayData).getData(context);
             if (arrayData instanceof Value) {
-                arrayData = ((Value) arrayData).getValue();
+                arrayData = ((Value) arrayData).getData();
             }
         }
         
@@ -49,7 +48,7 @@ public class ResolvedArray extends ResolvedCollection {
             // this doesn't support args in anonymous arrays 
             CollectionDefinition arrayDef = (CollectionDefinition) arrayData;
             if (arrayDef.equals(collectionDef)) {
-                throw new Redirection(Redirection.STANDARD_ERROR, "Array " + def.getName() + " is circularly defined.");
+                throw new RuntimeException("Array " + def.getName() + " is circularly defined.");
             }
             array = arrayDef.getArray(context, null, null);
         } else if (arrayData instanceof Object[]) {
@@ -59,11 +58,11 @@ public class ResolvedArray extends ResolvedCollection {
         } else if (arrayData instanceof ResolvedArray) {
             array = ((ResolvedArray) arrayData).getArray();
         } else if (arrayData != null) {
-            throw new Redirection(Redirection.STANDARD_ERROR, "Unable to initialize array " + def.getName() + "; data in context of wrong type: " + arrayData.getClass().getName());
+            throw new ClassCastException("Unable to initialize array " + def.getName() + "; data in context of wrong type: " + arrayData.getClass().getName());
         }
     }
 
-    public Object generateData(Context context, Definition def) throws Redirection {
+    public Object generateData(Context context, Definition def) {
         return array;
     }
 
@@ -72,9 +71,9 @@ public class ResolvedArray extends ResolvedCollection {
      */
     private static CantoArray createArray(Definition def, Context context, ArgumentList args) throws Redirection {
         boolean pushed = false;
-        Context.Entry entry = context.peek();
+        Scope scope = context.peek();
         
-        if (!def.equals(entry.def) || (args != null && !args.equals(entry.args))) {
+        if (!def.equals(scope.def) || (args != null && !args.equals(scope.args))) {
             ParameterList params = def.getParamsForArgs(args, context);
             context.push(def, params, args, false);
             pushed = true;
@@ -143,7 +142,7 @@ public class ResolvedArray extends ResolvedCollection {
                 }
 
             } else if (contents instanceof Value) {
-                array = new ArrayInstance(((Value) contents).getValue());
+                array = new ArrayInstance(((Value) contents).getData());
 
             } else if (contents instanceof ValueGenerator) {
                 array = new ArrayInstance((ValueGenerator) contents, context);

@@ -11,6 +11,7 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.Log;
+import canto.util.EmptyList;
 
 
 /**
@@ -18,14 +19,14 @@ import canto.runtime.Log;
  */
 
 public class ElementReference extends Definition {
-    private static final Log log = Log.getLogger(ElementReference.class);
+    private static final Log LOG = Log.getLogger(ElementReference.class);
     
     private CollectionInstance collection;
     private Definition collectionDef;
-    private List<Index> indexes;
+    private IndexList indexes;
     private Instantiation instance;
 
-    public ElementReference(CollectionInstance collection, List<Index> indexes) {
+    public ElementReference(CollectionInstance collection, IndexList indexes) {
         super();
         this.collection = collection;
         this.collectionDef = collection.getDefinition();
@@ -44,7 +45,7 @@ public class ElementReference extends Definition {
         return ib.toString();
     }
     
-    public List<Index> getIndexes() {
+    public IndexList getIndexes() {
         return indexes;
     }
 
@@ -65,7 +66,7 @@ public class ElementReference extends Definition {
     }
 
     public NameNode getNameNode() {
-        return new NameWithIndexes(collection.getName(), indexes);
+        return new NameWithArgs(collection.getName(), indexes);
     }
 
     public List<ParameterList> getParamLists() {
@@ -81,7 +82,7 @@ public class ElementReference extends Definition {
     }        
         
     
-    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) throws Redirection{
+    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
         return collectionDef.getCollectionDefinition(context, args);
     }
     
@@ -91,12 +92,8 @@ public class ElementReference extends Definition {
      *  has no definition then this returns false, since it has a concrete value (null)
      */
     public boolean isAbstract(Context context) {
-        try {
-            Definition def = getElementDefinition(context);
-            return (def == null ? false : def.isAbstract(context));
-        } catch (Redirection r) {
-            return false;
-        }
+        Definition def = getElementDefinition(context);
+        return (def == null ? false : def.isAbstract(context));
     }
 
     /** Returns null. */
@@ -111,11 +108,7 @@ public class ElementReference extends Definition {
 
     public List<Construction> getConstructions(Context context) {
         Definition def = null;
-        try {
-            def = getElementDefinition(context);
-        } catch (Redirection r) {
-            ;
-        }
+        def = getElementDefinition(context);
         if (def == null) {
             return new EmptyList<Construction>();
         } else {
@@ -168,14 +161,10 @@ public class ElementReference extends Definition {
     }
     
     public Definition getBaseDefinition(Context context) {
-        try {
-            Definition baseDef = getElementDefinition(context);
-            if (baseDef != null) {
-                return baseDef;
-            } else {
-                return collectionDef;
-            }
-        } catch (Redirection r) {
+        Definition baseDef = getElementDefinition(context);
+        if (baseDef != null) {
+            return baseDef;
+        } else {
             return collectionDef;
         }
     }
@@ -196,7 +185,7 @@ public class ElementReference extends Definition {
         return getBaseDefinition(context).getSuperDefinition(context); //collectionDef.getSuperDefinition(context);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         Definition def = getElementDefinition(argContext);
         if (def == null) {
             return (generate ? UNDEFINED : null);
@@ -205,7 +194,7 @@ public class ElementReference extends Definition {
         }
     }
 
-    public Definition getElementDefinition(Context context) throws Redirection {
+    public Definition getElementDefinition(Context context) {
         Definition def = null;
         Iterator<Index> it = indexes.iterator();
         CollectionInstance coll = collection;
@@ -227,7 +216,7 @@ public class ElementReference extends Definition {
                     throw new ClassCastException("Bad definition type for collection");
                 }
                 if (coll == null) {
-                    log("Null collection in multidimensional ElementReference");
+                    LOG.error("Null collection in multidimensional ElementReference");
                     break;
                 }
             } else {
@@ -259,7 +248,7 @@ public class ElementReference extends Definition {
                     throw new ClassCastException("Bad definition type for collection");
                 }
                 if (coll == null) {
-                    log("Null collection in multidimensional ElementReference");
+                    LOG.error("Null collection in multidimensional ElementReference");
                     break;
                 }
             } else {
@@ -269,7 +258,7 @@ public class ElementReference extends Definition {
         return null;
     }
 
-    private CollectionInstance getCollectionInstanceFor(Context context, Object obj, Index index) throws Redirection {
+    private CollectionInstance getCollectionInstanceFor(Context context, Object obj, Index index) {
         CollectionInstance coll = null;
         if (obj instanceof CollectionInstance) {
             coll = (CollectionInstance) obj;

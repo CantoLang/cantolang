@@ -21,7 +21,7 @@ abstract public class CollectionBuilder {
     }
 
     
-    public static CollectionInstance createCollectionInstanceForDef(Definition def, Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection {
+    public static CollectionInstance createCollectionInstanceForDef(Definition def, Context context, ArgumentList args, List<Index> indexes, Object collectionData) {
         if (def.isArray()) {
             return new ResolvedArray(def, context, args, indexes, collectionData);
         } else if (def.isTable()) {

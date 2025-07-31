@@ -260,7 +260,7 @@ public class ComplexName extends NameNode implements Name, Initializable {
     }
 
     /** Returns a list of indexes associated with this name, or null if none. */
-    public List<Index> getIndexes() {
+    public IndexList getIndexes() {
         // this name has indexes if the last child name has indexes, or
         // is followed by indexes.
         int n = children.length;
@@ -268,7 +268,9 @@ public class ComplexName extends NameNode implements Name, Initializable {
             if (children[i] instanceof NameNode) {
                 return ((NameNode) children[i]).getIndexes();
             } else if (children[i] instanceof Index) {
-                return new SingleItemList<Index>((Index) children[i]);
+                CantoNode[] indexes = new CantoNode[1];
+                indexes[0] = children[i];
+                return new IndexList(indexes);
             }
         }
         return null;

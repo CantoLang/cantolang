@@ -23,7 +23,7 @@ public interface DynamicObject {
      *  definition instance).   If the object is already initialized or needs no
      *  initialization, this method returns the original object.
      */
-    public Object initForContext(Context context, ArgumentList args, List<Index> indexes) throws Redirection;
+    public Object initForContext(Context context, ArgumentList args, IndexList indexes);
 
     /** Returns true if this object is already initialized for the specified context,
      *  i.e., if <code>initForContext(context, args) == this</code> is true.

@@ -15,7 +15,7 @@ import canto.lang.*;
 import java.util.ArrayList;
 
 /**
- * @author Michael St. Hippolyte
+ * Container for an arbitrary Canto construction, along with a domain or context.
  */
 
 public class CantoObjectWrapper {
@@ -48,7 +48,7 @@ public class CantoObjectWrapper {
     /** Constructs a new CantoWrapperObject, given a definition, data
      *  and context.
      */
-    public CantoObjectWrapper(Definition def, ArgumentList args, List<Index> indexes, Context context) throws Redirection {
+    public CantoObjectWrapper(Definition def, ArgumentList args, List<Index> indexes, Context context) {
         def = def.getSubdefInContext(context);
         ResolvedInstance ri = new ResolvedInstance(def, context, args, indexes);
         construction = ri;

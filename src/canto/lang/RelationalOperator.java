@@ -2,13 +2,12 @@
  * 
  * RelationalOperator.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
 package canto.lang;
 
-import canto.runtime.Context;
 
 /**
  * Base class for relational operators.
@@ -41,14 +40,14 @@ abstract public class RelationalOperator extends BinaryOperator {
             Object obj1 = null;
             if (type1 != null && type1.isArray()) {
                 Value val = firstObj.getValue(context);
-                obj1 = val.getValue();
+                obj1 = val.getData();
                 if (obj1 instanceof CantoArray) {
                     obj1 = ((CantoArray) obj1).getArrayObject();
                 }
                 obj1 = ArrayBuilder.instantiateElements(obj1, context);
 
             } else if (firstObj instanceof Value) {
-                obj1 = ((Value) firstObj).getValue();
+                obj1 = ((Value) firstObj).getData();
                 
             } else {
                 obj1 = firstObj.getValue(context);
@@ -57,14 +56,14 @@ abstract public class RelationalOperator extends BinaryOperator {
             Object obj2 = null;
             if (type2 != null && type2.isArray()) {
                 Value val = secondObj.getValue(context);
-                obj2 = val.getValue();
+                obj2 = val.getData();
                 if (obj2 instanceof CantoArray) {
                     obj2 = ((CantoArray) obj2).getArrayObject();
                 }
                 obj2 = ArrayBuilder.instantiateElements(obj2, context);
 
             } else if (secondObj instanceof Value) {
-                obj2 = ((Value) secondObj).getValue();
+                obj2 = ((Value) secondObj).getData();
                 
             } else {
                 obj2 = secondObj.getValue(context);

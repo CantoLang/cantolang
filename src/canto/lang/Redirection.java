@@ -8,14 +8,15 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
 import canto.runtime.CantoObjectWrapper;
+import canto.runtime.Log;
 
 /**
- *  A Redirection is thrown by a Canto <code>redirect</code> statement.  This
- *  interrupts the construction of the page and leads to a HTTP redirect.
+ *  A Redirection is thrown by a Canto <code>redirect</code> statement.  This interrupts the 
+ *  construction of the response and substitutes a different response.
  */
-public class Redirection extends Throwable {
+public class Redirection extends RuntimeException {
+    private static final Log LOG = Log.getLogger(Redirection.class);
     
     private static final long serialVersionUID = 1L;
 
@@ -42,7 +43,7 @@ public class Redirection extends Throwable {
             message = null;
         }
         location = null;
-        CantoLogger.vlog("Creating redirection to instance: " + instance.getName());
+        LOG.debug("Creating redirection to instance: " + instance.getName());
     }
     
     public Redirection(String location) {
@@ -50,14 +51,14 @@ public class Redirection extends Throwable {
         this.location = (STANDARD_ERROR.equals(location) ? STANDARD_ERROR_PAGE : location);
         message = null;
         instance = null;
-        CantoLogger.vlog("Creating redirection to location: " + location);
+        LOG.debug("Creating redirection to location: " + location);
     }
 
     public Redirection(String location, String message) {
         super(message);
         this.location = (STANDARD_ERROR.equals(location) ? STANDARD_ERROR_PAGE : location);
         this.message = message;
-        CantoLogger.vlog("Creating redirection to location: " + location + " with message: " + message);
+        LOG.debug("Creating redirection to location: " + location + " with message: " + message);
     }
 
     public Redirection(int status, String location, String message) {
@@ -65,7 +66,7 @@ public class Redirection extends Throwable {
         this.status = status;
         this.location = (STANDARD_ERROR.equals(location) ? STANDARD_ERROR_PAGE : location);
         this.message = message;
-        CantoLogger.vlog("Creating redirection to location: " + location + " with message: " + message + " and status: " + status);
+        LOG.debug("Creating redirection to location: " + location + " with message: " + message + " and status: " + status);
     }
 
     public int getStatus() {

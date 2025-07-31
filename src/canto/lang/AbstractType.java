@@ -78,7 +78,7 @@ abstract public class AbstractType extends NameNode implements Type {
         if (obj instanceof Instantiation) {
             Instantiation instance = (Instantiation) obj;
             Definition def = instance.getDefinition(context);
-            List<Index> indexes = instance.getIndexes();
+            IndexList indexes = instance.getIndexes();
             if (def == null) {
                 return false;
             } else if (name.equals(def.getName())) {

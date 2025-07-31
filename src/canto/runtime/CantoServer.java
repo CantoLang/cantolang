@@ -11,7 +11,6 @@ package canto.runtime;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.util.Date;
@@ -94,7 +93,7 @@ public class CantoServer implements canto_server {
     private long asyncTimeout = 0l;
 
     private CantoStandaloneServer standaloneServer = null;
-    private HashMap<String, CantoServer> serverMap = new HashMap<String, CantoServer>();
+    //private HashMap<String, CantoServer> serverMap = new HashMap<String, CantoServer>();
 
 
     /** Main entry point, if CantoServer is run as a standalone application.  The following
@@ -581,11 +580,6 @@ public class CantoServer implements canto_server {
             response.setStatus(status);                
             callback.succeeded();
 
-        } catch (Exception e) {
-            status = CantoServer.SERVER_ERROR;
-            response.setStatus(status);
-            Response.writeError(request, response, callback, status, "Server error", e);
-
         } catch (Redirection r) {
             status = r.getStatus();
             String location = r.getLocation();
@@ -607,6 +601,11 @@ public class CantoServer implements canto_server {
                 response.setStatus(status);
                 callback.succeeded();
             }
+
+        } catch (Exception e) {
+            status = CantoServer.SERVER_ERROR;
+            response.setStatus(status);
+            Response.writeError(request, response, callback, status, "Server error", e);
 
         } finally {
             if (cantoContext != null) {

@@ -133,7 +133,7 @@ public class CollectionDefinition extends ComplexDefinition {
 
     public void resolveDims() {}
     
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (Name.COUNT.equals(node.getName())) {
             if (generate) {
                 if (parentObj != null) {
@@ -362,7 +362,7 @@ public class CollectionDefinition extends ComplexDefinition {
         }
     }
 
-    public ElementReference getElementReference(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public ElementReference getElementReference(Context context, ArgumentList args, IndexList indexes) {
         CollectionInstance instance = getCollectionInstance(context, args, null);
         return new ElementReference(instance, indexes);
     }

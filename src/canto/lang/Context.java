@@ -94,6 +94,10 @@ public class Context {
         stateCount = stateFactory.lastState();
     }
    
+    public Context(Context context) {
+        this(context, false);
+    }
+  
     public Context(Context context, boolean clearKeep) {
         instanceCount++;
         rootContext = context.rootContext;
@@ -156,13 +160,13 @@ public class Context {
     // -------------------------------------------
     // push, pop, peek, etc.
     
-    public void push(Definition def, ParameterList params, ArgumentList args) throws Redirection {
+    public void push(Definition def, ParameterList params, ArgumentList args) {
         DefinitionInstance defInstance = getContextDefInstance(def, args);
         Scope scope = newScope(defInstance.def, defInstance.def, params, defInstance.args);
         push(scope);
     }
 
-    public void push(Definition def, ParameterList params, ArgumentList args, boolean newFrame) throws Redirection {
+    public void push(Definition def, ParameterList params, ArgumentList args, boolean newFrame) {
         DefinitionInstance defInstance = getContextDefInstance(def, args);
         if (defInstance.args != null && (defInstance.args != args || params == null)) {
             args = defInstance.args;
@@ -173,7 +177,7 @@ public class Context {
         push(scope);
     }
 
-    public void push(Definition instantiatedDef, Definition superdef, ParameterList params, ArgumentList args) throws Redirection {
+    public void push(Definition instantiatedDef, Definition superdef, ParameterList params, ArgumentList args) {
         DefinitionInstance defInstance = getContextDefInstance(instantiatedDef, args);
         if (defInstance.args != null && defInstance.args != args) {
             args = defInstance.args;
@@ -183,7 +187,7 @@ public class Context {
         push(scope);
     }
 
-    private void push(Scope scope) throws Redirection {
+    private void push(Scope scope) {
         boolean newFrame = (scope.superdef == null);
         boolean newScope = (scope.def != scope.superdef);
 
@@ -230,12 +234,7 @@ public class Context {
                         Iterator<KeepNode> it = keeps.iterator();
                         while (it.hasNext()) {
                             KeepNode k = it.next();
-                            try {
-                                keep(k);
-                            } catch (Redirection r) {
-                                LOG.error("Error in keep statement: " + r.getMessage());
-                                throw r;
-                            }
+                            keep(k);
                         }
                 
                         String keepKeepKey = scopedef.getName() + ".keep";
@@ -258,12 +257,7 @@ public class Context {
                     Iterator<KeepNode> it = keeps.iterator();
                     while (it.hasNext()) {
                         KeepNode k = it.next();
-                        try {
-                            keep(k);
-                        } catch (Redirection r) {
-                            LOG.error("Error in keep statement: " + r.getMessage());
-                            throw r;
-                        }
+                        keep(k);
                     }
                 }
                 // Don't cache the keep map if the def owning the keeps is dynamic or the current instantiation
@@ -448,11 +442,21 @@ public class Context {
         }
     }
 
+    /** Returns true if the passed definition is on the stack. **/
+    public boolean contains(Definition def) {
+        for (Scope scope = topScope; scope != null; scope = scope.previous) {
+            if (scope.def.equalsOrExtends(def)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public Definition getDefiningDef() {
         return definingDef;
     }
 
-    void setTop(Scope scope) {
+    public void setTop(Scope scope) {
         if (topScope != null) {
             topScope.decRefCount();
         }
@@ -482,13 +486,9 @@ public class Context {
         // first resolve element references to element definitions,
         // which are handled below
         if (definition instanceof ElementReference) {
-            try {
-                Definition elementDef = ((ElementReference) definition).getElementDefinition(this);
-                if (elementDef != null) {
-                    definition = elementDef;
-                }
-            } catch (Redirection r) {
-                throw new IllegalStateException("Redirection on attempt to get element definition: " + r);
+            Definition elementDef = ((ElementReference) definition).getElementDefinition(this);
+            if (elementDef != null) {
+                definition = elementDef;
             }
         }
 
@@ -533,13 +533,9 @@ public class Context {
         // first resolve element references to element definitions,
         // which are handled below
         if (definition instanceof ElementReference) {
-            try {
-                Definition elementDef = ((ElementReference) definition).getElementDefinition(this);
-                if (elementDef != null) {
-                    definition = elementDef;
-                }
-            } catch (Redirection r) {
-                throw new IllegalStateException("Redirection on attempt to get element definition: " + r);
+            Definition elementDef = ((ElementReference) definition).getElementDefinition(this);
+            if (elementDef != null) {
+                definition = elementDef;
             }
         }
 
@@ -576,11 +572,15 @@ public class Context {
      *  the definition associated with it (i.e., the argument passed as the
      *  parameter's value).
      */
-    public Definition getParameterDefinition(NameNode name, boolean inContainer) throws Redirection {
+    public Definition getParameterDefinition(NameNode name, boolean inContainer) {
         return (Definition) getParameter(name, inContainer, Definition.class);
     }
 
-    public Object getParameter(NameNode name, boolean inContainer, Class<?> returnClass) throws Redirection {
+    public Scope getParameterScope(NameNode name, boolean inContainer) {
+        return (Scope) getParameter(name, inContainer, Scope.class);
+    }
+    
+   public Object getParameter(NameNode name, boolean inContainer, Class<?> returnClass) {
         if (topScope == null) {
             return null;
         }
@@ -680,7 +680,7 @@ public class Context {
             // dereference the argument definition if the reference includes indexes
             NameNode paramNameNode = (checkForChild ? (NameNode) name.getChild(0) : name);
             ArgumentList paramArgs = paramNameNode.getArguments();
-            List<Index> paramIndexes = paramNameNode.getIndexes();
+            IndexList paramIndexes = paramNameNode.getIndexes();
             if ((paramArgs != null && paramArgs.size() > 0) || (paramIndexes != null && paramIndexes.size() > 0)) {
                 Context argContext = this;
                 if (mustUnpush) {
@@ -762,7 +762,7 @@ public class Context {
         }
     }
 
-    public Definition initDef(Definition def, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Definition initDef(Definition def, ArgumentList args, IndexList indexes) {
         ExternalDefinition externalDef = null;
         
         if (def instanceof ExternalDefinition) {
@@ -782,7 +782,7 @@ public class Context {
             CollectionDefinition collectionDef = def.getCollectionDefinition(this, args);
             if (collectionDef != null) {
                 if (def instanceof ElementReference) {
-                    List<Index> combinedIndexes = new ArrayList<Index>(((ElementReference) def).getIndexes());
+                    IndexList combinedIndexes = new IndexList(((ElementReference) def).getIndexes());
                     combinedIndexes.addAll(indexes);
                     indexes = combinedIndexes;
                 }
@@ -797,7 +797,7 @@ public class Context {
         return def;
     }
 
-    public Definition dereference(Definition def, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Definition dereference(Definition def, ArgumentList args, IndexList indexes) {
         if (indexes != null) {
             CollectionDefinition collectionDef = null;
 
@@ -846,7 +846,7 @@ public class Context {
         return def;
     }
 
-    public Object dereference(Object data, List<Index> indexes) throws Redirection {
+    public Object dereference(Object data, IndexList indexes) {
         // dereference collections represented as values
         if (data instanceof Value) {
             data = ((Value) data).getData();
@@ -897,13 +897,9 @@ public class Context {
                 }
             }
         } else if (node.numParts() > 1) {
-            try {
-                Definition paramDef = getParameterDefinition(node, false);
-                if (paramDef != null) {
-                    paramType = paramDef.getType();
-                }
-            } catch (Redirection r) {
-                ;
+            Definition paramDef = getParameterDefinition(node, false);
+            if (paramDef != null) {
+                paramType = paramDef.getType();
             }
     
         } else {
@@ -1096,7 +1092,7 @@ public class Context {
                     // the child consists of everything past the first dot, which is the
                     // same as a complex name consisting of every node in the name
                     // except for the first
-                    List<Index> indexes = ((NameNode) name.getChild(0)).getIndexes();
+                    IndexList indexes = ((NameNode) name.getChild(0)).getIndexes();
                     ComplexName childName = new ComplexName(name, 1, name.getNumChildren());
                     data = resolutionContext.instantiateParameterChild(childName, param, arg, indexes);
 
@@ -1118,7 +1114,7 @@ public class Context {
     private Object instantiateParameter(DefParameter param, Object arg, NameNode argName) throws Redirection {
         Object data = null;
         ArgumentList argArgs = argName.getArguments();
-        List<Index> indexes = argName.getIndexes();
+        IndexList indexes = argName.getIndexes();
         int numUnpushes = 0;
         boolean pushedOwner = false;
 
@@ -1368,11 +1364,11 @@ public class Context {
         return data;
     }
 
-    private List<Index> instantiateIndexes(List<Index> indexes) {
+    private IndexList instantiateIndexes(IndexList indexes) {
         if (indexes == null || indexes.size() == 0) {
             return indexes;
         }
-        List<Index> instantiatedIndexes = new ArrayList<Index>(indexes.size());
+        ListNode<Index> instantiatedIndexes = new ListNode<Index>(indexes.size());
         Iterator<Index> it = indexes.iterator();
         while (it.hasNext()) {
             Index index = it.next();
@@ -1380,14 +1376,14 @@ public class Context {
             instantiatedIndexes.add(instantiatedIndex);
         }
 
-        return instantiatedIndexes;
+        return new IndexList(instantiatedIndexes);
     }
     
-    public List<Index> resolveIndexes(List<Index> indexes) {
+    public IndexList resolveIndexes(IndexList indexes) {
         if (indexes == null || indexes.size() == 0) {
             return indexes;
         }
-        List<Index> resolvedIndexes = new ArrayList<Index>(indexes.size());
+        ListNode<Index> resolvedIndexes = new ListNode<Index>(indexes.size());
         Iterator<Index> it = indexes.iterator();
         while (it.hasNext()) {
             Index index = it.next();
@@ -1395,7 +1391,7 @@ public class Context {
             resolvedIndexes.add(resolvedIndex);
         }
 
-        return resolvedIndexes;
+        return new IndexList(resolvedIndexes);
     }
     
     private ArgumentList resolveArguments(ArgumentList args) {
@@ -1418,7 +1414,7 @@ public class Context {
         return resolvedArgs;
     }
     
-    private Object instantiateParameterChild(ComplexName childName, DefParameter param, Object arg, List<Index> indexes) throws Redirection {
+    private Object instantiateParameterChild(ComplexName childName, DefParameter param, Object arg, IndexList indexes) {
         if (arg instanceof Value && !(arg instanceof Instantiation)) {
             Object val = ((Value) arg).getData();
             if (val instanceof CantoObjectWrapper) {
@@ -1598,7 +1594,7 @@ public class Context {
 
             if (argDef != null) {
                 args = (instance != null ? instance.getArguments() : null);
-                List<Index> argIndexes = (instance != null ? instance.getIndexes() : null);
+                IndexList argIndexes = (instance != null ? instance.getIndexes() : null);
                 if (argDef.isIdentity() && (instance == null || !(instance instanceof ResolvedInstance))) {
                     Holder holder = getDefHolder(argDef.getName(), argDef.getFullNameInContext(this), args, argIndexes, false);
                     if (holder != null) {
@@ -1664,7 +1660,7 @@ public class Context {
     }
 
 
-    private Object instantiateArgChild(ComplexName name, Type paramType, Definition def, ArgumentList args, List<Index> indexes) throws Redirection {
+    private Object instantiateArgChild(ComplexName name, Type paramType, Definition def, ArgumentList args, IndexList indexes) {
 
         int n = name.numParts();
 
@@ -1716,11 +1712,383 @@ public class Context {
         }
     }
 
+    public Object getDescendant(Definition parentDef, ArgumentList args, NameNode name, boolean generate, Object parentObj) throws Redirection {
+        Definition def = parentDef;
+
+        // if this is a reference to a collection element, forward to its definition
+        if (def instanceof ElementReference) {
+            Definition elementDef = ((ElementReference) def).getElementDefinition(this);
+            if (elementDef instanceof ElementDefinition) {
+                // might have to fix the args and parentArgs here
+                return ((ElementDefinition) elementDef).getChild(name, name.getArguments(), null, null, this, generate, true, parentObj, null); 
+            }
+        }
+
+        Definition childDef = null;
+        NameNode childName = name.getFirstPart();
+        ArgumentList childArgs = childName.getArguments();
+        boolean dynamicChild = (childArgs != null && childArgs.isDynamic());
+        IndexList childIndexes = childName.getIndexes();
+        int numPushes = 0;
+        int numSuperPushes = 0;
+        ComplexName restOfName = null;
+        int numNameParts = name.numParts();
+        if (numNameParts > 1) {
+            restOfName = new ComplexName(name, 1, numNameParts);
+        }
+
+        // if parentObj is a CantoObjectWrapper and we are generating data, delegate to the object
+        //if (generate && !dynamicChild && numNameParts == 1 && parentObj != null && parentObj instanceof CantoObjectWrapper) {
+        //    CantoObjectWrapper obj = (CantoObjectWrapper) parentObj;
+        //    return obj.getChildData(name);
+        //}
+
+        try {
+            // Keep track of intermediate definitions during alias dereferencing
+            // by pushing them onto the context stack in case their parameters are
+            // referenced in the child being instantiated.  Look for cached
+            // definitions and arguments
+
+            if ((args == null || !args.isDynamic()) && !(def instanceof AliasedDefinition)) {
+                String nm = def.getName();
+                String fullNm = def.getFullNameInContext(this);
+                Holder holder = getDefHolder(nm, fullNm, null, null, false);
+                if (holder != null && holder.nominalDef != null && holder.nominalDef.getDurability() != Definition.Durability.DYNAMIC && !((CantoNode) holder.nominalDef).isDynamic()) {
+                    def = holder.nominalDef;
+                    args = holder.nominalArgs;
+                    if (generate && def.isIdentity() && holder.data != null && holder.data instanceof CantoObjectWrapper && numNameParts == 1) {
+                        CantoObjectWrapper obj = (CantoObjectWrapper) holder.data;
+                        return obj.getChildData(resolveArgsIndexes(childName));
+                    }
+                }
+            }
+    
+            if (!def.isExternal() && (!def.isCollection() || parentObj == null) && !childName.isSpecial()) {
+                ParameterList params = def.getParamsForArgs(args, this);
+                if (!def.isIdentity() && !topScope.def.equals(def)) {
+                    boolean newFrame = !topScope.def.equalsOrExtends(def);
+                    push(def, params, args, newFrame);
+                    numPushes++;
+                }
+
+                // put in loop to push supers
+        
+                Definition superDef = def.getSuperDefinition(this);
+                Definition nextDef = def;
+                while (nextDef.isAliasInContext(this) && !nextDef.isCollection()) {
+                    Instantiation aliasInstance = nextDef.getAliasInstanceInContext(this);
+                    if (nextDef.isParamAlias() && aliasInstance != null) {
+                        aliasInstance = aliasInstance.getUltimateInstance(this);
+                    }
+                    if (aliasInstance == null) {
+                        break;
+                    }
+                    NameNode aliasName = aliasInstance.getReferenceName();
+                    if (aliasName.isComplex()) {
+                        numPushes += pushParts(aliasInstance);
+                    }
+            
+                    ArgumentList aliasArgs = aliasInstance.getArguments();
+                    IndexList aliasIndexes = aliasInstance.getIndexes();
+                    Definition aliasDef = aliasInstance.getDefinition(this, def, false);  // def or nextDef?
+                    if (aliasDef == null) {
+                        break;
+                    }
+            
+                    // we are only interested in aliases in the same hierarchy
+                    if (superDef != null && !aliasDef.equalsOrExtends(superDef)) {
+                        break;
+                    }
+            
+                    nextDef = aliasDef;
+                    args = aliasArgs;
+                    if ((args == null || !args.isDynamic()) && aliasIndexes == null) {
+                        String nm = aliasInstance.getName();
+                        String fullNm = parentDef.getFullNameInContext(this) + "." + nm;
+                        Holder holder = getDefHolder(nm, fullNm, null, null, false);
+                        if (holder == null && aliasInstance instanceof ResolvedInstance) {
+                            ResolvedInstance ri = (ResolvedInstance) aliasInstance;
+                            if (!equals(ri.getResolutionContext())) {
+                                holder = ri.getResolutionContext().getDefHolder(nm, fullNm, null, null, false);
+                            }
+                        }
+                        if (holder != null && holder.nominalDef != null && holder.nominalDef.getDurability() != Definition.Durability.DYNAMIC && !((CantoNode) holder.nominalDef).isDynamic() && (nextDef.equals(holder.nominalDef) || nextDef.equals(holder.def))) {
+                            nextDef = holder.nominalDef;
+                            args = holder.nominalArgs;
+                            if (generate && holder.data != null && holder.data instanceof CantoObjectWrapper) {
+                                CantoObjectWrapper obj = (CantoObjectWrapper) holder.data;
+                                if (numNameParts == 1) {
+                                    try {
+                                        unpush();
+                                        return obj.getChildData(resolveArgsIndexes(childName));
+                                    } finally {
+                                        repush();
+                                    }
+                                } else {
+                                    Definition objDef = obj.getDefinition();
+                                    Context resolutionContext = obj.getResolutionContext();
+                                    return resolutionContext.getDescendant(objDef, childArgs, name, generate, obj);
+                                }
+                            }
+                        }
+                    }
+                    params = nextDef.getParamsForArgs(args, this);
+                    push(nextDef, params, args, true);
+                    numPushes++;
+                }
+                if (def != nextDef) {
+                    def = nextDef;
+                    superDef = def.getSuperDefinition(this);
+                }
+        
+                if (superDef != null && topScope.def.equalsOrExtends(superDef)) {
+                    numSuperPushes = pushSupers(def, superDef);
+                }
+            }
+
+            //if (childIndexes == null) {
+                String nm = childName.getName();
+                String fullNm = parentDef.getFullNameInContext(this) + "." + nm;
+                Holder holder = getDefHolder(nm, fullNm, childArgs, childIndexes, false);
+                if (holder != null) {
+                    Definition nominalDef = holder.nominalDef;
+                    if (nominalDef != null && !nominalDef.isCollection() && nominalDef.getDurability() != Definition.Durability.DYNAMIC) { 
+                        if (nominalDef.isIdentity()) {
+                            childDef = holder.def;
+                            if (childArgs == null) {
+                                childArgs = holder.args;
+                            }
+                        } else {
+                            childDef = nominalDef;
+                            if (childArgs == null) {
+                                childArgs = holder.nominalArgs;
+                            }
+                        }
+                        if (childDef != null && childDef.getDurability() == Definition.Durability.DYNAMIC) {
+                            dynamicChild = true;    
+                        }
+
+                        if (generate && !dynamicChild) { // && fullNm.equals(childDef.getFullNameInContext(this))) {
+                            if (holder.data != null && !holder.data.equals(NullValue.NULL_VALUE)) {
+                                if (numNameParts == 1) {
+                                    return holder.data;
+                                } else if (holder.data instanceof CantoObjectWrapper) {
+                                    CantoObjectWrapper obj = (CantoObjectWrapper) holder.data;
+                                    return obj.getChildData(resolveArgsIndexes(restOfName));
+                                }
+                            } else if (holder.resolvedInstance != null) {
+                                ResolvedInstance ri = holder.resolvedInstance;
+                                if (numNameParts == 1) {
+                                    Object data = ri.getData(this, childDef);
+                                    if (data != null && !data.equals(NullValue.NULL_VALUE)) {
+                                        return data;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            //}
+    
+            if (childDef == null) {
+                return def.getChild(name, name.getArguments(), name.getIndexes(), args, this, generate, true, parentObj, null);
+            }
+
+            // if parentObj is a CantoObjectWrapper and we are generating data, delegate to the object
+            if (generate && childDef.getDurability() != Definition.Durability.DYNAMIC && !dynamicChild && numNameParts == 1 && parentObj != null && parentObj instanceof CantoObjectWrapper) {
+                CantoObjectWrapper obj = (CantoObjectWrapper) parentObj;
+                return obj.getChildData(resolveArgsIndexes(name));
+            }
+    
+    
+            DefinitionInstance childDefInstance = null;
+            if (childDef != null) {
+                if (generate && childName != null) {
+                    childDef = initDef(childDef, childArgs, childName.getIndexes());
+                }
+
+                if (restOfName != null) {
+                    if (generate) {
+                        return getDescendant(childDef, childArgs, restOfName, generate, parentObj);
+                    } else {
+                        childDefInstance = (DefinitionInstance) getDescendant(childDef, childArgs, restOfName, generate, parentObj);
+                    }
+                }
+            }    
+    
+            if (!generate) {
+                if (childDefInstance != null) {
+                    return childDefInstance;
+                } else if (childDef != null) {
+                    return childDef.getDefInstance(childArgs, childIndexes);
+                } else {
+                    return null;
+                }
+            }
+    
+            if (childDefInstance != null) {
+                childDef = childDefInstance.def;
+            }
+
+            if (childDef == null) {
+                return CantoNode.UNDEFINED;
+        
+            } else {
+                return childDef.instantiate(childArgs, childName.getIndexes(), this);
+            }
+
+        } finally {
+            if (numSuperPushes > 0) {
+                unpushSupers(numSuperPushes);
+            }
+            while (numPushes-- > 0) {
+                pop();
+            }
+            //validateSize();
+        }
+    }
+
+    private NameNode resolveArgsIndexes(NameNode name) {
+        ArgumentList args = name.getArguments();
+        IndexList indexes = name.getIndexes();
+
+        if ((args != null && args.size() > 0) || (indexes != null && indexes.size() < 0)) {
+            if (args != null && args.size() > 0) {
+                args = ResolvedInstance.resolveArguments(args, this);
+            }
+            if (indexes != null && indexes.size() < 0) {
+                indexes = resolveIndexes(indexes);
+            }
+            name = new NameWithArgs(name.getName(), args, indexes);
+        }
+        return name;
+    }
+    
+    public int pushParts(Instantiation instance) {
+        if (instance != null) {
+            NameNode nameNode = instance.getReferenceName();
+            if (nameNode != null) {
+                if (nameNode.isComplex()) {
+                    Context resolutionContext = this;
+                    //if (instance instanceof ResolvedInstance) {
+                    //    resolutionContext = ((ResolvedInstance) instance).getResolutionContext();
+                    //}
+                    int num = nameNode.numParts();
+                    return resolutionContext.pushParts(nameNode, num - 1, instance.getOwner());
+                }
+            }
+        }
+        return 0;
+    }
+    
+    public int pushParts(NameNode nameNode, int numParts, Definition owner) {
+        int numPushes = 0;
+        try {
+            for (int part = 0; part < numParts; part++) {
+                NameNode partName = nameNode.getPart(part);
+                Definition partDef = null;
+        
+                IndexList partIndexes = partName.getIndexes();
+                ArgumentList partArgs = partName.getArguments();
+                if (partIndexes == null || partIndexes.size() == 0) {
+                    String nm = partName.getName();
+                    String fullNm = owner.getFullNameInContext(this) + "." + nm;
+                    Holder holder = getDefHolder(nm, fullNm, partArgs, partIndexes, false);
+                    if (holder != null) {
+                        Definition nominalDef = holder.nominalDef;
+                        if (nominalDef != null && !nominalDef.isCollection() && nominalDef.getDurability() != Definition.Durability.DYNAMIC) { 
+                            if (nominalDef.isIdentity()) {
+                                partDef = holder.def;
+                                if (partArgs == null) {
+                                    partArgs = holder.args;
+                                }
+                            } else {
+                                partDef = nominalDef;
+                                if (partArgs == null) {
+                                    partArgs = holder.nominalArgs;
+                                }
+                            }
+                        }
+                    }
+                }
+        
+                Instantiation partInstance = new Instantiation(partName, owner);
+                partInstance.setKind(getParameterKind(partName.getName()));
+        
+                if (partDef == null) {
+                    partDef = partInstance.getDefinition(this);
+                    if (partDef == null) {
+                        break;
+                    }
+                }
+                if (partInstance.isParameterKind()) {
+                    Scope partScope = getParameterScope(partInstance.getReferenceName(), partInstance.isContainerParameter(this));
+                    push(partScope);
+                } else {
+                    ParameterList partParams = partDef.getParamsForArgs(partArgs, this, false);
+                    push(partDef, partParams, partArgs, false);
+                }
+                numPushes++;
+                while (partDef.isAliasInContext(this) && !partDef.isIdentity()) {
+                    partInstance = partDef.getAliasInstanceInContext(this);
+                    if (partInstance == null) {
+                        break;
+                    }
+                    if (partInstance.isParameterKind()) {
+                        Scope partScope = getParameterScope(partInstance.getReferenceName(), partInstance.isContainerParameter(this));
+                        if (partScope == null) {
+                            break;
+                        }
+                        partDef = partScope.def;
+                        if (partDef == null) {
+                            break;
+                        }
+                        push(partScope);
+                    } else {
+                        partDef = partInstance.getDefinition(this);
+                        if (partDef == null) {
+                            break;
+                        }
+                        partArgs = partInstance.getArguments();
+                        ParameterList partParams = partDef.getParamsForArgs(partArgs, this);
+                        push(partDef, partParams, partArgs, false);
+                    }
+                    numPushes++;
+                }
+            }
+        } finally {
+            //validateSize();
+        }
+        return numPushes;
+    }
+
+    public int getParameterKind(String name) {
+        int kind = Instantiation.UNRESOLVED;
+        boolean isChild = (name.indexOf('.') > 0);
+        DefParameter param = topScope.getParam(name);
+
+        if (param != null) {
+            if (param.isInFor()) {
+                return (isChild ? Instantiation.FOR_PARAMETER_CHILD : Instantiation.FOR_PARAMETER);
+            } else {
+                return (isChild ? Instantiation.PARAMETER_CHILD : Instantiation.PARAMETER);
+            }
+        }
+
+        for (Scope entry = topScope.getPrevious(); entry != null; entry = entry.getPrevious()) {
+            param = entry.getParam(name);
+            if (param != null) {
+                return (isChild ? Instantiation.CONTAINER_PARAMETER_CHILD : Instantiation.CONTAINER_PARAMETER);
+            }
+        }
+        return kind;
+    }
+
     /** Push superdefinitions of the passed definition on the stack, from most super to least super with
      *  the passed definition remaining on top.  This is designed to accommodate instantiation of children
      *  which reference parameters. 
      */
-    private int pushSupers(Definition def, Definition superDef) throws Redirection {
+    private int pushSupers(Definition def, Definition superDef) {
         int numPushes = 0;
         Definition contextDef = def;
 
@@ -1770,7 +2138,7 @@ public class Context {
     }
     
     
-    public int pushSupersAndAliases(Definition def, ArgumentList args, Definition childDef) throws Redirection {
+    public int pushSupersAndAliases(Definition def, ArgumentList args, Definition childDef) {
         //validateSize();
         // track back through superdefinitions and aliases to push intermediate definitions
         if (childDef != null  /* && !isSpecialDefinition(childDef) */ ) {
@@ -1781,7 +2149,7 @@ public class Context {
                 childOwner = childOwner.getOwner();
             }
             if (childOwner == null) {
-                throw new Redirection(Redirection.STANDARD_ERROR, "Improperly initialized definition tree");
+                throw new NullPointerException("Improperly initialized definition tree");
             }
 
             return pushSupersAndAliases((ComplexDefinition) childOwner, def, args);
@@ -1790,7 +2158,7 @@ public class Context {
         }
     }
 
-    public int pushSupersAndAliases(ComplexDefinition owner, Definition def, ArgumentList args) throws Redirection {
+    public int pushSupersAndAliases(ComplexDefinition owner, Definition def, ArgumentList args) {
         Definition instantiatedDef = def;
         DefinitionInstance defInstance = getContextDefInstance(instantiatedDef, args);
         def = defInstance.def;
@@ -1857,7 +2225,7 @@ public class Context {
         return numPushes;
     }
 
-    synchronized private Object _instantiateArgChild(NameNode childName, Type paramType, Definition argDef, ArgumentList argArgs, List<Index> argIndexes) throws Redirection {
+    synchronized private Object _instantiateArgChild(NameNode childName, Type paramType, Definition argDef, ArgumentList argArgs, IndexList argIndexes) {
         Object data = null;
         int numPushes = 0;
         int numUnpushes = 0;
@@ -2306,7 +2674,7 @@ public class Context {
     }
 
 
-    public Object construct(Definition definition, ArgumentList args) throws Redirection {
+    public Object construct(Definition definition, ArgumentList args) {
         Object data = null;
 
         boolean pushedSuperDef = false;
@@ -2454,7 +2822,7 @@ public class Context {
                     message = className + ": " + message;
                 }
                 t.printStackTrace();
-                throw new Redirection(Redirection.STANDARD_ERROR, message);
+                throw new RuntimeException(message);
             }
 
         } finally {
@@ -2481,7 +2849,7 @@ public class Context {
     }
 
 
-    public Object construct(List<Construction> constructions) throws Redirection {
+    public Object construct(List<Construction> constructions) {
         Object data = null;
         if (constructions != null) {
             StringBuffer sb = null;
@@ -2672,14 +3040,14 @@ public class Context {
     /** Returns any cached data for a definition with the specified name
      *  in the current frame of the current context, or null if there is none.
      */
-    public Object getLocalData(String name, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object getLocalData(String name, ArgumentList args, IndexList indexes) {
         return getData(null, name, args, indexes, true);
     }    
 
     /** Returns any cached data for a definition with the specified name
      *  in the current context, or null if there is none.
      */
-    public Object getData(Definition def, String name, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object getData(Definition def, String name, ArgumentList args, IndexList indexes) {
         Object data = getData(def, name, args, indexes, false);
         LOG.debug(" - - - getting " + name + " from cache: - - - ");
         if (data == null) {
@@ -2690,7 +3058,7 @@ public class Context {
         return data;
     }    
 
-    synchronized private Object getData(Definition def, String name, ArgumentList args, List<Index> indexes, boolean local) throws Redirection {
+    synchronized private Object getData(Definition def, String name, ArgumentList args, IndexList indexes, boolean local) {
         if (name == null || name.length() == 0) {
             return null;
         }
@@ -2754,7 +3122,7 @@ public class Context {
      *  or null if there is none.
      */
     
-    public Holder getKeepdHolderForDef(Definition def, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Holder getKeepdHolderForDef(Definition def, ArgumentList args, IndexList indexes) {
         String name = def.getName();
         String fullName = def.getFullNameInContext(this);
         Holder holder = getDefHolder(name, fullName, args, indexes, false);
@@ -2798,7 +3166,7 @@ public class Context {
     /** Returns a Holder containing the definition and arguments associated with cached data for a 
      *  specified name in the current context, or null if there is none.
      */
-    synchronized public Holder getDefHolder(String name, String fullName, ArgumentList args, List<Index> indexes, boolean local) throws Redirection {
+    synchronized public Holder getDefHolder(String name, String fullName, ArgumentList args, IndexList indexes, boolean local) {
         if (topScope == null || name == null || name.length() == 0) {
             return null;
         }
@@ -2834,25 +3202,25 @@ public class Context {
         return holder;
     }
 
-    public void putDefinition(Definition def, String name, ArgumentList args, List<Index> indexes) throws Redirection {
+    public void putDefinition(Definition def, String name, ArgumentList args, IndexList indexes) {
         putData(def, args, indexes, name, null); //CantoNode.UNINSTANTIATED);
     }
     
     /** Keeps data associated with the specified name
      *  in the current context.
      */
-    public void putData(Definition def, ArgumentList args, List<Index> indexes, String name, Object data) throws Redirection {
+    public void putData(Definition def, ArgumentList args, IndexList indexes, String name, Object data) {
         putData(def, args, def, args, indexes, name, data, null);
     }    
     /** Keeps data associated with the specified name
      *  in the current context.
      */
-    public void putData(Definition nominalDef, ArgumentList nominalArgs, Definition def, ArgumentList args, List<Index> indexes, String name, Object data, ResolvedInstance resolvedInstance) throws Redirection {
+    public void putData(Definition nominalDef, ArgumentList nominalArgs, Definition def, ArgumentList args, IndexList indexes, String name, Object data, ResolvedInstance resolvedInstance) {
         Holder holder = new Holder(nominalDef, nominalArgs, def, args, this, data, resolvedInstance);
         putData(name, holder, indexes);
     }
         
-    synchronized public void putData(String name, Holder holder, List<Index> indexes) throws Redirection {
+    synchronized public void putData(String name, Holder holder, IndexList indexes) {
         if (holder.data != null || holder.resolvedInstance != null) {
             LOG.debug(" - - - storing " + name + " in cache - - - ");
         }
@@ -2946,7 +3314,7 @@ public class Context {
     /** Modify the name used to cache a value with indexes, to discriminate
      *  cached collections from cached elements.
      */
-    private String addIndexesToKey(String key, List<Index> indexes) {
+    private String addIndexesToKey(String key, IndexList indexes) {
         if (indexes != null && indexes.size() > 0) {
             Iterator<Index> it = indexes.iterator();
             while (it.hasNext()) {
@@ -2956,7 +3324,7 @@ public class Context {
         return key;
     }
 
-    private Object getElement(Object collection, Index index) throws Redirection {
+    private Object getElement(Object collection, Index index) {
         Object data = null;
 
         // this occurs with anonymous collections in the input
@@ -3064,7 +3432,7 @@ public class Context {
         return data;
     }
 
-    public Object constructDef(Definition definition, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object constructDef(Definition definition, ArgumentList args, IndexList indexes) throws Redirection {
         // initialization expressions
         if (definition instanceof DynamicObject) {
             definition = (Definition) ((DynamicObject) definition).initForContext(this, args, indexes);
@@ -3080,26 +3448,21 @@ public class Context {
     }
 
     
-    public void addKeeps(Definition def) throws Redirection {
+    public void addKeeps(Definition def) {
         if (def != null && def instanceof NamedDefinition) {
             List<KeepNode> keeps = ((NamedDefinition) def).getKeeps();
             if (keeps != null) {
                 Iterator<KeepNode> it = keeps.iterator();
                 while (it.hasNext()) {
                     KeepNode k = it.next();
-                    try {
-                        keep(k);
-                    } catch (Redirection r) {
-                        LOG.error("Error in keep statement: " + r.getMessage());
-                        throw r;
-                    }
+                    keep(k);
                 }
             }
         }
     }
 
     @SuppressWarnings("unchecked")
-    private void keep(KeepNode k) throws Redirection {
+    private void keep(KeepNode k) {
         
         Map<String, Object> table = null;
         Instantiation instance = k.getTableInstance();
@@ -3122,7 +3485,7 @@ public class Context {
             } else {
                 Object tableObject = instance.getData(this);
                 if (tableObject == null || tableObject.equals(NullValue.NULL_VALUE)) {
-                    throw new Redirection(Redirection.STANDARD_ERROR, "error in keep: table " + instance.getName() + " not found");
+                    throw new NullPointerException("error in keep: table " + instance.getName() + " not found");
                 }
         
                 if (tableObject instanceof CantoNode) {
@@ -3154,12 +3517,10 @@ public class Context {
             ResolvedInstance riAs = k.getResolvedAsInstance(this);
             Name asName = k.getAsName();
             String key = null;
-            boolean asthis = false;
             if (asName != null) {
                 key = asName.getName();
                 if (key == Name.THIS) {
                     key = definingDef.getName();
-                    asthis = true;
                 }
             }
 
@@ -3421,7 +3782,7 @@ public class Context {
         //rootContext.abandonedScopes = scope;
     }
 
-    public Object getRootScope() {
+    public Scope getRootScope() {
         return rootScope;
     }
 

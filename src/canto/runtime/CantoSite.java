@@ -558,7 +558,7 @@ public class CantoSite extends CantoDomain {
                     }
                     
                     if (element instanceof Value) {
-                        element = ((Value) element).getValue();
+                        element = ((Value) element).getData();
                     }
                     if (element != null) {
                         if (isCollection(element)) {
@@ -597,7 +597,7 @@ public class CantoSite extends CantoDomain {
                         sb.append("null");
                     } else {
                         if (element instanceof Value) {
-                            element = ((Value) element).getValue();
+                            element = ((Value) element).getData();
                         }
                         if (isCollection(element)) {
                             sb.append(getStringForCollection(element));
@@ -623,13 +623,13 @@ public class CantoSite extends CantoDomain {
     
     
     
-    private static final Integer ONE = new Integer(1);
+    private static final Integer ONE = Integer.valueOf(1);
     private void recordRequest(String name, Map<String, Integer> tracker) {
         LOG.debug("------------------------------------------------------------\nRequesting: " + name);
         Integer hitCount = (Integer) tracker.get(name);
         if (hitCount != null) {
             int n = hitCount.intValue();
-            tracker.put(name, new Integer(n + 1));
+            tracker.put(name, Integer.valueOf(n + 1));
         } else {
             tracker.put(name, ONE);
         }

@@ -67,10 +67,6 @@ public class DefinitionFlavor extends ComplexDefinition {
         return def.getDefinitionTable();
     }
 
-    public void addDefinition(Definition newDef, boolean replace) throws DuplicateDefinitionException {
-        def.addDefinition(newDef, replace);
-    }
-
     // Definition interface methods are all handled by delegation
 
     /** Returns the name. */
@@ -175,7 +171,7 @@ public class DefinitionFlavor extends ComplexDefinition {
         return def.getOwner();
     }
 
-    public Object getChild(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         return def.getChild(name, args, indexes, parentArgs, argContext, generate, trySuper, parentObj, resolver);
     }
 

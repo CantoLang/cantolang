@@ -195,7 +195,7 @@ public class IndexedInstanceReference extends NamedDefinition {
     private CollectionInstance getCollectionInstanceFor(Context context, Object obj, Index index) throws Redirection {
         CollectionInstance coll = null;
         if (obj instanceof Value) {
-            obj = ((Value) obj).getValue();
+            obj = ((Value) obj).getData();
         }
         if (obj instanceof CollectionInstance) {
             coll = (CollectionInstance) obj;

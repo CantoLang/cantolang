@@ -38,8 +38,6 @@ public class SiteLoader {
     
     private static final long LOAD_SLEEP = 200L;
 
-    private static final int actions = 0; //SiteBuilder.LOG | SiteBuilder.DUMP_SOURCE | SiteBuilder.DUMP_PAGES;
-
     private HashMap<String, String> loadedFiles = new HashMap<String, String>();
     private List<CantoSourceLoader> loaders = new ArrayList<CantoSourceLoader>();
     protected Core core;

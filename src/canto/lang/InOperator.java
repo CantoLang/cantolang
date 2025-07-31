@@ -2,7 +2,7 @@
  * 
  * InOperator.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,8 +11,6 @@ package canto.lang;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import canto.runtime.Context;
 
 import java.util.Arrays;
 
@@ -29,8 +27,8 @@ public class InOperator extends BinaryOperator {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Value operate(Value firstVal, Value secondVal) {
         
-        Object memberObj = firstVal.getValue();
-        Object collectionObj = secondVal.getValue();
+        Object memberObj = firstVal.getData();
+        Object collectionObj = secondVal.getData();
         boolean isIn = false;
 
         if (collectionObj instanceof String) {
@@ -54,7 +52,7 @@ public class InOperator extends BinaryOperator {
                     Object element = it.next();
                     if (element.equals(memberObj)) {
                         isIn = true;
-                    } else if (element instanceof Value && memberObj.equals(((Value) element).getValue())) {
+                    } else if (element instanceof Value && memberObj.equals(((Value) element).getData())) {
                         isIn = true;    
                     }
                 }

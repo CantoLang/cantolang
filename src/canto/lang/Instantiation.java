@@ -11,6 +11,7 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.*;
+import canto.util.Holder;
 import canto.util.SingleItemList;
 
 /**
@@ -20,6 +21,7 @@ import canto.util.SingleItemList;
 */
 
 public class Instantiation extends Construction implements ValueGenerator /*, ConstructionGenerator */ {
+    private static final Log LOG = Log.getLogger(Instantiation.class);
 
     //
     // Different kinds of instantiation
@@ -89,7 +91,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
     protected CantoNode reference;
     protected ArgumentList args = null;
-    protected List<Index> indexes = null;
+    protected IndexList indexes = null;
 
     public Instantiation() {
         super();
@@ -108,7 +110,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         resolve(null);
     }
 
-    public Instantiation(Object reference, ArgumentList args, List<Index> indexes) {
+    public Instantiation(Object reference, ArgumentList args, IndexList indexes) {
         // this instantiation is unowned
         super();
         setReference(reference);
@@ -116,7 +118,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         setIndexes(indexes);
     }
     
-    public Instantiation(Object reference, ArgumentList args, List<Index> indexes, Definition owner) {
+    public Instantiation(Object reference, ArgumentList args, IndexList indexes, Definition owner) {
         super();
         setOwner(owner);
         setReference(reference);
@@ -127,7 +129,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
     
     /** Copies an instantiation but substitues different indexes and arguments. **/
-    public Instantiation(Instantiation instance, ArgumentList args, List<Index> indexes) {
+    public Instantiation(Instantiation instance, ArgumentList args, IndexList indexes) {
         super(instance);
         this.localDef = instance.localDef;
         this.explicitDef = instance.explicitDef;
@@ -196,12 +198,10 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return args;
     }
 
-    public void addIndexes(List<Index> indexes) {
+    public void addIndexes(IndexList indexes) {
         if (indexes != null) {
             if (this.indexes != null) {
-                if (this.indexes instanceof SingleItemList) {
-                    this.indexes = new ArrayList<Index>(this.indexes);
-                }
+                this.indexes = new IndexList(this.indexes);
                 this.indexes.addAll(indexes);
             } else {
                 this.indexes = indexes;
@@ -209,12 +209,12 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         }
     }
 
-    public void setIndexes(List<Index> indexes) {
+    public void setIndexes(IndexList indexes) {
         this.indexes = indexes;
     }
 
     /** Returns the list of indexes this instantiation has, if any. */
-    public List<Index> getIndexes() {
+    public IndexList getIndexes() {
         return indexes;
     }
 
@@ -465,7 +465,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                         kind = CONTAINER_PARAMETER;
                     }
 
-                } else if (def.getAccess() == Definition.LOCAL_ACCESS) {
+                } else if (def.getAccess() == Definition.Access.LOCAL) {
                     localDef = def;
                     LOG.debug("   ..." + checkName + " refers to local definition " + def.getFullName());
                     kind = LOCAL;
@@ -567,13 +567,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             Definition def = getDefinition(context, resolver, false);
             if (def != null) {
                 if (def instanceof ElementReference) {
-                    try {
-                        Definition elementDef = ((ElementReference) def).getElementDefinition(context);
-                        if (elementDef != null) {
-                            def = elementDef;
-                        }
-                    } catch (Redirection r) {
-                        ;
+                    Definition elementDef = ((ElementReference) def).getElementDefinition(context);
+                    if (elementDef != null) {
+                        def = elementDef;
                     }
                 }
                 return def.getType();
@@ -636,7 +632,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 } else if (name.equals("cache") && def.getOwner().getName().equals("here")) {
                     return NOT_CACHEABLE_INFO;
                 
-                } else if (def.getDurability() == Definition.DYNAMIC) {
+                } else if (def.getDurability() == Definition.Durability.DYNAMIC) {
                     cacheability = CACHE_STORABLE;
 
                 // fully caching all parameters would break container parameter references and for loops.
@@ -785,7 +781,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
    /** If this is a parameter, and the associated argument in the given context is an instantiation,
     *  then return it, otherwise return this instantiation. */
-   public Instantiation getUltimateInstance(Context context) throws Redirection {
+   public Instantiation getUltimateInstance(Context context) {
 	   if (isParam || isParamChild) {
            NameNode name = (NameNode) reference;
            Object arg = context.getArgumentForParameter(name, isParamChild, isContainerParameter(context));
@@ -806,11 +802,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                            NameNode argName = instance.getReferenceName();
                            int numParts = argName.numParts();
                            if (numParts > 1) {
-                               NameNode newSuffix = new NameWithIndexes(argName.getLastPart().getName(), instance.getArguments(), name.getIndexes());
+                               NameNode newSuffix = new NameWithArgs(argName.getLastPart().getName(), instance.getArguments(), name.getIndexes());
                                NameNode newPrefix = new ComplexName(argName, 0, numParts - 1);
                                newName = new ComplexName(newPrefix, newSuffix);
                            } else {
-                               newName = new NameWithIndexes(argName.getName(), instance.getArguments(), name.getIndexes());
+                               newName = new NameWithArgs(argName.getName(), instance.getArguments(), name.getIndexes());
                            }
                        }
                        
@@ -951,7 +947,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                 holder = context.getDefHolder(nm, null, prefixArgs, prefixIndexes, false);
                                 if (holder != null && holder.nominalDef != null && !holder.nominalDef.equals(context.getDefiningDef())) {
                                     def = holder.nominalDef;
-                                    if (holder.nominalDef.getDurability() != Definition.DYNAMIC && !((CantoNode) holder.nominalDef).isDynamic() && (args == null || !args.isDynamic())) {
+                                    if (holder.nominalDef.getDurability() != Definition.Durability.DYNAMIC && !((CantoNode) holder.nominalDef).isDynamic() && (args == null || !args.isDynamic())) {
                                         if (holder.data != null && holder.data != UNDEFINED) {
                                             data = holder.data;
                                             // the following breaks a bunch of pent_game_tests for some reason
@@ -1211,8 +1207,8 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                     }
                 }
             } else {
-                Iterator<Context.Scope> it = context.iterator();
-                Context.Scope scope = it.next();  // we already checked the top of the stack, so skip it
+                Iterator<Scope> it = context.iterator();
+                Scope scope = it.next();  // we already checked the top of the stack, so skip it
                 Definition lastDef = scope.def;
     
                 while (it.hasNext()) {
@@ -1262,9 +1258,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             int limit = context.size() - 1;
             try {
                 while (numUnpushes < limit && container != null  && !(container instanceof Site)) {
-                    Iterator<Context.Scope> it = context.iterator();
+                    Iterator<Scope> it = context.iterator();
                     while (it.hasNext()) {
-                        Context.Scope scope = (Context.Scope) it.next();
+                        Scope scope = (Scope) it.next();
                         if (!(scope.def instanceof NamedDefinition)) {
                             continue;
                         }
@@ -1336,9 +1332,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             if (def == null) {
                 container = ComplexDefinition.getComplexOwner(owner.getOwner());
                 while (def == null && container != null && !(container instanceof Site)) {
-                    Iterator<Context.Scope> it = context.iterator();
+                    Iterator<Scope> it = context.iterator();
                     while (it.hasNext()) {
-                        Context.Scope scope = it.next();
+                        Scope scope = it.next();
                         if (scope.def instanceof ComplexDefinition) {
                             ComplexDefinition cdef = (ComplexDefinition) scope.def;
                             if (container.equals(cdef) || container.isSubDefinition(cdef)) {
@@ -1369,9 +1365,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                         }
                         container = ComplexDefinition.getComplexOwner(superdef.getOwner());
                         while (def == null && container != null) {
-                            Iterator<Context.Scope> it = context.iterator();
+                            Iterator<Scope> it = context.iterator();
                             while (it.hasNext()) {
-                                Context.Scope scope = it.next();
+                                Scope scope = it.next();
                                 if (scope.def instanceof ComplexDefinition) {
                                     ComplexDefinition cdef = (ComplexDefinition) scope.def;
                                     if (container.equals(cdef) || container.isSubDefinition(cdef)) {
@@ -1447,7 +1443,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return def;
     }
     
-    Definition dereference(Context context, Definition def) throws Redirection {
+    Definition dereference(Context context, Definition def) {
         return context.dereference(def, getArguments(), getIndexes());
     }
 
@@ -1771,7 +1767,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         } else if (reference instanceof Value) {
             // values are inherently static
             setDynStat(false, true);
-            data = ((Value) reference).getValue();
+            data = ((Value) reference).getData();
             LOG.debug("  * Instantiating value " + ((Value) reference).getString() + " directly");
 
         } else if (reference instanceof Definition) {
@@ -1822,7 +1818,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
 
 
-    public List<Construction> generateConstructions(Context context) throws Redirection {
+    public List<Construction> generateConstructions(Context context) {
         List<Construction> constructions = null;
         if (reference instanceof NameNode) {
 

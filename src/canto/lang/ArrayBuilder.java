@@ -40,7 +40,7 @@ public class ArrayBuilder extends CollectionBuilder {
                 }
 
                 if (data instanceof Value) {
-                    data = ((Value) data).getValue();
+                    data = ((Value) data).getData();
 
                 } else if (data instanceof ValueGenerator) {
                     data = ((ValueGenerator) data).getData(context);
@@ -70,7 +70,7 @@ public class ArrayBuilder extends CollectionBuilder {
                 }
 
                 if (data instanceof Value) {
-                    data = ((Value) data).getValue();
+                    data = ((Value) data).getData();
 
                 } else if (data instanceof ValueGenerator) {
                     data = ((ValueGenerator) data).getData(context);
@@ -343,7 +343,7 @@ class ArrayInstance implements CantoArray, DynamicObject {
         }
         if (data != null) {
             if (data instanceof Value) {
-                data = ((Value) data).getValue();
+                data = ((Value) data).getData();
             }
             if (data instanceof DynamicObject) {
                 data = ((DynamicObject) data).initForContext(context, null, null);

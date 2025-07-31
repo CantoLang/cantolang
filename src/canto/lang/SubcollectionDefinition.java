@@ -289,7 +289,7 @@ public class SubcollectionDefinition extends CollectionDefinition {
             	context = getResolutionContext();
             }
             Value indexVal = index.getIndexValue(context);
-            Object key = indexVal.getValue();
+            Object key = indexVal.getData();
             Definition element = (Definition) overrides.get(key);
             if (element == null) {
                 int ix = indexVal.getInt();

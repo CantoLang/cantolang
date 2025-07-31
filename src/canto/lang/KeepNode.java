@@ -77,7 +77,7 @@ public class KeepNode extends CantoNode {
         }
     }
 
-    synchronized public ResolvedInstance getResolvedAsInstance(Context context) throws Redirection {
+    synchronized public ResolvedInstance getResolvedAsInstance(Context context) {
         if (asInstance != null) {
             return new ResolvedInstance(asInstance, context, false, true);
 

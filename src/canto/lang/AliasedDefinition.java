@@ -10,12 +10,9 @@ package canto.lang;
 
 import java.util.List;
 
-import canto.runtime.*;
 
 /**
 * An AliasedDefinition is a definition that references another definition.
-*
-* @author Michael St. Hippolyte
 */
 
 public class AliasedDefinition extends ExternalDefinition {
@@ -57,12 +54,12 @@ public class AliasedDefinition extends ExternalDefinition {
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
-    public Object instantiate(ArgumentList args, List<Index> indexes, Context context) throws Redirection {
+    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
         return def.instantiate(args, indexes, context);
     }
 
         
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         
         Object data = def.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
         if (data == null || data == UNDEFINED) {

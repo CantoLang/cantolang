@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import canto.lang.ArgumentList;
+import canto.lang.ComplexName;
 import canto.lang.Construction;
 import canto.lang.Context;
 import canto.lang.Definition;
@@ -48,7 +49,7 @@ public class CantoContext implements canto_context {
     public CantoContext(CantoContext cantoContext) {
         site = cantoContext.site;
         context = new Context(cantoContext.context);
-        context.setTop(context.getRootEntry());
+        context.setTop(context.getRootScope());
         initialized = true;
     }
     
@@ -141,21 +142,21 @@ public class CantoContext implements canto_context {
         }        
     }
 
-    public Object get(Definition def) throws Redirection {
-        return def.get(getContext());
-    }
-
-    public Object get(Definition def, ArgumentList args) throws Redirection {
-        return def.get(getContext(), args);
-    }
-
-    public List<Object> get_array(Definition def) throws Redirection {
-        return def.get_array(getContext());
-    }
-    
-    public Map<String, Object> get_table(Definition def) throws Redirection {
-        return def.get_table(getContext());
-    }
+//    public Object get(Definition def) throws Redirection {
+//        return def.get(getContext());
+//    }
+//
+//    public Object get(Definition def, ArgumentList args) throws Redirection {
+//        return def.get(getContext(), args);
+//    }
+//
+//    public List<Object> get_array(Definition def) throws Redirection {
+//        return def.get_array(getContext());
+//    }
+//    
+//    public Map<String, Object> get_table(Definition def) throws Redirection {
+//        return def.get_table(getContext());
+//    }
 
     
     

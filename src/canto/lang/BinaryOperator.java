@@ -362,7 +362,7 @@ abstract public class BinaryOperator extends AbstractOperator {
                     return null;
                 }
             }
-            return val.getValue();
+            return val.getData();
         }
 
         public Class<?> getValueClass() {

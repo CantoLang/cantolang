@@ -26,7 +26,7 @@ public class BitflipOperator extends UnaryOperator {
         Value result = null;
         Class<?> valueClass = val.getValueClass();
         if (valueClass.isArray() || List.class.isAssignableFrom(valueClass) || CantoArray.class.isAssignableFrom(valueClass)) {
-            Object obj = val.getValue();
+            Object obj = val.getData();
             if (obj instanceof CantoArray) {
                 obj = ((CantoArray) obj).getArrayObject();
             }

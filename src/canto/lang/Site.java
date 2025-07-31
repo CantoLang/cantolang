@@ -142,7 +142,6 @@ public class Site extends MultiUnitDefinition {
                     list.add(defs[i]);
                 }
             }
-            int n = list.size();
             contents = new CantoBlock(list);
             setContents(contents);
         }
@@ -458,7 +457,7 @@ public class Site extends MultiUnitDefinition {
                         what = def.getClass().getName();
                         subdef.add(def);
                     }
-                    vlog("Adding " + what + " " + fullName + " owned by " + ownerName);
+                    LOG.debug("Adding " + what + " " + fullName + " owned by " + ownerName);
  
                 } else if (entry instanceof CollectionDefinition) {
                     if (def instanceof CollectionDefinition) {
@@ -470,7 +469,7 @@ public class Site extends MultiUnitDefinition {
                     SubcollectionDefinition subcoll = new SubcollectionDefinition(colldef);
                     subcoll.add(def);
                     put(key, subcoll);
-                    vlog("Adding " + what + " " + fullName + " owned by " + ownerName + " to collection " + subcoll.getFullName());
+                    LOG.debug("Adding " + what + " " + fullName + " owned by " + ownerName + " to collection " + subcoll.getFullName());
 
                 } else if (!entry.isExternal()) {
                     throw new DuplicateDefinitionException(key + " already defined");
@@ -478,7 +477,7 @@ public class Site extends MultiUnitDefinition {
 
             } else {
 
-                vlog("Adding definition " + fullName + " owned by " + ownerName);
+                LOG.debug("Adding definition " + fullName + " owned by " + ownerName);
                 // filter out Site objects because getContents can be expensive for them
                 if (!(def instanceof Site) && def.getContents() instanceof ElementDefinition) {
                     NameNode nameNode = null;
@@ -632,6 +631,7 @@ public class Site extends MultiUnitDefinition {
          *  or null if no such definition exists.  Either <code>ownerName<code> or
          *  <code>name</code> must start with the site name.
          */
+        @SuppressWarnings("unchecked")
         public Definition getInternalDefinition(String ownerName, String name) {
             boolean nameHasPrefix = false;
             boolean ownerHasPrefix = false;
@@ -681,16 +681,16 @@ public class Site extends MultiUnitDefinition {
             }
         }
 
-        public Collection values() {
-            Collection vals = super.values();
-            ArrayList defs = new ArrayList(vals.size());
+        public Collection<Definition> values() {
+            Collection<Definition> vals = super.values();
+            ArrayList<Definition> defs = new ArrayList<Definition>(vals.size());
             Iterator it = vals.iterator();
             while (it.hasNext()) {
                 Object entry = it.next();
                 if (entry instanceof List) {
                     defs.addAll((List) entry);
                 } else {
-                    defs.add(entry);
+                    defs.add((Definition) entry);
                 }
             }
             return defs;

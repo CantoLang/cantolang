@@ -10,14 +10,12 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Log;
 
 /**
  * A NameWithArgs is an identifier, an associated list of arguments, and
  * an optionl list of indexes.
  */
 public class NameWithArgs extends NameNode {
-    private static final Log LOG = Log.getLogger(NameWithArgs.class);
     
     public NameWithArgs() {
         super();

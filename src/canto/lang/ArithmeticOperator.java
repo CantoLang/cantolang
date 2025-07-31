@@ -39,7 +39,7 @@ abstract public class ArithmeticOperator extends BinaryOperator {
             Object obj1 = null;
             if (type1 != null && type1.isArray()) {
                 Value val = firstObj.getValue(context);
-                obj1 = val.getValue();
+                obj1 = val.getData();
                 if (obj1 instanceof CantoArray) {
                     obj1 = ((CantoArray) obj1).getArrayObject();
                 }
@@ -49,19 +49,19 @@ abstract public class ArithmeticOperator extends BinaryOperator {
                 obj1 = ArrayBuilder.instantiateElements(obj1, context);
 
             } else if (firstObj instanceof Value) {
-                obj1 = ((Value) firstObj).getValue();
+                obj1 = ((Value) firstObj).getData();
                 
             } else {
                 obj1 = firstObj.getValue(context);
                 if (obj1 instanceof Value) {
-                    obj1 = ((Value) obj1).getValue();
+                    obj1 = ((Value) obj1).getData();
                 }
             }
 
             Object obj2 = null;
             if (type2 != null && type2.isArray()) {
                 Value val = secondObj.getValue(context);
-                obj2 = val.getValue();
+                obj2 = val.getData();
                 if (obj2 instanceof CantoArray) {
                     obj2 = ((CantoArray) obj2).getArrayObject();
                 }
@@ -71,12 +71,12 @@ abstract public class ArithmeticOperator extends BinaryOperator {
                 obj2 = ArrayBuilder.instantiateElements(obj2, context);
 
             } else if (secondObj instanceof Value) {
-                obj2 = ((Value) secondObj).getValue();
+                obj2 = ((Value) secondObj).getData();
                 
             } else {
                 obj2 = secondObj.getValue(context);
                 if (obj2 instanceof Value) {
-                    obj2 = ((Value) obj2).getValue();
+                    obj2 = ((Value) obj2).getData();
                 }
             }
             
@@ -92,12 +92,12 @@ abstract public class ArithmeticOperator extends BinaryOperator {
     public Value operate(Value firstVal, Value secondVal) {
         Value result = null;
 
-        Object firstObj = firstVal.getValue();
+        Object firstObj = firstVal.getData();
         if (firstObj instanceof CantoArray) {
             firstObj = ((CantoArray) firstObj).getArrayObject();
         }
 
-        Object secondObj = secondVal.getValue();
+        Object secondObj = secondVal.getData();
         if (secondObj instanceof CantoArray) {
             secondObj = ((CantoArray) secondObj).getArrayObject();
         }

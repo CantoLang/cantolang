@@ -20,7 +20,7 @@ import canto.util.SingleItemList;
 /**
  * 
  */
-abstract public class Definition extends CantoNode implements Name {
+abstract public class Definition extends CantoNode implements Name, ConstructionContainer {
     private static final Log LOG = Log.getLogger(Definition.class);
 
     // The modifier values are such that for groups of definitions, the lowest value
@@ -257,6 +257,42 @@ abstract public class Definition extends CantoNode implements Name {
         return this;
     }
 
+    /** Returns true if the passed object is the same definition as this
+     *  in the specified context.
+     * 
+     * @param obj
+     * @param context
+     * @return true if the passed object equals this definition in the 
+     *         specified context.
+     */
+    public boolean equals(Definition def, Context context) {
+        if (def == this) {
+            return true;
+        }
+        if (isAnonymous()) {
+            return false;
+        } else {
+            Definition thisDef = (context == null ? this : getUltimateDefinition(context));
+            if (thisDef == null) {
+                thisDef = this;
+            }
+            Definition otherDef = (context == null ? def : def.getUltimateDefinition(context));
+            if (otherDef == null) {
+                otherDef = def;
+            }
+            
+            String name = thisDef.getFullName();
+            String otherName = otherDef.getFullName();
+            if (name != null) {
+                // not sure why this works, but filtering out dot names prevents keys that
+                // are a child of a loop parameter from unwanted caching
+                return !name.startsWith(".") && name.equals(otherName);
+            } else {
+                return (otherName == null);
+            }
+        }
+    }
+
     /** Returns true if <code>def</code> equals this definition or is a subdefinition of
      *  this definition.
      */
@@ -292,11 +328,7 @@ abstract public class Definition extends CantoNode implements Name {
 
             } else if (contents instanceof CollectionDefinition) {
                 CollectionInstance collectionInstance = null;
-                try {
-                    collectionInstance = ((CollectionDefinition) contents).getCollectionInstance(context, null, null);
-                } catch (Redirection r) {
-                    LOG.error(" ******** unable to obtain collection instance for " + (contents == null ? "(anonymous)" : ((CollectionDefinition) contents).getName()) + " ******");
-                }
+                collectionInstance = ((CollectionDefinition) contents).getCollectionInstance(context, null, null);
                 if (collectionInstance != null) {
                     constructions = new SingleItemList<Construction>((Construction) collectionInstance);
                 } else {
@@ -349,7 +381,7 @@ abstract public class Definition extends CantoNode implements Name {
         return false;
     }
 
-    public Definition getChildDefinition(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, Definition resolver) {
+    public Definition getChildDefinition(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, Definition resolver) {
         try {
             Object obj = getChild(name, args, indexes, parentArgs, argContext, false, true, null, resolver);
             if (obj instanceof Definition) {
@@ -387,7 +419,7 @@ abstract public class Definition extends CantoNode implements Name {
      *  false, return the definition, else instantiate it and return the result.  If <code>generate</code>
      *  is true and a definition is not found, return UNDEFINED.
      */
-    public Object getChild(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (generate) {
             return UNDEFINED;
         } else {
@@ -413,10 +445,10 @@ abstract public class Definition extends CantoNode implements Name {
      *  type parameter is only used if the child definition is external, in which case it
      *  is the Canto supertype of the external object.
      **/
-    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) throws Redirection {
+    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) {
         Object data = null;
         ArgumentList childArgs = childName.getArguments();
-        List<Index> childIndexes = childName.getIndexes();
+        IndexList childIndexes = childName.getIndexes();
 
         // see if the argument definition has a child definition by that name
         Definition childDef = getChildDefinition(childName, childArgs, childIndexes, args, context, null);
@@ -461,7 +493,7 @@ abstract public class Definition extends CantoNode implements Name {
                 if (childDef instanceof ElementReference) {
                     childDef = ((ElementReference) childDef).getElementDefinition(context);
                     if (childDef == null) {
-                        throw new Redirection(Redirection.STANDARD_ERROR, "No definition for element " + childName.toString());
+                        throw new NullPointerException("No definition for element " + childName.toString());
                     }
 
                 // if the child name has one or more indexes, and the definition is a
@@ -739,7 +771,7 @@ abstract public class Definition extends CantoNode implements Name {
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
-    public Object instantiate(ArgumentList args, List<Index> indexes, Context context) throws Redirection {
+    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
         Definition initializedDef = context.initDef(this, args, indexes);
         if (initializedDef == null && indexes != null) {
             initializedDef = context.initDef(this, args, null);
@@ -753,7 +785,7 @@ abstract public class Definition extends CantoNode implements Name {
         }
     }
         
-    private Object _instantiate(Context context, ArgumentList args, List<Index> indexes) throws Redirection {        
+    private Object _instantiate(Context context, ArgumentList args, IndexList indexes) throws Redirection {        
         if ((dur == Durability.GLOBAL || dur == Durability.STATIC) && staticData.data != null && (args == null || !args.isDynamic())) {
             return staticData.data;
         }
@@ -772,7 +804,7 @@ abstract public class Definition extends CantoNode implements Name {
     }
 
     /* TODO: this is probably the best place to coerce the constructed data into the proper type for this definition. */
-    protected Object construct(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         // dynamic objects are objects such as arrays with logic in their
         // initialization expressions
         Definition def = this;
@@ -788,7 +820,7 @@ abstract public class Definition extends CantoNode implements Name {
 
     
     /** Returns an object wrapping this definition with arguments and indexes. */ 
-    public DefinitionInstance getDefInstance(ArgumentList args, List<Index> indexes) {
+    public DefinitionInstance getDefInstance(ArgumentList args, IndexList indexes) {
         return new DefinitionInstance(this, args, indexes);
     }
     

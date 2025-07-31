@@ -178,7 +178,7 @@ public class NameNode extends CantoNode implements Name {
     /** Returns the list of indexes associated with this name.  The base class
      *  always returns null.
      */
-    public List<Index> getIndexes() {
+    public IndexList getIndexes() {
         return null;
     }
 

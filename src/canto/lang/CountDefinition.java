@@ -9,16 +9,12 @@
 package canto.lang;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.lang.reflect.Array;
 
 /**
  * CountDefinition represents the built-in <code>count</code> field which belongs
  * to every table and array.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.24 $
  */
 
 public class CountDefinition extends NamedDefinition implements DynamicObject {
@@ -29,7 +25,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     private ResolvedInstance ri = null;
     private PrimitiveValue value = null;
     private ArgumentList args;
-    private List<Index> indexes;
+    private IndexList indexes;
 
     public CountDefinition(Definition def) {
         super(def);
@@ -43,7 +39,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
         setDurability(Durability.DYNAMIC);
     }
 
-    public CountDefinition(Definition def, Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CountDefinition(Definition def, Context context, ArgumentList args, IndexList indexes) {
         super(PrimitiveType.INT.getDefinition(), context);
         setName(new NameNode(Name.COUNT));
         if (def instanceof ExternalDefinition) {
@@ -98,8 +94,6 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
                     count = getCountForObject(data);
                         
                 }
-            } catch (Redirection r) {
-                ;                
             } finally {
                 if (unpushed) {
                     context.repush();
@@ -197,7 +191,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     /** Returns a copy of this count definition initialized for the specified context.  The
      *  passed arguments are ignored.
      */
-    public Object initForContext(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object initForContext(Context context, ArgumentList args, IndexList indexes) {
         if (initContext == null || !initContext.equals(context)) {
             return new CountDefinition(def, context, this.args, this.indexes);
         } else {

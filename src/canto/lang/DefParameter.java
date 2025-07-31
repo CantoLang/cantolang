@@ -133,7 +133,7 @@ public class DefParameter extends NamedDefinition {
 
         } else {
             if (obj instanceof Value) {
-                obj = ((Value) obj).getValue();
+                obj = ((Value) obj).getData();
             }
             
             if (obj instanceof AliasedDefinition) {

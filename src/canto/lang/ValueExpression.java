@@ -25,7 +25,7 @@ public class ValueExpression extends Expression {
         super(expression);
     }
 
-    public Object generateData(Context context, Definition def) throws Redirection {
+    public Object generateData(Context context, Definition def) {
         // not the right logic, just to get things rolling
         int n = getNumChildren();
         for (int i = 0; i < n; i++) {

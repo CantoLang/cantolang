@@ -550,7 +550,7 @@ public class ExternalDefinition extends ComplexDefinition {
                     try {
                         data = ((Construction) contents).getData(context);
                         if (data instanceof Value) {
-                            data = ((Value) data).getValue();
+                            data = ((Value) data).getData();
                         } else if (data instanceof CantoNode) {
                             initNode((CantoNode) data);
                         }
@@ -853,7 +853,7 @@ public class ExternalDefinition extends ComplexDefinition {
         return new ExternalConstruction(this);
     }
 
-    public Definition getDefForContext(Context context, ArgumentList args) throws Redirection {
+    public Definition getDefForContext(Context context, ArgumentList args) {
         Definition def = this;
         if (!context.isCompatible(initContext)) {
             Class<?> c = getExternalClass(context);
@@ -928,13 +928,13 @@ public class ExternalDefinition extends ComplexDefinition {
             if (object == null) {
                  object = getObject();
                  if (object instanceof Value) {
-                     object = ((Value) object).getValue();
+                     object = ((Value) object).getData();
 
                  } else if (object instanceof ValueGenerator) {
                      object = ((ValueGenerator) object).getData(ownerContext);
 
                  } else if (object instanceof Value) {
-                     object = ((Value) object).getValue();
+                     object = ((Value) object).getData();
                  }
                  if ((cacheInfo.cacheability & AbstractConstruction.CACHE_STORABLE) == AbstractConstruction.CACHE_STORABLE) {
                      context.putData(owner, ownerArgs, ownerIndexes, owner.getName(), object);
@@ -1145,7 +1145,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
                     throw new Redirection(Redirection.STANDARD_ERROR, "Argument " + i + " for external object " + def.getName() + " is illegal");
                 }
 
-                argObjects[i] = val.getValue();
+                argObjects[i] = val.getData();
                 params[i] = val.getValueClass();
                
                 while (numUnpushes > 0) {
@@ -1434,7 +1434,7 @@ class MethodConstruction extends ExternalConstruction {
             Object arg = args.get(i);
 
             if (arg instanceof Value) {
-                argObjects[i] = ((Value) arg).getValue();
+                argObjects[i] = ((Value) arg).getData();
             
             // dereference value generators
             } else if (arg instanceof ValueGenerator) {
@@ -1471,7 +1471,7 @@ class MethodConstruction extends ExternalConstruction {
            
             // dereference Value again in case the ValueGenerator yielded a Value
             if (arg instanceof Value) {
-                argObjects[i] = ((Value) arg).getValue();
+                argObjects[i] = ((Value) arg).getData();
 
             // dereference collections represented as CantoArray objects
             } else if (arg instanceof CantoArray) {
@@ -1545,7 +1545,7 @@ class MethodConstruction extends ExternalConstruction {
     @SuppressWarnings("unchecked")
     private static Object instantiateElements(Object obj, Context context) throws Redirection {
         if (obj instanceof Value) {
-            obj = ((Value) obj).getValue();
+            obj = ((Value) obj).getData();
         }
         
         if (obj == null) {
@@ -1762,7 +1762,7 @@ class FieldDefinition extends ExternalDefinition {
             try {
                 Object object = getObject();
                 if (object instanceof Value) {
-                    object = ((Value) object).getValue();
+                    object = ((Value) object).getData();
                 } else if (object instanceof ValueGenerator) {
                     object = ((ValueGenerator) object).getData(context);
                 }

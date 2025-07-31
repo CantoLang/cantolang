@@ -425,8 +425,6 @@ public class NamedDefinition extends Definition {
                     }
                 } catch (Exception e) {
                     LOG.error("Exception getting super for child: " + e);
-                } catch (Redirection r) {
-                    ;
                 }
             }
 
@@ -452,15 +450,11 @@ public class NamedDefinition extends Definition {
             if (sd == null) {
                 return null;
             }
-            try {
-                Definition def = ((DefinitionInstance) sd.getChild(name, name.getArguments(), name.getIndexes(), null, context, false, false, null, null)).def;
-                // if the child is external, the def doesn't have to be equal; it could be an
-                // interface definition
-                if (def != null && (def.equals(childDef) || childDef.isExternal())) {
-                    return st;
-                }
-            } catch (Redirection r) {
-                ;
+            Definition def = ((DefinitionInstance) sd.getChild(name, name.getArguments(), name.getIndexes(), null, context, false, false, null, null)).def;
+            // if the child is external, the def doesn't have to be equal; it could be an
+            // interface definition
+            if (def != null && (def.equals(childDef) || childDef.isExternal())) {
+                return st;
             }
             if (sd.getSuperForChild(context, childDef) != null) {
                 return st;
@@ -571,8 +565,8 @@ public class NamedDefinition extends Definition {
     }
 
     public int getDimSize() {
-        if (name instanceof NameWithDims) {
-            List<Dim> dims = ((NameWithDims) name).getDims();
+        if (name instanceof NameWithParams) {
+            List<Dim> dims = ((NameWithParams) name).getDims();
             if (dims != null && dims.size() > 0) {
                 Dim dim = (Dim) dims.get(0);
                 if (dim.getType() == Dim.TYPE.DEFINITE) {
@@ -866,19 +860,19 @@ public class NamedDefinition extends Definition {
 
 
     /** Calls the generic version of createCollectionInstance. */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) {
         return CollectionBuilder.createCollectionInstanceForDef(this, context, args, indexes, null);
     }
 
     /** Calls createCollectionInstance for the passed object. */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) {
         return CollectionBuilder.createCollectionInstanceForDef(this, context, args, indexes, collectionData);
     }
 
     /** Returns an instance of this collection in the specified context with the specified
      *  arguments.
      */
-    public CollectionInstance getCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CollectionInstance getCollectionInstance(Context context, ArgumentList args, IndexList indexes) {
         CollectionInstance collection = null;
         String name = getName();
         String fullName = getFullNameInContext(context);
@@ -976,7 +970,7 @@ public class NamedDefinition extends Definition {
         return getSite().getExternalDefinition(this, node, DefaultType.TYPE, context);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (context == null) {
             throw new Redirection(Redirection.STANDARD_ERROR, "getChild requires a context; none provided.");
         } else if (context.peek() == null) {
@@ -1207,7 +1201,7 @@ public class NamedDefinition extends Definition {
                                     break;
                                 }
                                 ArgumentList partArgs = partInstance.getArguments();
-                                List<Index> partIndexes = partInstance.getIndexes();
+                                IndexList partIndexes = partInstance.getIndexes();
                                 if (partIndexes == null || partIndexes.size() == 0) {
                                     String nm = partName.getName();
                                     String fullNm = partDef.getFullNameInContext(context);
@@ -1260,7 +1254,7 @@ public class NamedDefinition extends Definition {
             }
             ArgumentList prefixArgs = prefix.getArguments();
             ParameterList prefixParams = null;
-            List<Index> prefixIndexes = prefix.getIndexes();
+            IndexList prefixIndexes = prefix.getIndexes();
             Definition prefixDef = null;
             if (prefixArgs == null) {
                 String nm = prefix.getName();
@@ -1290,7 +1284,7 @@ public class NamedDefinition extends Definition {
                 if (prefixDef.isAliasInContext(context)) {
                     NameNode alias = prefixDef.isParamAlias() ? prefixDef.getParamAlias() : prefixDef.getAliasInContext(context);
                     ArgumentList aliasArgs = alias.getArguments();
-                    List<Index> aliasIndexes = alias.getIndexes();
+                    IndexList aliasIndexes = alias.getIndexes();
                     Definition aliasDef = null;
                     Scope aliasScope = context.getParameterScope(alias, false);
                     if (aliasScope == null) {
@@ -1696,7 +1690,7 @@ public class NamedDefinition extends Definition {
                             }
                         }
                         if (collectionDef == null) {
-                            log(node.getName() + " not found.");
+                            LOG.error(node.getName() + " not found.");
                             return null;
                         }
                     }
@@ -1726,7 +1720,7 @@ public class NamedDefinition extends Definition {
                 return UNDEFINED;
             } else {
                 Object data = null;
-                if (def.getDurability() != Definition.DYNAMIC) {
+                if (def.getDurability() != Definition.Durability.DYNAMIC) {
                     data = context.getData(def, def.getName(), args, indexes);
                 }
                 if (data == null) {
@@ -1740,7 +1734,7 @@ public class NamedDefinition extends Definition {
         }
     }
 
-    public Object dummy_getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object dummy_getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
 
         if (this instanceof Definition) {
             return getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
@@ -1857,7 +1851,7 @@ public class NamedDefinition extends Definition {
                          if (aliasArg instanceof Instantiation) {
                              if (name.equals(((Instantiation) aliasArg).getDefinitionName())) {
                                  nameEqualsArg = true;
-                                 vlog(name + " is also an alias arg; skipping lookup");
+                                 LOG.debug(name + " is also an alias arg; skipping lookup");
                                  break;
                             }
                         }
@@ -1879,7 +1873,7 @@ public class NamedDefinition extends Definition {
                                     break;
                                 }
                                 ArgumentList partArgs = partInstance.getArguments();
-                                List<Index> partIndexes = partInstance.getIndexes();
+                                IndexList partIndexes = partInstance.getIndexes();
                                 if (partIndexes == null || partIndexes.size() == 0) {
                                     String nm = partName.getName();
                                     String fullNm = partDef.getFullNameInContext(context);
@@ -2081,15 +2075,11 @@ public class NamedDefinition extends Definition {
         HashMap<String, Definition> defMap = new HashMap<String, Definition>(size);
         if (keeps != null) {
             for (KeepNode k : keeps) {
-                try {
-                    Definition[] kdefs = k.getDefs(context);
-                    for (Definition d : kdefs) {
-                        if (defMap.get(d.getName()) == null) {
-                            defMap.put(d.getName(), d);
-                        }
+                Definition[] kdefs = k.getDefs(context);
+                for (Definition d : kdefs) {
+                    if (defMap.get(d.getName()) == null) {
+                        defMap.put(d.getName(), d);
                     }
-                } catch (Redirection r) {
-                    log("Unable to return def for keep statement " + k + ": " + r);
                 }
             }
         }
@@ -2127,16 +2117,16 @@ public class NamedDefinition extends Definition {
      *  if the definition is cacheable and a value is present in the cache,
      *  else constructs the definition with the passed arguments. 
      */
-    public Object get(Context context, ArgumentList args) throws Redirection {
+    public Object get(Context context, ArgumentList args, IndexList indexes) {
         Object data = null;
-        if (getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic())) {
+        if (getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic()) && indexes == null) {
             data = context.getData(this, getName(), args, null);
             if (data != null) {
                 return data;
             }
         }
-        data = instantiate(context, args);
-        if (data != null && getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic())) {
+        data = instantiate(args, indexes, context);
+        if (data != null && getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic()) && indexes == null) {
             context.putData(this, args, null, getName(), data);
         }
         return data;
@@ -2147,7 +2137,7 @@ public class NamedDefinition extends Definition {
      *  else constructs the definition with no arguments. 
      */
     public Object get(Context context) throws Redirection {
-        return get(context, null);
+        return get(context, null, null);
     }
 
     @Override

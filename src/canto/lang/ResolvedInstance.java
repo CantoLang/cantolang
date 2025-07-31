@@ -26,7 +26,7 @@ public class ResolvedInstance extends Instantiation implements Value {
     private Definition def;
 
     
-    public static ArgumentList resolveArguments(ArgumentList args, Context context) throws Redirection {
+    public static ArgumentList resolveArguments(ArgumentList args, Context context) {
         if (args == null || args.size() == 0) {
             return args;
         }
@@ -51,7 +51,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         return resolvedArgs;
     }
     
-    public static ArgumentList instantiateArguments(ArgumentList args, Context context) throws Redirection {
+    public static ArgumentList instantiateArguments(ArgumentList args, Context context) {
         if (args == null || args.size() == 0) {
             return args;
         }
@@ -69,17 +69,17 @@ public class ResolvedInstance extends Instantiation implements Value {
         }
         
         return resolvedArgs;
-    }
+    } 
+
     
-    
-    public ResolvedInstance(Definition def, Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public ResolvedInstance(Definition def, Context context, ArgumentList args, IndexList indexes) {
         super(def, args, indexes);
 
         if (def instanceof BoundDefinition) {
             resolutionContext = ((BoundDefinition) def).getBoundContext();
         } else if (!def.isIdentity()) {
-            Context.Entry entry = context.peek();
-            if (!def.equals(entry.def) || (args != null && !args.equals(entry.args))) {
+            Scope scope = context.peek();
+            if (!def.equals(scope.def) || (args != null && !args.equals(scope.args))) {
                 if (args != null && args.isDynamic()) {
                     args = instantiateArguments(args, context);
                     setArguments(args);
@@ -217,7 +217,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         return super.getData(resolutionContext, getDefinition(context));
     }
 
-    public Object generateData(Context context, Definition def) throws Redirection {
+    public Object generateData(Context context, Definition def) {
         if (def == null) {
             def = getDefinition();
             if (def == null) {
@@ -264,13 +264,13 @@ public class ResolvedInstance extends Instantiation implements Value {
     //
     // Following are overloaded versions of the above with no context parameter
     //
-    public Object generateData() throws Redirection {
+    public Object generateData() {
         //resolutionContext.validateSize();
         data = super.generateData(resolutionContext, null);
         return data;
     }
 
-    public List<Construction> generateConstructions() throws Redirection {
+    public List<Construction> generateConstructions() {
         //resolutionContext.validateSize();
         return super.generateConstructions(resolutionContext);
     }
@@ -321,19 +321,16 @@ public class ResolvedInstance extends Instantiation implements Value {
         return getDouble(resolutionContext);
     }
 
-    public Object getValue() {
+    @Override
+    public Object getData() {
         if (data == null) {
-            try {
-                data = getData(resolutionContext);
-            } catch (Redirection r) {
-                ;
-            }
+            data = getData(resolutionContext);
         }
         return data;
     }
 
     public Class<?> getValueClass() {
-        Object value = getValue();
+        Object value = getData();
         return (value == null ? null : value.getClass());
     }
     
@@ -351,12 +348,6 @@ public class ResolvedInstance extends Instantiation implements Value {
 
     public String toString() {
         return super.toString() + " (resolved)";
-    }
-
-    @Override
-    public Object getObject() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

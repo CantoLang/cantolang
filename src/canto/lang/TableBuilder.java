@@ -39,7 +39,7 @@ public class TableBuilder extends CollectionBuilder {
                 }
 
                 if (data instanceof Value) {
-                    data = ((Value) data).getValue();
+                    data = ((Value) data).getData();
 
                 } else if (data instanceof ValueGenerator) {
                     data = ((ValueGenerator) data).getData(context);
@@ -147,7 +147,7 @@ class TableInstance implements Map<String, Object> {
             } else {
                 obj = valueGen.getData(context);
                 if (obj instanceof Value) {
-                    obj = ((Value) obj).getValue();
+                    obj = ((Value) obj).getData();
                 }
             }
             if (obj instanceof DynamicObject) {

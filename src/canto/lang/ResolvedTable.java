@@ -2,7 +2,7 @@
  * 
  * ResolvedTable.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -13,7 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import canto.runtime.Context;
+import canto.util.MappedArray;
 
 public class ResolvedTable extends ResolvedCollection {
 
@@ -21,7 +21,7 @@ public class ResolvedTable extends ResolvedCollection {
     private CollectionDefinition collectionDef = null;
 
     @SuppressWarnings("unchecked")
-    public ResolvedTable(Definition def, Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public ResolvedTable(Definition def, Context context, ArgumentList args, IndexList indexes) throws Redirection {
         super(def, context, args, indexes);
 
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -52,7 +52,7 @@ public class ResolvedTable extends ResolvedCollection {
     }
 
     @SuppressWarnings("unchecked")
-    public ResolvedTable(Definition def, Context context, ArgumentList args, List<Index> indexes, Object tableData) throws Redirection {
+    public ResolvedTable(Definition def, Context context, ArgumentList args, List<Index> indexes, Object tableData) {
         super(def, context, args, indexes);
 
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -64,12 +64,12 @@ public class ResolvedTable extends ResolvedCollection {
             // this doesn't support args in anonymous arrays 
             CollectionDefinition tableDef = (CollectionDefinition) tableData;
             if (tableDef.equals(collectionDef)) {
-                throw new Redirection(Redirection.STANDARD_ERROR, "Table " + def.getName() + " is circularly defined.");
+                throw new RuntimeException("Table " + def.getName() + " is circularly defined.");
             }
             table = tableDef.getTable(context, null, null);
 
         } else if (tableData != null) {
-            throw new Redirection(Redirection.STANDARD_ERROR, "Unable to initialize table " + def.getName() + "; data in context of wrong type: " + tableData.getClass().getName());
+            throw new ClassCastException( "Unable to initialize table " + def.getName() + "; data in context of wrong type: " + tableData.getClass().getName());
         }
         
     }
@@ -124,7 +124,7 @@ public class ResolvedTable extends ResolvedCollection {
                     	obj = ((Construction) obj).getData(context);
                     }
                     if (obj instanceof Value) {
-                        obj = ((Value) obj).getValue();
+                        obj = ((Value) obj).getData();
                     }
                     Map<String, Object> map;
                     if (obj == null || obj instanceof Map) {

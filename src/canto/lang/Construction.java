@@ -25,7 +25,7 @@ import canto.util.Holder;
  * @author Michael St. Hippolyte
  */
 
-public abstract class Construction extends CantoNode {
+public abstract class Construction extends CantoNode implements ValueGenerator {
 
     private CantoNode contents;
     
@@ -47,7 +47,7 @@ public abstract class Construction extends CantoNode {
         setChildren(children);
     }
 
-    abstract public Object generateData(Context context, Definition def) throws Redirection;
+    abstract public Object generateData(Context context, Definition def);
     
 
     // possible values returned by getCacheability
@@ -253,7 +253,7 @@ public abstract class Construction extends CantoNode {
      * Returns the list of indexes associated with this construction, if any.  The
      * base class always returns null.
      */
-    public List<Index> getIndexes() {
+    public IndexList getIndexes() {
         return null;
     }
 
@@ -332,23 +332,23 @@ public abstract class Construction extends CantoNode {
      *  indexes, or if indexes are not applicable, return the passed definition.
      *  @throws Redirection 
      */
-    Definition dereference(Context context, Definition def) throws Redirection {
+    Definition dereference(Context context, Definition def) {
         return def;    
     }
     
-    public Object getData(Context context) throws Redirection {
+    public Object getData(Context context) {
         return getData(context, null);
     }
     
     /**
      * @throws Redirection  
      */
-    public Instantiation getUltimateInstance(Context context) throws Redirection {
+    public Instantiation getUltimateInstance(Context context) {
         return null;
     }
     
     transient private Object staticData = null;
-    public Object getData(Context context, Definition def) throws Redirection {
+    public Object getData(Context context, Definition def) {
         if (isDynamic()) {
             return generateData(context, def);
 
@@ -589,11 +589,7 @@ public abstract class Construction extends CantoNode {
         return DefaultType.TYPE;
     }
 
-    // because several subclasses implement ValueGenerator, the
-    // methods are implemented here (even though this class does
-    // not implement ValueGenerator)
-
-    public Value getValue(Context context) throws Redirection {
+    public Value getValue(Context context) {
         Object data = null;
         data = getData(context);
         if (data instanceof ResolvedInstance) {
