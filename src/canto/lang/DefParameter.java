@@ -22,14 +22,9 @@ public class DefParameter extends NamedDefinition {
 
     private List<Construction> list = null;
 
-    public DefParameter() {
-        super();
-        setAccess(Access.LOCAL);
-    }
-
     /** Construct an explicitly named parameter.  */
     public DefParameter(NameNode name) {
-        super();
+        super(name);
         setName(name);
         setType(DefaultType.TYPE);
         setAccess(Access.LOCAL);
