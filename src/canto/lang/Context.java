@@ -568,6 +568,18 @@ public class Context {
         }
     }
 
+    public Definition getSubdefinitionInContext(Definition def) {
+        Definition subdef = def;
+        for (Scope scope = topScope; scope != null; scope = scope.previous) {
+            if (scope.def.equalsOrExtends(def)) {
+                subdef = scope.def;
+                break;
+            }
+        }
+
+        return subdef;
+    }
+    
     /** Checks to see if a name corresponds to a parameter, and if so returns
      *  the definition associated with it (i.e., the argument passed as the
      *  parameter's value).

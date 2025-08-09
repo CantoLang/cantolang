@@ -210,8 +210,8 @@ public class ForStatement extends Construction implements ConstructionContainer,
     private int pushParams(Context context, Object argObj) {
         int n = 0;
         
-        if (argObj instanceof ArgumentList) {
-            Iterator<Construction> it = ((ArgumentList) argObj).iterator();
+        if (argObj instanceof Combo) {
+            Iterator<Construction> it = ((Combo) argObj).iterator();
             IteratorValues iv = vals;
             while (it.hasNext()) {
                 context.pushParam(iv.getDefParameter(), it.next());
@@ -419,7 +419,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                         // the iterator may trigger the instantiation of the array
 
                         ArgumentList args = instance.getArguments();
-                        List<Index> indexes = instance.getIndexes();
+                        IndexList indexes = instance.getIndexes();
                         CollectionInstance collection = ((CollectionDefinition) def).getCollectionInstance(context, args, indexes);
                         it  = collection.constructionIterator();
 
@@ -547,7 +547,7 @@ class ConstructionObjectIterator implements Iterator<Construction> {
     }
 
     public Construction next() {
-        return AbstractConstruction.getConstructionForObject(it.next());
+        return Construction.getConstructionForObject(it.next());
     }
 
     public void remove() {
@@ -577,7 +577,7 @@ class ConstructionArrayIterator implements Iterator<Construction> {
         if (obj instanceof Definition && !isDefinitionArray) {
             return new Instantiation((Definition) obj);
         } else {
-		    return AbstractConstruction.getConstructionForObject(obj);
+		    return Construction.getConstructionForObject(obj);
         }
 	}
 	
@@ -644,7 +644,7 @@ class FromIterator implements Iterator<Construction> {
         }
         this.byValue = byValue;
         goingUp = gtOp.getBoolean(byValue, zero);
-        value = AbstractConstruction.getConstructionForObject((Object) fromValue);
+        value = Construction.getConstructionForObject((Object) fromValue);
     }
     
  
@@ -676,7 +676,7 @@ class FromIterator implements Iterator<Construction> {
     public Construction next() {
         Construction returnVal = value;
         try {
-            value = AbstractConstruction.getConstructionForObject(addOp.operate(valueFor(value, context), byValue));
+            value = Construction.getConstructionForObject(addOp.operate(valueFor(value, context), byValue));
         } catch (Throwable t) {
             value = null;
         }
@@ -748,39 +748,34 @@ class CombinedIterator implements Iterator<Construction> {
     }
 }
 
-class Combo extends ArgumentList implements Construction {
+class Combo extends Construction {
 
+    private ArgumentList list;
+    
     public Combo(Construction obj1, Construction obj2) {
         super();
-        int n = (obj1 instanceof Combo ? ((Combo) obj1).size() : 1) + (obj2 instanceof Combo ? ((Combo) obj2).size() : 1);
-        List<Construction> list = Context.newArrayList(n, Construction.class);
+        int n = (obj1 instanceof Combo ? ((Combo) obj1).list.size() : 1) + (obj2 instanceof Combo ? ((Combo) obj2).list.size() : 1);
+        list = new ArgumentList(n);
         if (obj1 instanceof Combo) {
-            list.addAll((Combo) obj1);
+            list.addAll(((Combo) obj1).list);
         } else {
             list.add((Construction) obj1);
         }
         if (obj2 instanceof Combo) {
-            list.addAll((Combo) obj2);
+            list.addAll(((Combo) obj2).list);
         } else {
             list.add((Construction) obj2);
         }
-        setList(list);
+    }
+    
+    public Iterator<Construction> iterator() {
+        return list.iterator();
     }
 
-    public String getDefinitionName()                            { return null; }
-    public Type getType(Context context, boolean generate)       { return null; }
-    public boolean getBoolean(Context context)                   { return false; }
-    public Object getData(Context context)                       { return null; }
-    public Object getData(Context context, Definition def)       { return null; }
-    public String getText(Context context)                       { return null; }
-    public boolean isAbstract(Context context)                   { return false; }
-    public Construction getUltimateConstruction(Context context) { return this; }
+    @Override
+    public Object generateData(Context context, Definition def) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-    public String getString(Context context) throws Redirection  { return null; }
-    public byte getByte(Context context) throws Redirection      { return 0; }
-    public char getChar(Context context) throws Redirection      { return 0; }
-    public int getInt(Context context) throws Redirection        { return 0; }
-    public long getLong(Context context) throws Redirection      { return 0; }
-    public double getDouble(Context context) throws Redirection  { return 0; }
-	public Value getValue(Context context) throws Redirection    { return NullValue.NULL_VALUE; }
 }

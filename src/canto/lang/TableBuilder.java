@@ -42,7 +42,7 @@ public class TableBuilder extends CollectionBuilder {
                     data = ((Value) data).getData();
 
                 } else if (data instanceof ValueGenerator) {
-                    data = ((ValueGenerator) data).getData(context);
+                   data = ((ValueGenerator) data).getValue(context).getData();
                 }
 
                 if (!data.equals(origData)) {

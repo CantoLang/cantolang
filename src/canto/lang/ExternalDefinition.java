@@ -133,11 +133,6 @@ public class ExternalDefinition extends ComplexDefinition {
     private ArgumentList args = null;
     private List<Dim> dims = null;
 
-    public ExternalDefinition() {
-        super();
-        //setDurability(DYNAMIC);
-    }
-
     public ExternalDefinition(ExternalDefinition def) {
         this(def.getNameNode(), def.getParent(), def.getOwner(), def.getSuper(), def.getAccess(), def.getDurability(), def.getObject(), null);
     }
@@ -156,7 +151,7 @@ public class ExternalDefinition extends ComplexDefinition {
         
         
     public ExternalDefinition(NameNode name, CantoNode parent, Definition owner, Type superType, Access access, Durability dur, Object object, ArgumentList args) {
-        super();
+        super(name);
         setAccess(access);
         setDurability(dur);
         setOwner(owner);
@@ -180,8 +175,9 @@ public class ExternalDefinition extends ComplexDefinition {
         }
         if (name == null) {
             name = new ComplexName(c.getName());
+            setName(name);
         }
-        setName(name);
+
         CantoNode contents = null;
         if (object instanceof CantoNode) {
             contents = (CantoNode) object;
@@ -195,7 +191,7 @@ public class ExternalDefinition extends ComplexDefinition {
 
 
     public ExternalDefinition(ExternalDefinition def, Context context, ArgumentList args) throws Redirection {
-        super();
+        super(def, context);
         setAccess(def.getAccess());
         setDurability(def.getDurability());
         setOwner(def.getOwner());
@@ -392,7 +388,7 @@ public class ExternalDefinition extends ComplexDefinition {
         }
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
 
         ComplexName restOfName = null;
         int numNameParts = node.numParts();
@@ -844,7 +840,7 @@ public class ExternalDefinition extends ComplexDefinition {
         return NO_MATCH;
     }
 
-    public void setModifiers(int access, int dur) {
+    public void setModifiers(Access access, Durability dur) {
         setAccess(access);
         setDurability(dur);
     }
@@ -916,11 +912,11 @@ public class ExternalDefinition extends ComplexDefinition {
             if (owner instanceof IndexedMethodDefinition) {
                 ownerIndexes = ((IndexedMethodDefinition) owner).getIndexes();
             }
-            AbstractConstruction.CacheabilityInfo cacheInfo = AbstractConstruction.NOT_CACHEABLE_INFO;
+            Construction.CacheabilityInfo cacheInfo = Construction.NOT_CACHEABLE_INFO;
             CantoNode contents = owner.getContents();
-            if (contents instanceof AbstractConstruction) {
-                cacheInfo = ((AbstractConstruction) contents).getCacheability(context, null);
-                if ((cacheInfo.cacheability & AbstractConstruction.CACHE_RETRIEVABLE) == AbstractConstruction.CACHE_RETRIEVABLE) {
+            if (contents instanceof Construction) {
+                cacheInfo = ((Construction) contents).getCacheability(context, null);
+                if ((cacheInfo.cacheability & Construction.CACHE_RETRIEVABLE) == Construction.CACHE_RETRIEVABLE) {
                     object = context.getData(owner, owner.getName(), ownerArgs, ownerIndexes);
                 }
             }
@@ -936,7 +932,7 @@ public class ExternalDefinition extends ComplexDefinition {
                  } else if (object instanceof Value) {
                      object = ((Value) object).getData();
                  }
-                 if ((cacheInfo.cacheability & AbstractConstruction.CACHE_STORABLE) == AbstractConstruction.CACHE_STORABLE) {
+                 if ((cacheInfo.cacheability & Construction.CACHE_STORABLE) == Construction.CACHE_STORABLE) {
                      context.putData(owner, ownerArgs, ownerIndexes, owner.getName(), object);
                  }
             }
@@ -1213,8 +1209,8 @@ class ExternalConstruction extends Construction implements ValueGenerator {
 //            Iterator<Construction> it = args.iterator();
 //            while (it.hasNext()) {
 //                Construction arg = it.next();
-//                if (arg instanceof AbstractConstruction) {
-//                    int argCacheability = ((AbstractConstruction) arg).getCacheability(context).cacheability;
+//                if (arg instanceof Construction) {
+//                    int argCacheability = ((Construction) arg).getCacheability(context).cacheability;
 //                    cacheability &= argCacheability;
 //   
 //                    // if not cacheable, no need to go further
@@ -1556,8 +1552,8 @@ class MethodConstruction extends ExternalConstruction {
            Object[] array = (Object[]) obj;
            for (int i = 0; i < array.length; i++) {
                Object element = array[i];
-               if (element instanceof Chunk) {
-                   element = ((Chunk) element).getData(context);
+               if (element instanceof Construction) {
+                   element = ((Construction) element).getData(context);
                }
                element = instantiateElements(element, context);
                
@@ -1569,8 +1565,8 @@ class MethodConstruction extends ExternalConstruction {
            int len = list.size();
            for (int i = 0; i < len; i++) {
                Object element = list.get(i);
-               if (element instanceof Chunk) {
-                   element = ((Chunk) element).getData(context);
+               if (element instanceof Construction) {
+                   element = ((Construction) element).getData(context);
                }
                element = instantiateElements(element, context);
                
@@ -1584,8 +1580,8 @@ class MethodConstruction extends ExternalConstruction {
             while (it.hasNext()) {
                 Object key = it.next();
                 Object element = map.get(key);
-                if (element instanceof Chunk) {
-                    element = ((Chunk) element).getData(context);
+                if (element instanceof Construction) {
+                    element = ((Construction) element).getData(context);
                 }
                 element = instantiateElements(element, context);
                 map.put(key, element);
@@ -1757,7 +1753,7 @@ class FieldDefinition extends ExternalDefinition {
         return this;
     }
     
-    public class FieldConstruction extends AbstractConstruction {
+    public class FieldConstruction extends Construction {
         public Object generateData(Context context, Definition def) throws Redirection {
             try {
                 Object object = getObject();

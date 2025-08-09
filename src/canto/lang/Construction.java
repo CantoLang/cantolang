@@ -452,7 +452,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
                         }
                     }
                 }
-                List<Index> indexes = getIndexes();
+                IndexList indexes = getIndexes();
                 if (data == null) {
                     if (Name.THIS.equals(name)) {
                         Definition owner = getOwner();
@@ -517,7 +517,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
                                 if (node instanceof Instantiation) {
                                     String argName = node.getName();
                                     ArgumentList argArgs = ((Instantiation) node).getArguments();
-                                    List<Index> argIndexes = ((Instantiation) node).getIndexes();
+                                    IndexList argIndexes = ((Instantiation) node).getIndexes();
                                     holder = context.getDefHolder(argName, null, argArgs, argIndexes, false);
                                     if (holder != null && holder.def != null) {
                                         def = holder.def.getUltimateDefinition(context);

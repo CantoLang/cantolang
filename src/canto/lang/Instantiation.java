@@ -862,9 +862,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         Object data = UNDEFINED;
         Definition def = null;
         NameNode restOfName = null;
-        List<Index> indexes = getIndexes();
+        IndexList indexes = getIndexes();
         ArgumentList args = getArguments();
-        List<Index> prefixIndexes = null;
+        IndexList prefixIndexes = null;
         ArgumentList prefixArgs = null;
 
 //if (getOwner() == null) {
@@ -1134,7 +1134,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
             } else {
                 args = getArguments();
-                List<Index> initIndexes = dereferencedIndexes ? null : getIndexes();
+                IndexList initIndexes = dereferencedIndexes ? null : getIndexes();
                 Definition initializedDef = context.initDef(def, args, initIndexes);
                 if (initializedDef == null && initIndexes != null) {
                     initializedDef = context.initDef(def, args, null);
@@ -1158,7 +1158,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return data;
     }
 
-    private static Definition lookupDef(NameNode name, List<Index> indexes, CantoNode parent, NamedDefinition owner, Definition classDef, Context context, Definition resolver, boolean localScope) throws Redirection {
+    private static Definition lookupDef(NameNode name, IndexList indexes, CantoNode parent, NamedDefinition owner, Definition classDef, Context context, Definition resolver, boolean localScope) throws Redirection {
         Definition def = null;
         ArgumentList args = name.getArguments();
         Definition defclass = context.peek().def;
@@ -1457,7 +1457,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
         Definition def = null;
         ArgumentList args = getArguments();
-        List<Index> indexes = getIndexes();
+        IndexList indexes = getIndexes();
         if (reference instanceof Definition) {
             def = (Definition) reference;
 
@@ -1694,7 +1694,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 Definition superdef = site.getDefinition("canto_context");
                 Type superType = (superdef != null ? superdef.getType() : null);
                 CantoContext cantoContext = new CantoContext(site, context);
-                def = new ExternalDefinition(Name.HERE, parent, owner, superType, Definition.LOCAL_ACCESS, Definition.DYNAMIC, cantoContext, null);
+                def = new ExternalDefinition(Name.HERE, parent, owner, superType, Definition.Access.LOCAL, Definition.Durability.DYNAMIC, cantoContext, null);
              }
             
             if (def != null) {
@@ -1720,13 +1720,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
     /** Returns true if this instantiation is abstract in the specified context. */
     public boolean isAbstract(Context context) {
-        log("????????? calling isAbstract on instance: " + toString(""));
+        LOG.warn("????????? calling isAbstract on instance: " + toString(""));
         try {
             getData(context);
-        } catch (AbstractConstructionException ace) {
+        } catch (Throwable t) {
             return true;
-        } catch (Redirection r) {
-            ;
         }
         return false;
     }
@@ -1761,7 +1759,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         if (reference instanceof ValueGenerator) {
             // value generators are inherently dynamic
             setDynStat(true, false);
-            data = ((ValueGenerator) reference).getData(context);
+            data = ((ValueGenerator) reference).getValue(context).getData();
             LOG.debug("  * Instantiating a value using ValueGenerator " + reference.getClass().getName()); // + ", yielding " + (data == null ? "null" : "value " + ((Value) data).getString()));
 
         } else if (reference instanceof Value) {
@@ -1804,10 +1802,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         
         if (data == UNDEFINED) {
             String name = getName();
-            log("*** " + name + " not defined, cannot instantiate ***");
-            if (context.getErrorThreshhold() <= Context.IGNORABLE_ERRORS) {
-                throw new Redirection(Redirection.STANDARD_ERROR, name + " not defined; cannot instantiate");
-            }
+            LOG.error("*** " + name + " not defined, cannot instantiate ***");
             data = null;
         } else if (data == null) {
             data = NullValue.NULL_VALUE;
@@ -1911,7 +1906,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return instantiate(context, def, getArguments(), getIndexes());
     }
 
-    public Object instantiate(Context context, Definition def, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object instantiate(Context context, Definition def, ArgumentList args, IndexList indexes) throws Redirection {
         Object obj = null;
         if (isConcurrent()) {
             ConcurrentInstantiator ci = new ConcurrentInstantiator(context, def, args, indexes);
@@ -1939,10 +1934,10 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         Object startLock = new Object();
         Definition def;
         ArgumentList args;
-        List<Index> indexes;
+        IndexList indexes;
         Object status;
 
-        ConcurrentInstantiator(Context context, Definition def, ArgumentList args, List<Index> indexes) {
+        ConcurrentInstantiator(Context context, Definition def, ArgumentList args, IndexList indexes) {
             concurrentContext = (Context) context.clone();
             this.def = def;
             this.args = args;
@@ -1951,7 +1946,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         }
         
         public void run() {
-            log("Launching concurrent instantiation of " + def.getName());
+            LOG.debug("Launching concurrent instantiation of " + def.getName());
 
             status = null;
             synchronized (startLock) {
@@ -1962,7 +1957,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 status = def.instantiate(args, indexes, concurrentContext);
                 
             } catch (Throwable t) {
-                log("    ...concurrent instantiation failed to complete: " + t);
+                LOG.error("    ...concurrent instantiation failed to complete: " + t);
                 status = t;
             }
         }
@@ -2054,12 +2049,27 @@ class SubDefinition extends AliasedDefinition {
     }
 }
 
-class EmptyDefinition extends AnonymousDefinition {
+class EmptyDefinition extends Definition {
     public EmptyDefinition() {
         super();
     }
     public boolean isSuperType(String name) {
         return (name.equals("definition"));
+    }
+    @Override
+    public boolean isPrimitive() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    @Override
+    public boolean isStatic() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    @Override
+    public boolean isDynamic() {
+        // TODO Auto-generated method stub
+        return false;
     }
 }
 

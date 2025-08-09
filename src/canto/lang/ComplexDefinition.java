@@ -12,6 +12,7 @@ import java.util.*;
 
 import canto.runtime.Log;
 import canto.util.EmptyList;
+import canto.util.SingleItemList;
 
 /**
 * ComplexDefinition is a named definition which may contain other named definitions.
@@ -32,10 +33,10 @@ public class ComplexDefinition extends NamedDefinition {
 
     private DefinitionTable definitions;
 
-    public ComplexDefinition() {
-        super();
+    public ComplexDefinition(NameNode name) {
+        super(name);
     }
-
+  
     public ComplexDefinition(Definition def, Context context) {
         super(def, context);
         if (def instanceof ComplexDefinition) {

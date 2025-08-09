@@ -207,7 +207,7 @@ public class ElementDefinition extends Definition {
                     return countDef.getDefInstance(null, null);
                 }
             } else {
-                Object obj = ((Value) element).getValue();
+                Object obj = ((Value) element).getData();
                 if (obj instanceof CantoObjectWrapper) {
                     CantoObjectWrapper wrapper = (CantoObjectWrapper) obj;
                     if (generate) {
