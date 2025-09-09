@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
 
 /**
  * An CollectionIndex represents an index to a table or array.

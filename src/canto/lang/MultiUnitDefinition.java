@@ -28,7 +28,7 @@ public class MultiUnitDefinition extends ComplexDefinition {
     }
  
     @Override
-    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
+    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
         return null;
     }
 

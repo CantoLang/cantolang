@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
 
 /**
  * A unary expression is a construction based on a unary operator and a single

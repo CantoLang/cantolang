@@ -10,7 +10,6 @@ package canto.lang;
 
 import java.util.Map;
 
-import canto.runtime.Context;
 
 /**
  * This interface corresponds to the Canto canto_server object, which represents a Canto server.

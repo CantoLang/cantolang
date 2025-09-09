@@ -11,7 +11,6 @@ package canto.lang;
 import java.util.Iterator;
 import java.util.List;
 
-import canto.runtime.Context;
 
 /**
  * Interface for canto arrays.

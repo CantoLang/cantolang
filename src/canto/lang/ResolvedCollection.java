@@ -27,7 +27,7 @@ abstract public class ResolvedCollection extends ResolvedInstance implements Col
         super(instance, context, false);
     }
 
-    public ResolvedCollection(Definition def, Context context, ArgumentList args, List<Index> indexes) {
+    public ResolvedCollection(Definition def, Context context, ArgumentList args, IndexList indexes) {
         super(def, context, args, indexes);
     }
 

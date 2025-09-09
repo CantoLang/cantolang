@@ -11,7 +11,6 @@ package canto.lang;
 import java.util.ArrayList;
 import java.util.List;
 
-import canto.runtime.Context;
 
 /**
  * Base class for bitwise operators.

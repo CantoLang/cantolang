@@ -154,7 +154,7 @@ public class ElementDefinition extends Definition {
     }
 
 
-    public Object getChild(NameNode name, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         Object element = getElement(context);
         if (element instanceof Definition) {
             return ((Definition) element).getChild(name, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
@@ -362,7 +362,7 @@ System.err.println("***** ElementDefinition getBaseDefinition null due to null o
     }
 
     @Override
-    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
+    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
         // TODO Auto-generated method stub
         return null;
     }

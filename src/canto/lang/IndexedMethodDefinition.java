@@ -20,9 +20,9 @@ import canto.runtime.*;
 public class IndexedMethodDefinition extends MethodDefinition {
     private static final Log LOG = Log.getLogger(IndexedMethodDefinition.class);
 
-    private List<Index> indexes;
+    private IndexList indexes;
 
-    public IndexedMethodDefinition(ExternalDefinition owner, Method method, ArgumentList args, List<Index> indexes ) {
+    public IndexedMethodDefinition(ExternalDefinition owner, Method method, ArgumentList args, IndexList indexes ) {
         super(owner, method, args);
         this.indexes = indexes;
     }
@@ -46,7 +46,7 @@ public class IndexedMethodDefinition extends MethodDefinition {
         return new IndexedMethodConstruction(this);
     }
 
-    List<Index> getIndexes() {
+    IndexList getIndexes() {
         return indexes;
     }
 }
@@ -76,7 +76,7 @@ class IndexedMethodConstruction extends MethodConstruction {
     public Object generateData(Context context, Definition def) throws Redirection {
         try {
             Object data = super.generateData(context, def);
-            List<Index> indexes = ((IndexedMethodDefinition) getMethodDefinition()).getIndexes();
+            IndexList indexes = ((IndexedMethodDefinition) getMethodDefinition()).getIndexes();
             Iterator<Index> it = indexes.iterator();
             while (it.hasNext()) {
                 Object collection = data;

@@ -52,7 +52,7 @@ public class ResolvedTable extends ResolvedCollection {
     }
 
     @SuppressWarnings("unchecked")
-    public ResolvedTable(Definition def, Context context, ArgumentList args, List<Index> indexes, Object tableData) {
+    public ResolvedTable(Definition def, Context context, ArgumentList args, IndexList indexes, Object tableData) {
         super(def, context, args, indexes);
 
         this.collectionDef = def.getCollectionDefinition(context, args);

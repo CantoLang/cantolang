@@ -17,7 +17,7 @@ public class ResolvedArray extends ResolvedCollection {
     private CollectionDefinition collectionDef = null;
     protected CantoArray array = null;
 
-    public ResolvedArray(Definition def, Context context, ArgumentList args, List<Index> indexes) {
+    public ResolvedArray(Definition def, Context context, ArgumentList args, IndexList indexes) {
         super(def, context, args, indexes);
         context = getResolutionContext();
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -30,7 +30,7 @@ public class ResolvedArray extends ResolvedCollection {
         }
     }
 
-    public ResolvedArray(Definition def, Context context, ArgumentList args, List<Index> indexes, Object arrayData) {
+    public ResolvedArray(Definition def, Context context, ArgumentList args, IndexList indexes, Object arrayData) {
         super(def, context, args, indexes);
         
         this.collectionDef = def.getCollectionDefinition(context, args);

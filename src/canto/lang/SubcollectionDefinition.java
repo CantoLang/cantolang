@@ -11,7 +11,6 @@ package canto.lang;
 import java.lang.reflect.*;
 import java.util.*;
 
-import canto.runtime.Context;
 
 /**
  * A SubcollectionDefinition contains a reference to a base collection plus a list
@@ -57,11 +56,11 @@ public class SubcollectionDefinition extends CollectionDefinition {
     }
 
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         return new ResolvedSubcollection(context, args, indexes);
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
     	// this is definitely not right.  Not sure if this is even a possible scenario, though, since
     	// this only gets called I believe in the case of externally created collection objects.  How
     	// could one of those be a subcollection?  So I'm holding off on trying to figuring out what
@@ -118,7 +117,7 @@ public class SubcollectionDefinition extends CollectionDefinition {
         protected CollectionInstance superInstance;
         private Object collectionObject = null;
 
-        public ResolvedSubcollection(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+        public ResolvedSubcollection(Context context, ArgumentList args, IndexList indexes) throws Redirection {
             super(SubcollectionDefinition.this, context, args, indexes);
 
             // subcollection definitions are implied by the presence of subcollection element

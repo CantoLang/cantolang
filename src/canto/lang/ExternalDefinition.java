@@ -908,7 +908,7 @@ public class ExternalDefinition extends ComplexDefinition {
                 ownerContext = context;
             }
            
-            List<Index> ownerIndexes = null;
+            IndexList ownerIndexes = null;
             if (owner instanceof IndexedMethodDefinition) {
                 ownerIndexes = ((IndexedMethodDefinition) owner).getIndexes();
             }
@@ -997,7 +997,7 @@ class PartialDefinition extends ExternalDefinition {
         return new PartialDefinition(this, args, nameParts);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         Definition def = completeForContext(argContext);
         if (def == null) {
             return (generate ? null : UNDEFINED);
@@ -1376,7 +1376,7 @@ class MethodDefinition extends ExternalDefinition {
         return this;
     }
     
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         if (parentObj == null && generate == true) {
             ExternalConstruction construction = (ExternalConstruction) getContents();
             if (construction != null) {

@@ -67,7 +67,7 @@ public class CollectionDefinition extends ComplexDefinition {
         return getSize();
     }
 
-    public CantoArray getArray(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CantoArray getArray(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         if (isArray()) {
             ResolvedArray array = (ResolvedArray) getCollectionInstance(context, args, indexes);
             return array.getArray();
@@ -76,7 +76,7 @@ public class CollectionDefinition extends ComplexDefinition {
         }
     }
 
-    public Map<String, Object> getTable(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Map<String, Object> getTable(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         if (isTable()) {
             ResolvedTable table = (ResolvedTable) getCollectionInstance(context, args, indexes);
             return table.getTable();
@@ -183,7 +183,7 @@ public class CollectionDefinition extends ComplexDefinition {
     }
 
 
-    public int getSize(Context context, ArgumentList args, List<Index> indexes) {
+    public int getSize(Context context, ArgumentList args, IndexList indexes) {
         if (majorDimType == Dim.TYPE.DEFINITE) {
             return ((Dim) dims.get(0)).getSize();
         } else try {
@@ -253,7 +253,7 @@ public class CollectionDefinition extends ComplexDefinition {
 //    abstract public Object initForContext(Context context, ArgumentList args) throws Redirection;
 
     /** Construct this definition with the specified arguments in the specified context. */
-    protected Object construct(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         CollectionInstance instance = getCollectionInstance(context, args, null);
 //        return instance;
         
@@ -288,7 +288,7 @@ public class CollectionDefinition extends ComplexDefinition {
     /** Creates a resolved instance of this collection in the specified context with the specified
      *  arguments.
      */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         if (builder == null) {
             Type type = getType();
             Class<?> c = type.getTypeClass(context);
@@ -304,7 +304,7 @@ public class CollectionDefinition extends ComplexDefinition {
     /** Wraps the passed data in a collection instance in the specified context with the specified
      *  arguments.
      */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
         if (builder == null) {
             Type type = getType();
             Class<?> c = type.getTypeClass(context);

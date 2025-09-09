@@ -48,7 +48,7 @@ public class CantoObjectWrapper {
     /** Constructs a new CantoWrapperObject, given a definition, data
      *  and context.
      */
-    public CantoObjectWrapper(Definition def, ArgumentList args, List<Index> indexes, Context context) {
+    public CantoObjectWrapper(Definition def, ArgumentList args, IndexList indexes, Context context) {
         def = def.getSubdefInContext(context);
         ResolvedInstance ri = new ResolvedInstance(def, context, args, indexes);
         construction = ri;
@@ -178,7 +178,7 @@ public class CantoObjectWrapper {
         return "(" + construction.toString() + ")";
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, boolean generate, boolean trySuper, Object parentObject, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, boolean generate, boolean trySuper, Object parentObject, Definition resolver) throws Redirection {
         return def.getChild(node, args, indexes, parentArgs, getContext(), generate, trySuper, null, resolver);
     }
 

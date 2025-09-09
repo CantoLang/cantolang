@@ -10,7 +10,6 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.Context;
 
 /**
  * KeysDefinition represents the built-in <code>keys</code> field which belongs
@@ -31,7 +30,7 @@ public class KeysDefinition extends CollectionDefinition {
     	this(def, context, null, null);
     }
 
-    public KeysDefinition(Definition def, Context context, ArgumentList args, List<Index> indexes) {
+    public KeysDefinition(Definition def, Context context, ArgumentList args, IndexList indexes) {
         super();
         if (def instanceof ExternalDefinition) {
         	try {

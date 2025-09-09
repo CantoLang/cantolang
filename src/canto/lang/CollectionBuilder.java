@@ -21,7 +21,7 @@ abstract public class CollectionBuilder {
     }
 
     
-    public static CollectionInstance createCollectionInstanceForDef(Definition def, Context context, ArgumentList args, List<Index> indexes, Object collectionData) {
+    public static CollectionInstance createCollectionInstanceForDef(Definition def, Context context, ArgumentList args, IndexList indexes, Object collectionData) {
         if (def.isArray()) {
             return new ResolvedArray(def, context, args, indexes, collectionData);
         } else if (def.isTable()) {
@@ -35,12 +35,12 @@ abstract public class CollectionBuilder {
     /** Creates a resolved instance of this collection in the specified context with the specified
      *  arguments.
      */
-    abstract public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection;
+    abstract public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection;
 
     /** Wraps the passed data in a collection instance in the specified context with the specified
      *  arguments.
      */
-    abstract public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection;
+    abstract public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection;
 
 }
 

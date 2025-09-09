@@ -23,7 +23,7 @@ public class CompilationUnit extends BlockDefinition {
     }
 
     @Override
-    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
+    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
         // TODO Auto-generated method stub
         return null;
     }

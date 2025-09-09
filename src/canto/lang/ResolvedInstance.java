@@ -172,7 +172,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         indexes = instance.indexes;
         if (indexes != null && indexes.size() > 0) {
             int numIndexes = indexes.size();
-            List<Index> resolvedIndexes = Context.newArrayList(numIndexes, Index.class);
+            IndexList resolvedIndexes = Context.newArrayList(numIndexes, Index.class);
             try {
                 for (int i = 0; i < numIndexes; i++) {
                     Index index = indexes.get(i);
@@ -246,7 +246,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         return super.getType(resolutionContext, generate);
     }
 
-    public Object instantiate(Context context, Definition definition, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object instantiate(Context context, Definition definition, ArgumentList args, IndexList indexes) throws Redirection {
         //resolutionContext.validateSize();
         Object data = null;
         int numPushes = 0;

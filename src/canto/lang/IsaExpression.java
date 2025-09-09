@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
 
 /**
  * isa operator, similar to Java instanceof operator

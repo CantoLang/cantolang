@@ -89,23 +89,23 @@ public class ArrayBuilder extends CollectionBuilder {
         this.arrayDef = arrayDef;
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         // this could be cached
         return new ResolvedArray(arrayDef, context, args, indexes);
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
         // this could be cached
         return new ResolvedArray(arrayDef, context, args, indexes, collectionData);
     }
 
-    public CantoArray getArray(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CantoArray getArray(Context context, ArgumentList args, IndexList indexes) throws Redirection {
     	ResolvedArray array = (ResolvedArray) arrayDef.getCollectionInstance(context, args, indexes);
         return array.getArray();
     }
 
     /** Generates a list of constructions for a context. */
-    public List<Construction> generateConstructions(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public List<Construction> generateConstructions(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         CollectionInstance collection = arrayDef.getCollectionInstance(context, args, indexes);
         Iterator<?> it = collection.iterator();
         int n = collection.getSize();
@@ -315,7 +315,7 @@ class ArrayInstance implements CantoArray, DynamicObject {
     public ArrayInstance(ValueGenerator valueGen, Context context) throws Redirection {
         this.array = null;
         this.valueGen = valueGen;
-        List<Index> indexes = null;
+        IndexList indexes = null;
         initContext = (Context) context.clone();
         if (valueGen instanceof Instantiation) {
             Instantiation instance = (Instantiation) valueGen;
@@ -355,7 +355,7 @@ class ArrayInstance implements CantoArray, DynamicObject {
     }
 
 
-    public Object initForContext(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object initForContext(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         if (initContext == null && data == null) {
             return new ArrayInstance(valueGen, context);
         } else {
@@ -506,7 +506,7 @@ class DynamicArray implements CantoArray, DynamicObject {
         generateForContext(context);
     }
 
-    public Object initForContext(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public Object initForContext(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         if (initContext == null) {
             return new DynamicArray(statements, context);
         } else {

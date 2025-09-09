@@ -116,7 +116,7 @@ public class ElementReference extends Definition {
         }
     }
 
-    protected Object construct(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         ResolvedInstance ri = getResolvedElement(context);
         if (ri != null) {
             return ri.generateData();
@@ -185,7 +185,7 @@ public class ElementReference extends Definition {
         return getBaseDefinition(context).getSuperDefinition(context); //collectionDef.getSuperDefinition(context);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         Definition def = getElementDefinition(argContext);
         if (def == null) {
             return (generate ? UNDEFINED : null);
@@ -339,7 +339,7 @@ public class ElementReference extends Definition {
     }
 
     @Override
-    public Value instantiate(Context context, ArgumentList args, List<Index> indexes) {
+    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
 
         return null;
     }

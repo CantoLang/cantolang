@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import canto.runtime.Context;
 
 /**
  * Base class for boolean operators.

@@ -867,7 +867,7 @@ class MultiDefinition extends NamedDefinition {
     }
 
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         Redirection r = null;
         Object failed = (generate ? UNDEFINED : null);
         Iterator<Definition> it = definitions.iterator();

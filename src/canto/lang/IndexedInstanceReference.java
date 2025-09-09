@@ -21,11 +21,11 @@ import canto.runtime.Log;
 public class IndexedInstanceReference extends NamedDefinition {
     private static final Log LOG = Log.getLogger(IndexedInstanceReference.class);
 
-    private List<Index> indexes;
+    private IndexList indexes;
     private ResolvedInstance instance;
     private CollectionInstance collection;
 
-    public IndexedInstanceReference(ResolvedInstance instance, List<Index> indexes) {
+    public IndexedInstanceReference(ResolvedInstance instance, IndexList indexes) {
         super();
         this.indexes = indexes;
         this.instance = instance;
@@ -96,7 +96,7 @@ public class IndexedInstanceReference extends NamedDefinition {
         }
     }
 
-    protected Object construct(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         Definition def = getElementDefinition(context);
         if (def == null) {
             return null;
@@ -129,7 +129,7 @@ public class IndexedInstanceReference extends NamedDefinition {
         return instance.getDefinition(context).getSuperDefinition(context); //collectionDef.getSuperDefinition(context);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, List<Index> indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         if (Name.COUNT.equals(node.getName())) {
             if (generate) {
                 CollectionInstance collection = getCollection();

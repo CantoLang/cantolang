@@ -17,7 +17,7 @@ import java.util.Date;
 import canto.Version;
 import canto.lang.Definition;
 import canto.runtime.CantoServer;
-import canto.runtime.Context;
+import canto.lang.Context;
 import canto.runtime.Log;
 import canto.runtime.SiteBuilder;
 

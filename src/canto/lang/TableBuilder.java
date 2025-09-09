@@ -62,11 +62,11 @@ public class TableBuilder extends CollectionBuilder {
         this.tableDef = tableDef;
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
         return new ResolvedTable(tableDef, context, args, indexes);
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, List<Index> indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
         return new ResolvedTable(tableDef, context, args, indexes, collectionData);
     }
 
@@ -125,7 +125,7 @@ class TableInstance implements Map<String, Object> {
         Object obj = null;
         boolean pushed = false;
         ArgumentList args = null;
-        List<Index> indexes = null;
+        IndexList indexes = null;
         try {
           /***  if (valueGen instanceof Instantiation) {
                 Instantiation instance = (Instantiation) valueGen;

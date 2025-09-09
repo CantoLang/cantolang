@@ -717,7 +717,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return getNameModifier(getArguments(), getIndexes());
     }
 
-    public static String getNameModifier(ArgumentList args, List<Index> indexes) {
+    public static String getNameModifier(ArgumentList args, IndexList indexes) {
         String modifier = null;
         //if (args != null && args.size() > 0) {
         //    modifier = args.toString();
@@ -2044,7 +2044,7 @@ class SubDefinition extends AliasedDefinition {
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
-    public Object instantiate(ArgumentList args, List<Index> indexes, Context context) throws Redirection {
+    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
         return context.constructSub(def, def);
     }
 }

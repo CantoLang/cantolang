@@ -10,7 +10,6 @@ package canto.lang;
 
 import java.util.Iterator;
 
-import canto.runtime.Context;
 
 /**
  * A BinaryExpression is a construction based on a binary operator.

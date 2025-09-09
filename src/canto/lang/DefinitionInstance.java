@@ -17,9 +17,9 @@ import java.util.List;
 public class DefinitionInstance {
     public Definition def;
     public ArgumentList args;
-    public List<Index> indexes;
+    public IndexList indexes;
         
-    public DefinitionInstance(Definition def, ArgumentList args, List<Index> indexes) {
+    public DefinitionInstance(Definition def, ArgumentList args, IndexList indexes) {
         this.def = def;
         this.args = args;
         this.indexes = indexes;
