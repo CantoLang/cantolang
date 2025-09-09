@@ -32,7 +32,7 @@ public class DefParameter extends NamedDefinition {
 
     /** Construct an unnamed primitive parameter */
     public DefParameter(Class<?> c) {
-        super();
+        super(new NameNode(Name.ANONYMOUS));
         setType(new PrimitiveType(c));
         setAccess(Access.LOCAL);
     }
