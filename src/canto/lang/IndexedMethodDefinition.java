@@ -12,14 +12,13 @@ import java.lang.reflect.*;
 import java.util.*;
 
 import canto.runtime.*;
+import canto.util.Holder;
 
 /**
 * External definition referencing a method returning a collection.
 */
 
 public class IndexedMethodDefinition extends MethodDefinition {
-    private static final Log LOG = Log.getLogger(IndexedMethodDefinition.class);
-
     private IndexList indexes;
 
     public IndexedMethodDefinition(ExternalDefinition owner, Method method, ArgumentList args, IndexList indexes ) {
@@ -52,6 +51,8 @@ public class IndexedMethodDefinition extends MethodDefinition {
 }
 
 class IndexedMethodConstruction extends MethodConstruction {
+    private static final Log LOG = Log.getLogger(IndexedMethodConstruction.class);
+
     public IndexedMethodConstruction(IndexedMethodDefinition def) {
         super(def);
     }
@@ -68,7 +69,7 @@ class IndexedMethodConstruction extends MethodConstruction {
             }
             return data;
         } catch (Exception e) {
-            log("Exception retrieving collection object for indexed value: " + e);
+            LOG.error("Exception retrieving collection object for indexed value: " + e);
             return null;
         }
     }
@@ -94,7 +95,7 @@ class IndexedMethodConstruction extends MethodConstruction {
             }
             return data;
         } catch (Exception e) {
-            log("Exception retrieving indexed value: " + e);
+            LOG.error("Exception retrieving indexed value: " + e);
             return null;
         }
     }

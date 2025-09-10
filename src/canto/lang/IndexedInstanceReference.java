@@ -13,6 +13,7 @@ import java.util.*;
 import canto.runtime.Log;
 
 
+
 /**
  * IndexedInstanceReference represents a non-collection instance instantiated with
  * one or more array or table indexes.
@@ -20,7 +21,6 @@ import canto.runtime.Log;
 
 public class IndexedInstanceReference extends NamedDefinition {
     private static final Log LOG = Log.getLogger(IndexedInstanceReference.class);
-
     private IndexList indexes;
     private ResolvedInstance instance;
     private CollectionInstance collection;
@@ -105,8 +105,8 @@ public class IndexedInstanceReference extends NamedDefinition {
         }
     }
     
-        public AbstractNode getContents() {
-        return (AbstractNode) instance;
+        public CantoNode getContents() {
+        return (CantoNode) instance;
     }
 
     public Type getType() {
@@ -182,7 +182,7 @@ public class IndexedInstanceReference extends NamedDefinition {
                     throw new ClassCastException("Bad definition type for collection");
                 }
                 if (coll == null) {
-                    log("Null collection in multidimensional ElementReference!");
+                    LOG.error("Null collection in multidimensional ElementReference!");
                     break;
                 }
             } else {
@@ -220,7 +220,7 @@ public class IndexedInstanceReference extends NamedDefinition {
         try {
             return getElementDefinition(context);
         } catch (Redirection r) {
-            log("getUltimateDefinition call failed on " + getFullName() +"; couldn't get element definition");
+            LOG.error("getUltimateDefinition call failed on " + getFullName() +"; couldn't get element definition");
             return null;
         }
     }
@@ -239,7 +239,7 @@ public class IndexedInstanceReference extends NamedDefinition {
             sb.append(' ');
         }
 
-        AbstractNode contents = getContents();  
+        CantoNode contents = getContents();  
         sb.append(contents.toString(""));
 
 //        String name = getName();

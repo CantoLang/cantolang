@@ -2,7 +2,7 @@
  * 
  * IsaExpression.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,9 +11,6 @@ package canto.lang;
 
 /**
  * isa operator, similar to Java instanceof operator
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.10 $
  */
 
 public class IsaExpression extends Expression {

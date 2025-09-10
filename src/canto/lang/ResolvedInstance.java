@@ -13,13 +13,13 @@ import java.util.*;
 import canto.runtime.Log;
 import canto.util.*;
 
+
 /**
  * An ResolvedInstance is an Instantiation with a fixed resolution context.
  */
 public class ResolvedInstance extends Instantiation implements Value {
-
     private static final Log LOG = Log.getLogger(ResolvedInstance.class);
-    
+
     private Context resolutionContext;
     private boolean localScope = false;
     private Object data;
@@ -195,14 +195,14 @@ public class ResolvedInstance extends Instantiation implements Value {
                         child = (CantoNode) ((ValueGenerator) child).getValue(resolutionContext);
                     }
                     index = (Index) index.clone();
-                    index.setChild(0, (AbstractNode) child);
+                    index.setChild(0, (CantoNode) child);
                     resolvedIndexes.add(index);
                 }
                 indexes = resolvedIndexes;
 
             } catch (Throwable t) {
                 String message = "Problem resolving indexes: " + t.toString();
-                log(message);
+                LOG.error(message);
             }
         }
     }

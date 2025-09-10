@@ -355,7 +355,8 @@ abstract public class BinaryOperator extends AbstractOperator {
         }
 
 
-        public Object getObject() {
+        @Override
+        public Object getData() {
             if (val == null) {
                 val = generateValue();
                 if (val == null) {
@@ -373,8 +374,6 @@ abstract public class BinaryOperator extends AbstractOperator {
                 }
             }
             return val.getValueClass();
-        }
-        
+        }   
     }
-
 }

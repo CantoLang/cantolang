@@ -943,9 +943,9 @@ public class ExternalDefinition extends ComplexDefinition {
             }
         } catch (Exception e) {
             String message = "Exception initializing external method: " + e;
-            log(message);
+            LOG.error(message);
             message = "Context:\n" + context.toString();
-            log(message);
+            LOG.error(message);
             e.printStackTrace();
             throw new Redirection(Redirection.STANDARD_ERROR, message);
         } finally {
@@ -1247,7 +1247,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
 
         } catch (Exception e) {
             String message = "Exception constructing external object " + def.getName() + ": " + e.toString();
-            log(message);
+            LOG.error(message);
             throw new Redirection(Redirection.STANDARD_ERROR, message);
         } finally {
 //           context.repush();
@@ -1448,7 +1448,7 @@ class MethodConstruction extends ExternalConstruction {
                         }
                     } catch (Throwable t) {
                         String message = "Unable to initialize argument for external method: " + t.toString();
-                        log(message);
+                        LOG.error(message);
                        
                     } finally {
                         while (numUnpushes-- > 0) {
@@ -1645,13 +1645,13 @@ class MethodConstruction extends ExternalConstruction {
                     runtimeMethod = ExternalDefinition.getClosestMethod(name, params, runtimeClazz);
                     if (runtimeMethod == null) {
                         String message = "Unable to find method " + name + " in class " + instance.getClass().getName();
-                        log(message);
+                        LOG.error(message);
                         throw new Redirection(Redirection.STANDARD_ERROR, message);
                     }
     
                 } catch (Exception e) {
                     String message = "Exception finding method " + name + " in class " + instance.getClass().getName() + ": " + e;
-                    log(message);
+                    LOG.error(message);
                     e.printStackTrace();
                     throw new Redirection(Redirection.STANDARD_ERROR, message);
                 }
@@ -1715,14 +1715,14 @@ class MethodConstruction extends ExternalConstruction {
                 throw (Redirection) t;
             } else {
                 String message = "Exception in external method " + method.getName() + ": " + t;
-                log(message);
+                LOG.error(message);
                 t.printStackTrace();
                 throw new Redirection(Redirection.SERVER_ERROR_STATUS, Redirection.STANDARD_ERROR, message);
             }
  
         } catch (Exception e) {
             String message = "Exception generating data via external method " + method.getName() + ": " + e;
-            log(message);
+            LOG.error(message);
             e.printStackTrace();
             throw new Redirection(Redirection.SERVER_ERROR_STATUS, Redirection.STANDARD_ERROR_PAGE, message);
         }
@@ -1771,7 +1771,7 @@ class FieldDefinition extends ExternalDefinition {
                 }
                 return field.get(instance);
             } catch (Exception e) {
-                log("Exception generating data via external field: " + e);
+                LOG.error("Exception generating data via external field: " + e);
                 throw new Redirection(Redirection.SERVER_ERROR_STATUS, Redirection.STANDARD_ERROR_PAGE, e.toString());
             }
         }

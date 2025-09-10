@@ -21,6 +21,11 @@ public abstract class Expression extends Construction {
         super();
     }
 
+    public Expression(Expression expression) {
+        super();
+        copyChildren(expression);
+    }
+
     @Override
     public int getNumChildren() {
         return 0;

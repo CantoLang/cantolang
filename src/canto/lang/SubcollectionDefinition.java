@@ -12,6 +12,8 @@ import java.lang.reflect.*;
 import java.util.*;
 
 
+
+import canto.runtime.Log;
 /**
  * A SubcollectionDefinition contains a reference to a base collection plus a list
  * of overrides or additions.
@@ -21,6 +23,7 @@ import java.util.*;
  */
 
 public class SubcollectionDefinition extends CollectionDefinition {
+    private static final Log LOG = Log.getLogger(SubcollectionDefinition.class);
 
     protected CollectionDefinition supercollection;
     protected Map<Object, Object> overrides;
@@ -160,13 +163,13 @@ public class SubcollectionDefinition extends CollectionDefinition {
                                 newArray[ix] = ((CollectionInstance) newArray[ix]).getCollectionObject();
                             }
                         } catch (NumberFormatException nfe) {
-                            log("Bad format for array index in subcollection " + getFullName());
+                            LOG.error("Bad format for array index in subcollection " + getFullName());
 
                         } catch (ArrayIndexOutOfBoundsException be) {
-                            log("Out-of-bounds array index in subcollection " + getFullName());
+                            LOG.error("Out-of-bounds array index in subcollection " + getFullName());
 
                         } catch (Throwable t) {
-                            log("Problem interpreting array index in subcollection " + getFullName() + ": " + t.toString());
+                            LOG.error("Problem interpreting array index in subcollection " + getFullName() + ": " + t.toString());
                         }
                     }
 
@@ -195,13 +198,13 @@ public class SubcollectionDefinition extends CollectionDefinition {
                             }
                             newList.set(ix, item);
                         } catch (NumberFormatException nfe) {
-                            log("Bad format for array index in subcollection " + getFullName());
+                            LOG.error("Bad format for array index in subcollection " + getFullName());
 
                         } catch (ArrayIndexOutOfBoundsException be) {
-                            log("Out-of-bounds array index in subcollection " + getFullName());
+                            LOG.error("Out-of-bounds array index in subcollection " + getFullName());
 
                         } catch (Throwable t) {
-                            log("Problem interpreting array index in subcollection " + getFullName() + ": " + t.toString());
+                            LOG.error("Problem interpreting array index in subcollection " + getFullName() + ": " + t.toString());
                         }
                     }
 
@@ -235,7 +238,7 @@ public class SubcollectionDefinition extends CollectionDefinition {
                                         newMap.put(element.getDynamicKey(context).getString(), object);
     
                                     } catch (Redirection r) {
-                                        log("Problem getting dynamic key in subcollection " + getFullName() + ": " + r.toString());
+                                        LOG.error("Problem getting dynamic key in subcollection " + getFullName() + ": " + r.toString());
                                     }
     
                                 } else {

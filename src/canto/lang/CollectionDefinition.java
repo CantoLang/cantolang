@@ -13,11 +13,14 @@ import java.util.*;
 import canto.runtime.CantoObjectWrapper;
 import canto.util.Holder;
 
+import canto.runtime.Log;
+
 /**
  * CollectionDefinition is the common base class for array and table definitions.
  */
 
 public class CollectionDefinition extends ComplexDefinition {
+    private static final Log LOG = Log.getLogger(CollectionDefinition.class);
 
     static public boolean isCollectionObject(Object obj) {
         return obj != null && (obj.getClass().isArray() || obj instanceof List<?> || obj instanceof Map<?, ?>);
@@ -32,8 +35,8 @@ public class CollectionDefinition extends ComplexDefinition {
     private boolean dynamic_initialized = false;
 
     
-    public CollectionDefinition() {
-        super();
+    public CollectionDefinition(NameNode name) {
+        super(name);
     }
 
     public CollectionDefinition(CollectionDefinition def, Context context) {
@@ -190,7 +193,7 @@ public class CollectionDefinition extends ComplexDefinition {
             CollectionInstance instance = getCollectionInstance(context, args, indexes);
             return instance.getSize();
         } catch (Redirection r) {
-            log("Error in getSize call on " + getFullName() + ": " + r.getMessage());
+            LOG.error("Error in getSize call on " + getFullName() + ": " + r.getMessage());
             return 0;
         }
     }
@@ -446,7 +449,7 @@ public class CollectionDefinition extends ComplexDefinition {
         try {
             collectionInstance = getCollectionInstance(context, null, null);
         } catch (Redirection r) {
-            log(" ******** unable to obtain collection instance for " + getName() + " ******");
+            LOG.error(" ******** unable to obtain collection instance for " + getName() + " ******");
         }
         if (collectionInstance != null) {
             return new SingleItemList<Construction>((Construction) collectionInstance);
@@ -474,7 +477,7 @@ public class CollectionDefinition extends ComplexDefinition {
             } else {
                 return (Definition) element;
             }
-        } else if (element instanceof AbstractNode) {
+        } else if (element instanceof CantoNode) {
             return new ElementDefinition(this, element);
         } else if (element instanceof Holder) {
             Holder holder = (Holder) element;

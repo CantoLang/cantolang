@@ -10,6 +10,8 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.runtime.Log;
+
 
 /**
  * An ParameterList is a list of parameters.
@@ -18,6 +20,7 @@ import java.util.*;
  * @version $Revision: 1.28 $
  */
 public class ParameterList extends ListNode<DefParameter> {
+    private static final Log LOG = Log.getLogger(ParameterList.class);
     
     private boolean dynamic = false;
 
@@ -136,7 +139,7 @@ public class ParameterList extends ListNode<DefParameter> {
                             argParamType = argContext.getParameterType(argName, argInContainer);
 
                         } catch (Redirection r) {
-                            vlog("Caught while resolving argument " + argInstance.getName() + ": " + r);
+                            LOG.debug("Caught while resolving argument " + argInstance.getName() + ": " + r);
                         } finally {
                             while (numUnpushes-- > 0) {
                                 argContext.repush();
@@ -146,7 +149,7 @@ public class ParameterList extends ListNode<DefParameter> {
                         if (argDef != null) {
                             argType = argDef.getType();
                             if (!argType.equals(argParamType) && argParamType != null) {
-                                vlog("argType is " + argType.getName() + " but argParamType is " + argParamType.getName());
+                                LOG.debug("argType is " + argType.getName() + " but argParamType is " + argParamType.getName());
                             }
                         }
 

@@ -284,7 +284,7 @@ public class ElementReference extends Definition {
             Definition elementDef = getElementDefinition(context);
             return elementDef != null ? elementDef.getUltimateDefinition(context) : null;
         } catch (Redirection r) {
-            log("getUltimateDefinition call failed on " + getFullName() +"; couldn't get element definition");
+            LOG.error("getUltimateDefinition call failed on " + getFullName() +"; couldn't get element definition");
             return null;
         }
     }
@@ -336,12 +336,6 @@ public class ElementReference extends Definition {
 //        }
 
         return sb.toString();
-    }
-
-    @Override
-    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
-
-        return null;
     }
 
     @Override

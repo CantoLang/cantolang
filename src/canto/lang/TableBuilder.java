@@ -15,12 +15,10 @@ import canto.util.SingleItemList;
 
 /**
  * TableBuilder constructs tables and instantiates their contents.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.5 $
  */
 public class TableBuilder extends CollectionBuilder {
 
+    @SuppressWarnings("unchecked")
     static public Object instantiateElements(Object tableObject, Context context) throws Redirection {
         Object tableInstance = tableObject;
         if (tableObject instanceof Map<?,?>) {
@@ -145,7 +143,7 @@ class TableInstance implements Map<String, Object> {
                 obj = ((IndexedMethodConstruction) valueGen).getCollectionObject(context);
                 
             } else {
-                obj = valueGen.getData(context);
+                obj = valueGen.getValue(context);
                 if (obj instanceof Value) {
                     obj = ((Value) obj).getData();
                 }

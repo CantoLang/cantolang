@@ -16,9 +16,6 @@ import canto.runtime.Log;
 
 /**
  * ArrayBuilder constructs arrays and instantiates their contents.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.7 $
  */
 
 public class ArrayBuilder extends CollectionBuilder {
@@ -43,7 +40,7 @@ public class ArrayBuilder extends CollectionBuilder {
                     data = ((Value) data).getData();
 
                 } else if (data instanceof ValueGenerator) {
-                    data = ((ValueGenerator) data).getData(context);
+                    data = ((ValueGenerator) data).getValue(context).getData();
                 }
 
                 if (data != ((Object[]) arrayInstance)[i]) {
@@ -73,7 +70,7 @@ public class ArrayBuilder extends CollectionBuilder {
                     data = ((Value) data).getData();
 
                 } else if (data instanceof ValueGenerator) {
-                    data = ((ValueGenerator) data).getData(context);
+                    data = ((ValueGenerator) data).getValue(context).getData();
                 }
 
                 list.add(data);
@@ -339,7 +336,7 @@ class ArrayInstance implements CantoArray, DynamicObject {
             data = ((IndexedMethodConstruction) valueGen).getCollectionObject(context);
             
         } else {
-            data = valueGen.getData(context);
+            data = valueGen.getValue(context);
         }
         if (data != null) {
             if (data instanceof Value) {

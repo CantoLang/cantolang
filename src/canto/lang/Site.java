@@ -586,7 +586,7 @@ public class Site extends MultiUnitDefinition {
             if (entry == null) {
                 entry = getExternalDefinition(owner, node, null, null);
                 if (entry != null) {
-                    //vlog("would have put " + ((Definition) entry).getFullName() + " in " + name);
+                    // Removed commented vlog call
 //                       put(name, entry);
 
                 } else {
