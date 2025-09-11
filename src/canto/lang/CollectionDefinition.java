@@ -11,8 +11,9 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.CantoObjectWrapper;
+import canto.util.EmptyList;
 import canto.util.Holder;
-
+import canto.util.SingleItemList;
 import canto.runtime.Log;
 
 /**

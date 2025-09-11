@@ -10,6 +10,8 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.util.EmptyList;
+
 
 /**
  * KeysDefinition represents the built-in <code>keys</code> field which belongs
@@ -31,7 +33,7 @@ public class KeysDefinition extends CollectionDefinition {
     }
 
     public KeysDefinition(Definition def, Context context, ArgumentList args, IndexList indexes) {
-        super();
+        super(new NameNode(Name.KEYS));
         if (def instanceof ExternalDefinition) {
         	try {
         		def = ((ExternalDefinition) def).getDefForContext(context, args);
@@ -81,8 +83,7 @@ public class KeysDefinition extends CollectionDefinition {
             if (def instanceof CollectionDefinition) {
                 tableDef = (CollectionDefinition) def;
             } else {
-                tableDef = new CollectionDefinition();
-                tableDef.setName(def.getNameNode());
+                tableDef = new CollectionDefinition(def.getNameNode());
                 tableDef.setOwner(def.getOwner());
                 if (ri == null) {
                     ri = new ResolvedInstance(def, context, args, indexes);
@@ -123,13 +124,13 @@ public class KeysDefinition extends CollectionDefinition {
         return false;
     }
 
-    /** Returns <code>PUBLIC_ACCESS</code>. */
-    public int getAccess() {
-        return PUBLIC_ACCESS;
+    /** Returns <code>SITE</code>. */
+    public Access getAccess() {
+        return Access.SITE;
     }
 
     /** Returns the durability of the encapsulated definition. */
-    public int getDurability() {
+    public Durability getDurability() {
         return def.getDurability();
     }
 

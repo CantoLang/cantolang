@@ -946,6 +946,64 @@ abstract public class Definition extends CantoNode implements Name, Construction
         }
     }
 
-    
+    protected String getTypeAndName() {
+        StringBuffer sb = new StringBuffer();
+        
+        switch (access) {
+            case LOCAL:
+                sb.append("local ");
+                break;
+            case PUBLIC:
+                sb.append("public ");
+                break;
+        }
+
+        Type type = getSuper();
+        if (type != null) {
+            sb.append(type.getName());
+            sb.append(' ');
+        }
+
+        NameNode nameNode = getNameNode();
+        if (nameNode != null) {
+            String name = nameNode.toString("");
+            if (name != null && !name.equals(Name.ANONYMOUS)) {
+                sb.append(name);
+                List<Dim> dims = getDims();
+                if (dims != null && dims.size() > 0) { 
+                    Iterator<Dim> it = dims.iterator();
+                    while (it.hasNext()) {
+                        it.next().toString();
+                    }
+                }
+                sb.append(' ');
+            }
+        }
+        return sb.toString();        
+    }
+
+    public String toString(String prefix) {
+        StringBuffer sb = new StringBuffer(prefix);
+        boolean hasName = false;
+
+        String typeAndName = getTypeAndName();
+        if (typeAndName.length() > 0) {
+            hasName = true;
+            sb.append(typeAndName);
+        }
+
+        CantoNode contents = getContents();  
+        if (contents != null & !(contents instanceof Block)) {
+            if (hasName) {
+                sb.append("= ");
+            }
+            // in this case, don't append the prefix to the content
+            sb.append(contents.toString(""));
+            sb.append('\n');
+        } else {
+            sb.append(super.toString(prefix));
+        }
+        return sb.toString();
+    }    
 }
 
