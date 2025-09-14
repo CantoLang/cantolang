@@ -16,10 +16,6 @@ options {
     tokenVocab = CantoLexer;
 }
 
-@header {
-    package canto.parser;
-}
-
 cosmosDefinition
     : COSMOS siteBlock
     ;
@@ -109,19 +105,19 @@ literalBlock
 
 topDefinition
     : doc = DOC_COMMENT? keep = keepPrefix? pub = PUBLIC? dur = topDurability?
-    ( def = collectionElementDefinition
-    | def = collectionDefinition
-    | def = elementDefinition
-    | def = blockDefinition
+    ( collectionElementDefinition
+    | collectionDefinition
+    | elementDefinition
+    | blockDefinition
     )
     ;
 
 definition
     : doc = DOC_COMMENT? keep = keepPrefix? loc = LOCAL? dur = durability?
-    ( def = collectionElementDefinition
-    | def = collectionDefinition
-    | def = elementDefinition
-    | def = blockDefinition
+    ( collectionElementDefinition
+    | collectionDefinition
+    | elementDefinition
+    | blockDefinition
     )
     ;
 

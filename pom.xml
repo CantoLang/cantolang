@@ -32,13 +32,70 @@
       <plugin>
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
-        <version>4.3</version>
+        <version>4.13.2</version>
+        <configuration>
+            <sourceDirectory>src/canto/parser</sourceDirectory>
+            <outputDirectory>target/generated-sources/antlr4/canto/parser</outputDirectory>
+            <visitor>true</visitor>
+            <listener>true</listener>
+            <treatWarningsAsErrors>true</treatWarningsAsErrors>
+            <arguments>
+                <argument>-package</argument>
+                <argument>canto.parser</argument>
+            </arguments>
+        </configuration>
         <executions>
             <execution>
                 <goals>
                     <goal>antlr4</goal>
                 </goals>
             </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>target/generated-sources/antlr4</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <!-- Create CantoVisitor alias for backward compatibility -->
+                <echo file="target/generated-sources/antlr4/canto/parser/CantoVisitor.java">// Generated alias for backward compatibility
+package canto.parser;
+
+/**
+ * Alias for CantoParserBaseVisitor to maintain backward compatibility.
+ * This allows existing code to extend CantoVisitor instead of CantoParserBaseVisitor.
+ */
+public class CantoVisitor&lt;T&gt; extends CantoParserBaseVisitor&lt;T&gt; {
+    // This class extends CantoParserBaseVisitor without adding new methods
+}</echo>
+              </target>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>

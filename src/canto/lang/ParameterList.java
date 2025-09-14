@@ -10,14 +10,12 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.parser.CantoParserBaseVisitor;
 import canto.runtime.Log;
 
 
 /**
  * An ParameterList is a list of parameters.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.28 $
  */
 public class ParameterList extends ListNode<DefParameter> {
     private static final Log LOG = Log.getLogger(ParameterList.class);
@@ -253,7 +251,7 @@ public class ParameterList extends ListNode<DefParameter> {
 
 }
 
-class NameChecker extends CantoVisitor {
+class NameChecker extends CantoParserBaseVisitor {
 
     private String name;
 

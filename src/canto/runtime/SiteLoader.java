@@ -24,8 +24,8 @@ import org.antlr.v4.runtime.RecognitionException;
 import canto.lang.*;
 import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
+import canto.parser.CantoParserBaseVisitor;
 import canto.runtime.CantoServer;
-import canto.runtime.SiteBuilder;
 import cantocore.CoreSource;
 
 /**
@@ -544,7 +544,7 @@ public class SiteLoader {
         
     }
 
-    public static class Linker extends CantoVisitor {
+    public static class Linker {
 
     	private boolean errorOnUnresolvedType = false;
     	
@@ -693,26 +693,6 @@ public class SiteLoader {
                 return "passed source code";
             }
         }
-        
-        private CantoParser getCantoParser() throws IOException {
-            CharStream cs = null;
-            if (source instanceof Reader) {
-                cs = CharStreams.fromReader((Reader) source);
-            } else if (source instanceof String) {
-                cs = CharStreams.fromString((String) source);
-            } else if (source instanceof InputStream) {
-                cs = CharStreams.fromStream((InputStream) source);
-            } else if (source instanceof File) {
-                cs = CharStreams.fromStream(new FileInputStream((File) source));
-            } else if (source instanceof URL) {
-                cs = CharStreams.fromStream(((URL) source).openStream());
-            } else {
-                throw new IOException("Invalid source type: " + source.getClass());
-            }
-            CantoLexer lexer = new CantoLexer(cs);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            return new CantoParser(tokens);
-        }
 
         protected void load(boolean wait) {
             if (loaderThread != null && loaderThread.isAlive()) {
@@ -749,12 +729,11 @@ public class SiteLoader {
          * Loader thread.
          */
         public void run() {
-
-            SiteBuilder siteBuilder = new SiteBuilder(core);
             try {
-                CantoParser parser = getCantoParser();
-                CompilationUnit parseResult = siteBuilder.build(parser);
-                exception = siteBuilder.getException();
+                CantoBuilder cantoBuilder = new CantoBuilder(source);
+                CompilationUnit parseResult = cantoBuilder.buildSite();
+                core.addCompilationUnit(parseResult);
+                exception = cantoBuilder.getException();
                 this.parseResult = parseResult;
 
             } catch (RecognitionException re) {

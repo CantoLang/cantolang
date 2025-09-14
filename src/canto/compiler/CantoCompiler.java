@@ -16,10 +16,13 @@ import java.util.Date;
 
 import canto.Version;
 import canto.lang.Definition;
+import canto.lang.Instantiation;
+import canto.lang.Redirection;
+import canto.runtime.SiteLoader;
 import canto.runtime.CantoServer;
 import canto.lang.Context;
+import canto.lang.Core;
 import canto.runtime.Log;
-import canto.runtime.SiteBuilder;
 
 /**
  * canto compiler.
@@ -93,6 +96,11 @@ public class CantoCompiler {
      */
     protected String DEFAULT_OUTPUT_DIRECTORY = ".";
 
+    protected File createOutputDirectory( Definition page, Instantiation instance ) {
+        String directoryLocation = page.getStringConstant( "directoryLocation", DEFAULT_OUTPUT_DIRECTORY );
+        return createOutDir( page.getOwner().getName() + File.separatorChar + directoryLocation );
+    }
+
     File createOutDir( String outDirName ) {
         outDirName = outDirName.replace( '.', File.separatorChar );
         outDirName = outDirName.replace( '/', File.separatorChar );
@@ -110,6 +118,26 @@ public class CantoCompiler {
             return outDir;
         }
     }
+
+    /**
+     * createFileName
+     * 
+     * Default convention is to use the page name with the default extension
+     * ".html" current directory ".", unless the page Definition
+     * 
+     * @param page
+     * @param instance
+     * 
+     * @return a String used for the file name, or null if there is no output
+     *         associated with this page and instance
+     */
+    protected String DEFAULT_FILE_NAME_EXTENSION = "html";
+
+    protected String createFileName( Definition page, Instantiation instance ) {
+        String fileExtension = page.getStringConstant( "fileExtension", DEFAULT_FILE_NAME_EXTENSION );
+        return page.getName() + "." + fileExtension;
+    }
+
 
     void compile( String args[] ) {
 
@@ -173,8 +201,118 @@ public class CantoCompiler {
             System.out.println( "No path specified, exiting." );
             return;
         }
+        if ( logFileName != null ) {
+            try {
+                PrintStream log = new PrintStream( new FileOutputStream( logFileName, true ) );
+                System.setOut( log );
+                Date now = new Date();
+                System.out.println( "\n=========== begin logging " + now.toString() + " ============" );
+            } catch ( Exception e ) {
+                System.out.println( "Unable to log to file " + logFileName + ": " + e.toString() );
+            }
+        }
 
-        SiteBuilder siteBuilder = new SiteBuilder(cantoPath, inFilter, recursive);
+        Core core = new Core();
+
+        SiteLoader loader = new SiteLoader(core, "", cantoPath, inFilter);
+        loader.load();
+        long parseTime = System.currentTimeMillis() - startTime;
+
+        // all done; log results
+        Object[] sources = loader.getSources();
+        Exception[] exceptions = loader.getExceptions();
+
+        for ( int i = 0; i < sources.length; i++ ) {
+            Object source = sources[ i ];
+            String name = ( source instanceof File ? ( (File)source ).getAbsolutePath() : source.toString() );
+            Exception e = exceptions[ i ];
+            if ( e != null ) {
+                LOG.error( "Unable to load " + name + ": " + e );
+                e.printStackTrace();
+            } else {
+                LOG.info( name + " loaded successfully." );
+            }
+
+        }
+
+        Definition[] pages = core.getDefinitions( "page" );
+
+        int numPages = pages.length;
+        if ( numPages > 0 ) {
+            // now spit out pages
+            int count = 0; // count of pages successfully written
+            try {
+
+                Context context = new Context( core );
+                for ( int i = 0; i < numPages; i++ ) {
+
+                    if ( pageName != null && !pageName.equals( pages[ i ].getName() ) ) {
+                        continue;
+                    }
+
+                    Definition page = pages[ i ];
+                    Instantiation instance = new Instantiation( page );
+                    if ( instance.isAbstract( context )) {
+                        LOG.warn( page.getFullName() + " does not generate output; skipping" );
+                        continue;
+                    }
+                    String pageText = null;
+                    try {
+                        pageText = instance.getText( context );
+                    } catch ( Redirection r ) {
+                        LOG.warn( "Page " + pageName + " redirects to " + r.getLocation() + "; skipping" );
+                        continue;
+                    }
+                    if ( pageText != null && pageText.length() > 0 ) {
+                        File outDir = createOutputDirectory( page, instance );
+                        if ( outDir != null ) {
+                            String fileName = createFileName( page, instance );
+                            if ( fileName != null ) {
+                                LOG.debug( "Page " + count + " is " + fileName );
+                                File pageFile = new File( outDir, fileName );
+                                if ( !pageFile.exists() ) {
+                                    File parent = pageFile.getParentFile();
+                                    if ( !parent.exists() ) {
+                                        if ( !parent.mkdirs() ) {
+                                            LOG.error( "Unable to create parent directory " + parent.getAbsolutePath() );
+                                            continue;
+                                        }
+                                    }
+                                    pageFile.createNewFile();
+                                }
+
+                                if ( !pageFile.canWrite() ) {
+                                    LOG.error( "Unable to write to file " + pageFile.getAbsolutePath() );
+                                    continue;
+                                }
+
+                                LOG.info( "Writing " + pageFile.getAbsolutePath() + "..." );
+                                FileWriter writer = new FileWriter( pageFile );
+                                writer.write( pageText );
+                                writer.close();
+                                count++;
+                            }
+                        }
+
+                    } else {
+                        LOG.warn( "Page " + page.getFullName() + " has no content, skipping." );
+                    }
+                }
+                LOG.info( "Done." );
+
+                long totalTime = System.currentTimeMillis() - startTime;
+                long perPageTime = ( count > 0 ? ( totalTime / count ) : 0L );
+                LOG.info( count + " page" + ( count == 1 ? "" : "s" ) + " generated in " + durString( totalTime ) + " ("
+                        + durString( perPageTime ) + " per page)" );
+                LOG.info( "(parse time " + durString( parseTime ) + ")" );
+
+            } catch ( Exception e ) {
+                LOG.error( "Exception generating pages: " + e );
+                e.printStackTrace();
+            }
+        } else {
+            LOG.error( "No pages in input." );
+        }
     }
 
 }

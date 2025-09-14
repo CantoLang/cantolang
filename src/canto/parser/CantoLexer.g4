@@ -12,8 +12,6 @@
 
 lexer grammar CantoLexer;
 
-@lexer::header {package canto.parser;}
-
 // Keywords
 ADOPT        : 'adopt';
 AND          : 'and';

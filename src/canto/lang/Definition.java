@@ -956,6 +956,8 @@ abstract public class Definition extends CantoNode implements Name, Construction
             case PUBLIC:
                 sb.append("public ");
                 break;
+            default:
+                break;
         }
 
         Type type = getSuper();
@@ -982,6 +984,18 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return sb.toString();        
     }
 
+    public String getStringConstant(String name, String valueIfNotFound) {
+        Definition d = getChildDefinition(new NameNode(name), null);
+        if ( d != null ) {
+            CantoNode contents = d.getContents();
+            if (( contents != null ) && ( contents instanceof PrimitiveValue )) {
+                return ((PrimitiveValue)contents).getString();
+            }
+        }
+        return valueIfNotFound;
+    }
+    
+    
     public String toString(String prefix) {
         StringBuffer sb = new StringBuffer(prefix);
         boolean hasName = false;
