@@ -24,11 +24,8 @@ public class ExternalCollectionDefinition extends CollectionDefinition {
     private Object object = null;
     protected ArgumentList args = null;
 
-    public ExternalCollectionDefinition() {
-        super();
-    }
-
     public ExternalCollectionDefinition(ExternalDefinition externalDef, Context context, ArgumentList args, Class<?> c) throws Redirection {
+         super(externalDef.getNameNode());
          
          // this logic could be enhanced to handle multidimensional tables, arrays of tables,
          // tables of arrays etc.

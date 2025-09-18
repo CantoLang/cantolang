@@ -18,18 +18,13 @@ public class MultiUnitDefinition extends ComplexDefinition {
     
     List<CompilationUnit> units;
 
-    protected MultiUnitDefinition(Name name) {
+    protected MultiUnitDefinition(NameNode name) {
         super(name);
         units = new ArrayList<CompilationUnit>();
     }
 
     protected void addUnit(CompilationUnit unit) {
         units.add(unit);
-    }
- 
-    @Override
-    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
-        return null;
     }
 
     @Override

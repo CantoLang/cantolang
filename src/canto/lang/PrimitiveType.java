@@ -238,13 +238,13 @@ public class PrimitiveType extends AbstractType {
     }
 
     public Definition getDefinition() {
-        return new PrimitiveDefinition();
+        return new PrimitiveDefinition(type.getCanonicalName());
     }
 
     class PrimitiveDefinition extends NamedDefinition {
 
-        public PrimitiveDefinition() {
-            super();
+        public PrimitiveDefinition(String name) {
+            super(new NameNode(name));
             // set the owner to the top-level owner in the node tree, which
             // would presumably be the core.
             Definition owner = PrimitiveType.this.getOwner();

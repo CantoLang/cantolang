@@ -354,10 +354,10 @@ public class ResolvedArray extends ResolvedCollection {
                         elementKey = (String) object;
                     } else if (object instanceof Value) {
                         elementKey = ((Value) object).getString();
-                    } else if (object instanceof Chunk) {
-                        elementKey = ((Chunk) object).getText(context);
+                    } else if (object instanceof Construction) {
+                        elementKey = ((Construction) object).getText(context);
                     } else if (object instanceof ValueGenerator) {
-                        elementKey = ((ValueGenerator) object).getString(context);
+                        elementKey = ((ValueGenerator) object).getValue(context).getString();
                     } else {
                         elementKey = object.toString();
                     }

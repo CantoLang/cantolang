@@ -3697,6 +3697,12 @@ public class Context {
         return totalListSize;
     }
 
+    public static <E> ArrayList<E> newArrayList(int size) {
+        arrayListsCreated++;
+        totalListSize += size;
+        return new ArrayList<E>(size);
+    }
+
     public static <E> ArrayList<E> newArrayList(int size, Class<E> c) {
         arrayListsCreated++;
         totalListSize += size;

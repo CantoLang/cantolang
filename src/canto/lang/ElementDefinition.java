@@ -352,19 +352,13 @@ System.err.println("***** ElementDefinition getBaseDefinition null due to null o
     }
 
     protected ParameterList getMatch(ArgumentList args, Context argContext) {
-        return ((AnonymousDefinition) getBaseDefinition(argContext)).getMatch(args, argContext);
+        return getBaseDefinition(argContext).getMatch(args, argContext);
     }
 
     public String toString(String prefix) {
         StringBuffer sb = new StringBuffer(prefix);
         sb.append(getContents().toString());
         return sb.toString();
-    }
-
-    @Override
-    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override

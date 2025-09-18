@@ -1191,7 +1191,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
             return NOT_CACHEABLE_INFO;
         } else if (def.getName().equals("cache") && def.getOwner().getName().equals("here")) {
             return NOT_CACHEABLE_INFO;
-        } else if (def.getDurability() == Definition.DYNAMIC) {
+        } else if (def.getDurability() == Definition.Durability.DYNAMIC) {
             cacheability = CACHE_STORABLE;
         } else {
             ArgumentList args = (def instanceof ExternalDefinition ? ((ExternalDefinition) def).getArguments() : getArguments());
@@ -1326,7 +1326,7 @@ class MethodDefinition extends ExternalDefinition {
         setOwner(owner);
         setObject(owner.getContents());
         setAccess(owner.getAccess());
-        setDurability(DYNAMIC);
+        setDurability(Durability.DYNAMIC);
         setName(new NameWithArgs(method.getName(), args));
         setArguments(args);
         setExternalClass(method.getReturnType());

@@ -17,8 +17,8 @@ package canto.lang;
 
 public class AdoptStatement extends ComplexName {
 
-    public AdoptStatement() {
-        super();
+    public AdoptStatement(NameRange name) {
+        super(name);
     }
 
     public String toString(String prefix) {

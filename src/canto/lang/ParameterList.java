@@ -10,7 +10,6 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.parser.CantoParserBaseVisitor;
 import canto.runtime.Log;
 
 
@@ -235,7 +234,7 @@ public class ParameterList extends ListNode<DefParameter> {
                     String paramName = param.getReferenceName();
                     if (paramName != null && paramName.length() > 0) {
                         NameChecker checker = new NameChecker(paramName);
-                        Object data = node.jjtAccept(checker, "");
+                        Object data = checker.handleNode(node);
                         if (data != null || paramName.equals(data)) {
                             return true;
                         }
@@ -248,10 +247,9 @@ public class ParameterList extends ListNode<DefParameter> {
             return true;
         }
     }
-
 }
 
-class NameChecker extends CantoParserBaseVisitor {
+class NameChecker {
 
     private String name;
 
@@ -260,12 +258,11 @@ class NameChecker extends CantoParserBaseVisitor {
     }
 
 
-    /** handleNode will return one of three values: the name being checked, if the node
-     *  (or a subnode) contains that name; null, if the node (or a subnode) contains a
-     *  different name; or the passed data parameter, if the neither the node nor any
-     *  subnode contains a name.
+    /** handleNode will return the name being checked, if the node (or a subnode) 
+     *  contains that name, or null, if the node (or a subnode) contains a
+     *  different name or if the neither the node nor any subnode contains a name.
      */
-    public Object handleNode(CantoNode node, Object data) {
+    public Object handleNode(CantoNode node) {
         if (node instanceof Instantiation) {
             if (name.equals(((Instantiation) node).getName())) {
                 return name;
@@ -283,14 +280,12 @@ class NameChecker extends CantoParserBaseVisitor {
         CantoNode[] children = node.children;
         if (children != null) {
             for (int i = 0; i < children.length; i++) {
-                Object childData = children[i].jjtAccept(this, data);
-                if (name.equals(childData)) {
-                    return name;
-                } else if (childData == null) {
-                    data = null;
+                Object childData = handleNode(children[i]);
+                if (childData != null) {
+                    return childData;
                 }
             }
         }
-        return data;
+        return null;
     }
 }

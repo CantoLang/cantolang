@@ -30,6 +30,7 @@ public class SubcollectionDefinition extends CollectionDefinition {
     protected List<Object> additions;
 
     public SubcollectionDefinition(CollectionDefinition supercollection) {
+        super(supercollection.getNameNode());
         this.supercollection = supercollection;
         overrides = new HashMap<Object, Object>();
         if (supercollection.isTable()) {

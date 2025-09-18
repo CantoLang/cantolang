@@ -11,6 +11,7 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.Log;
+import canto.util.EmptyList;
 
 
 
@@ -26,7 +27,7 @@ public class IndexedInstanceReference extends NamedDefinition {
     private CollectionInstance collection;
 
     public IndexedInstanceReference(ResolvedInstance instance, IndexList indexes) {
-        super();
+        super(instance.getNameNode());
         this.indexes = indexes;
         this.instance = instance;
         this.collection = null;

@@ -123,8 +123,6 @@ public class ResolvedInstance extends Instantiation implements Value {
         owner = instance.owner;
         parent = instance.parent;
         children = instance.children;
-        firstToken = instance.firstToken;
-        lastToken = instance.lastToken;
         is_dynamic = instance.is_dynamic;
         is_static = instance.is_static;
         localDef = instance.localDef;
@@ -172,7 +170,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         indexes = instance.indexes;
         if (indexes != null && indexes.size() > 0) {
             int numIndexes = indexes.size();
-            IndexList resolvedIndexes = Context.newArrayList(numIndexes, Index.class);
+            IndexList resolvedIndexes = new IndexList(numIndexes);
             try {
                 for (int i = 0; i < numIndexes; i++) {
                     Index index = indexes.get(i);
@@ -350,4 +348,11 @@ public class ResolvedInstance extends Instantiation implements Value {
         return super.toString() + " (resolved)";
     }
 
+    public Name getNameNode() {
+        if (reference instanceof NameNode) {
+            return (NameNode) reference;
+        } else {
+            return new NameNode(reference.getName()); 
+        }
+    }
 }

@@ -264,7 +264,7 @@ public class ElementReference extends Definition {
             coll = (CollectionInstance) obj;
         } else {
             boolean isTable = !index.isNumericIndex(context);
-            CollectionDefinition def = new CollectionDefinition();
+            CollectionDefinition def = new CollectionDefinition(new NameNode(""));
             def.setOwner(this);
             if (isTable) {
                 coll = new ResolvedTable(def, context, null, null, obj);    

@@ -25,7 +25,6 @@ public class DefParameter extends NamedDefinition {
     /** Construct an explicitly named parameter.  */
     public DefParameter(NameNode name) {
         super(name);
-        setName(name);
         setType(DefaultType.TYPE);
         setAccess(Access.LOCAL);
     }
@@ -39,8 +38,7 @@ public class DefParameter extends NamedDefinition {
 
     /** Construct an named primitive parameter */
     public DefParameter(NameNode name, Class<?> c) {
-        super();
-        setName(name);
+        super(name);
         setType(new PrimitiveType(c));
         setAccess(Access.LOCAL);
     }
@@ -90,15 +88,15 @@ public class DefParameter extends NamedDefinition {
                 if (arg.isParameterKind()) {
                     Scope scope = context.peek();
                     while (!scope.covers(argOwner)) {
-                        Scope link = entry.getPrevious();
-                        if (link == null || link.equals(context.getRootEntry())) {
+                        Scope link = scope.getPrevious();
+                        if (link == null || link.equals(context.getRootScope())) {
                             while (numUnpushes-- > 0) {
                                 context.repush();
                             }
                             break;
                         }
                         numUnpushes++;
-                        entry = link;
+                        scope = link;
                         context.unpush();
                     }
                     def = arg.getDefinition(context);

@@ -2,7 +2,7 @@
  * 
  * ExternStatement.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2025 by cantolang.org
  * All rights reserved.
  */
 
@@ -10,25 +10,20 @@ package canto.lang;
 
 /**
  * ExternStatement represents an extern statement, which declares a name to refer
- * to an external object of a particular binding.
- *
- * @author Michael St. Hippolyte
- * @version $Revision: 1.4 $
+ * to an external object of a particular binding (the language the object is
+ * implemented in).
  */
 
-public class ExternStatement extends AdoptStatement {
+public class ExternStatement extends ComplexName {
 
-    private String binding;
+    private NameNode binding;
 
-    public ExternStatement() {
-        super();
-    }
-
-    public void setBinding(String binding) {
+    public ExternStatement(NameNode binding, NameRange nameRange) {
+        super(nameRange);
         this.binding = binding;
     }
 
-    public String getBinding() {
+    public NameNode getBinding() {
         return binding;
     }
 

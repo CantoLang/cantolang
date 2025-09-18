@@ -346,7 +346,7 @@ public class Site extends MultiUnitDefinition {
     /** Returns the external definition for the indicated name. */
     public Definition getExternalDefinition(NamedDefinition owner, NameNode node, Type superType, Context context) {
         
-        ComplexName name = (node instanceof ComplexName ? (ComplexName) node : new ComplexName(node));
+        ComplexName name = (node instanceof ComplexName ? (ComplexName) node : new ComplexName(node.getName()));
         Definition def = null;
 
         // if the owner is an external definition and has a child definition with the 
@@ -515,7 +515,6 @@ public class Site extends MultiUnitDefinition {
  
                         SubcollectionDefinition collection = new SubcollectionDefinition(supercollection);
                         collection.setOwner(def.getOwner());
-                        collection.setName(supercollection.getNameNode());
                         collection.add(def);
                         put(key, collection);
                 } else {

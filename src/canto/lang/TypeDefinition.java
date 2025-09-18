@@ -19,7 +19,7 @@ public class TypeDefinition extends NamedDefinition {
     public String contextName;
 
     public TypeDefinition(Definition def) {
-        super();
+        super(new NameNode(Name.TYPE));
         this.def = def;
         setContents(new PrimitiveValue(def.getName()));
     }

@@ -500,7 +500,7 @@ class MultiDefinition extends NamedDefinition {
     List<Definition> definitions;
 
     public MultiDefinition(TypeList types, List<Definition> definitions) {
-        super();
+        super(new NameNode(types.toString()));
         setOwner(types.getOwner());
         this.types = types;
         this.definitions = definitions;

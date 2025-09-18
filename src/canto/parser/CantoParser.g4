@@ -104,7 +104,7 @@ literalBlock
     ;
 
 topDefinition
-    : doc = DOC_COMMENT? keep = keepPrefix? pub = PUBLIC? dur = topDurability?
+    : doc = DOC_COMMENT? keep = topKeepPrefix? pub = PUBLIC? dur = topDurability?
     ( collectionElementDefinition
     | collectionDefinition
     | elementDefinition
@@ -134,7 +134,7 @@ keepAs
     ;
     
 keepIn
-    : IN (qualifiedName | identifier)
+    : IN instantiation
     ;
 
 topDurability
@@ -239,26 +239,22 @@ collectionSuffix
     : dim+
     ;
     
-paramSuffix
-    : params+
-    ;
-
-multiParamSuffix
+multiParams
     : params (COMMA params)+
     ;
 
 collectionDefName
-    : collectionType identifier paramSuffix?
-    | simpleType? identifier paramSuffix? collectionSuffix
+    : collectionType identifier params?
+    | simpleType? identifier params? collectionSuffix
     ;
     
 elementDefName
-    : simpleType? identifier paramSuffix? 
+    : simpleType? identifier params? 
     ;
 
 blockDefName
-    : multiType identifier (paramSuffix | multiParamSuffix)?
-    | simpleType? identifier (paramSuffix | multiParamSuffix)?
+    : multiType identifier (params | multiParams)?
+    | simpleType? identifier (params | multiParams)?
     ;
 
 simpleType
@@ -332,7 +328,6 @@ specialName
 
 name
    : specialName
-   | qualifiedName
    | identifier
    ;
 
@@ -341,11 +336,22 @@ identifier
    ;
 
 qualifiedName
-    : IDENTIFIER (DOT IDENTIFIER)+
+    : identifier (DOT identifier)*
     ;
-    
+
+any
+    : STAR
+    ;
+anyany
+    : STARSTAR
+    ;
+        
 nameRange
-    : IDENTIFIER (DOT (IDENTIFIER | STAR))* (DOT STARSTAR)?
+    : identifier (DOT (identifier | any))* (DOT anyany)?
+    ;
+
+typeName
+    : identifier (DOT identifier)*
     ;
 
 args
@@ -379,7 +385,11 @@ primary
     ;
 
 instantiation
-    : name (index)* (args)?
+    : (nameComponent)+
+    ;
+
+nameComponent
+    : name (index | args)*
     ;
 
 expression

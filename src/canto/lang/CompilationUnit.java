@@ -8,8 +8,6 @@
 
 package canto.lang;
 
-import java.util.List;
-
 import canto.runtime.Log;
 
 /**
@@ -21,12 +19,5 @@ public class CompilationUnit extends BlockDefinition {
     public CompilationUnit(Name name, Block block) {
         super(name, block);
     }
-
-    @Override
-    public Value instantiate(Context context, ArgumentList args, IndexList indexes) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 
 }

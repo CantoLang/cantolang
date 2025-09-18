@@ -10,16 +10,7 @@ package canto.lang;
 
 import java.util.*;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.TokenStream;
-
-import canto.parser.CantoLexer;
-import canto.parser.CantoParser;
 import canto.runtime.Log;
-import canto.util.SingleItemList;
-
-import java.io.StringReader;
 
 /**
  * Base class for compound names.
@@ -28,8 +19,9 @@ import java.io.StringReader;
 public class ComplexName extends NameNode implements Name, Initializable {
     private static final Log LOG = Log.getLogger(ComplexName.class);
 
-    public ComplexName() {
+    public ComplexName(ComplexName name) {
         super();
+        copyChildren(name);
     }
 
     public ComplexName(NameNode node, int start, int end) {
@@ -70,14 +62,9 @@ public class ComplexName extends NameNode implements Name, Initializable {
         super.setName(computeName());
     }
 
-    public ComplexName(NameNode node) {
+    public ComplexName(List<CantoNode> nameList) {
         super();
-        if (node instanceof ComplexName) {
-            copyChildren(node);
-        } else {
-            setChild(0, (CantoNode) node.clone());
-        }
-        super.setName(node.getName());
+        setChildren(nameList);
     }
 
 
@@ -97,13 +84,11 @@ public class ComplexName extends NameNode implements Name, Initializable {
 
     private void parseName(String name) {
         try {
-            CantoLexer lexer = new CantoLexer(CharStreams.fromString(name));
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            CantoParser parser = new CantoParser(tokens);
-            ComplexName generatedName = parser.parseComplexName();
+            CantoBuilder builder = new CantoBuilder(name);
+            ComplexName generatedName = builder.buildComplexName();
             copyChildren(generatedName);
         } catch (Exception e) {
-            System.out.println("Exception parsing name in ComplexName: " + e);
+            LOG.error("Exception parsing name in ComplexName: " + e);
             children = new CantoNode[1];
             name = '(' + name + ')';
             children[0] = new NameNode(name);
@@ -142,9 +127,6 @@ public class ComplexName extends NameNode implements Name, Initializable {
 
     public String getName() {
         String nm = super.getName();
-        if (nm == null) {
-            System.out.println("getName returns null name!!!!");
-        }
         return nm;
     }
    
@@ -407,6 +389,4 @@ public class ComplexName extends NameNode implements Name, Initializable {
         }
         return sb.toString();
     }
-
-
 }

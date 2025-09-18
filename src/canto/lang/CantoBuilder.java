@@ -20,9 +20,11 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
+import canto.parser.CantoParser.AnyanyContext;
 import canto.parser.CantoParserBaseVisitor;
 import canto.runtime.Log;
 
@@ -116,23 +118,112 @@ public class CantoBuilder {
         
         @Override
         public CantoNode visitExternDirective(CantoParser.ExternDirectiveContext ctx) {
-            return ctx.accept(this);
+            NameNode binding = (NameNode) ctx.identifier().accept(this);
+            NameRange nameRange = (NameRange) ctx.nameRange().accept(this);
+            ExternStatement externDirective = new ExternStatement(binding, nameRange);
+            return externDirective;
         }
     
         @Override
         public CantoNode visitAdoptDirective(CantoParser.AdoptDirectiveContext ctx) {
-            return ctx.accept(this);
+            NameRange nameRange = (NameRange) ctx.nameRange().accept(this);
+            AdoptStatement adoptDirective = new AdoptStatement(nameRange);
+            return adoptDirective;
         }
     
         @Override
         public CantoNode visitTopDefinition(CantoParser.TopDefinitionContext ctx) {
-            return ctx.accept(this);
+            Definition def = null;
+            String docComment = null;
+            KeepNode keepNode = null;
+            int numNodes = ctx.getChildCount();
+            for (int i = 0; i < numNodes; i++) {
+                ParseTree child = ctx.getChild(i);
+                if (child == ctx.doc) {
+                    docComment = ctx.doc.getText();
+                } else if (child == ctx.keep) {
+                    keepNode = (KeepNode) ctx.keep.accept(this);
+                } else {
+                    def = (Definition) child.accept(this);
+                }
+            }
+            return def;
         }
     
+        @Override
+        public CantoNode visitCollectionElementDefinition(CantoParser.CollectionElementDefinitionContext ctx) {
+            return ctx.accept(this);
+        }
+
+        @Override
+        public CantoNode visitCollectionDefinition(CantoParser.CollectionDefinitionContext ctx) {
+            return ctx.accept(this);
+        }
+        
+        @Override
+        public CantoNode visitElementDefinition(CantoParser.ElementDefinitionContext ctx) {
+            return ctx.accept(this);
+        }
+
+        @Override
+        public CantoNode visitBlockDefinition(CantoParser.BlockDefinitionContext ctx) {
+            return ctx.accept(this);
+        }
+
+        @Override
+        public CantoNode visitCollectionDefName(CantoParser.CollectionDefNameContext ctx) {
+            //   : collectionType identifier paramSuffix?
+            //   | simpleType? identifier paramSuffix? collectionSuffix
+            return ctx.accept(this);
+        }
+        
+        @Override
+        public CantoNode visitElementDefName(CantoParser.ElementDefNameContext ctx) {
+            //: simpleType? identifier paramSuffix? 
+            return ctx.accept(this);
+        }
+
+        @Override
+        public CantoNode visitBlockDefName(CantoParser.BlockDefNameContext ctx) {
+            //: multiType identifier (paramSuffix | multiParamSuffix)?
+            //| simpleType? identifier (paramSuffix | multiParamSuffix)?
+            return ctx.accept(this);
+        }
+
         @Override
         public CantoNode visitIdentifier(CantoParser.IdentifierContext ctx) {
             String name = ctx.getText();
             return new NameNode(name);
+        }
+
+        @Override
+        public CantoNode visitAny(CantoParser.AnyContext ctx) {
+            return new Any();
+        }
+
+        @Override
+        public CantoNode visitAnyany(CantoParser.AnyanyContext ctx) {
+            return new AnyAny();
+        }
+
+        @Override
+        public CantoNode visitNameRange(CantoParser.NameRangeContext ctx) {
+            int numNodes = ctx.getChildCount();
+            List<CantoNode> nodeList = new ArrayList<CantoNode>(numNodes);
+            for (int i = 0; i < numNodes; i++) {
+                nodeList.add(ctx.getChild(i).accept(this));
+            }
+            return new ComplexName(nodeList);
+        }
+
+        @Override
+        public CantoNode visitQualifiedName(CantoParser.QualifiedNameContext ctx) {
+            int numNodes = ctx.getChildCount();
+            List<CantoNode> nodeList = new ArrayList<CantoNode>(numNodes);
+            for (CantoParser.IdentifierContext identifier : ctx.identifier()) {
+                nodeList.add(identifier.accept(this));
+            }
+            return new ComplexName(nodeList);
         }
     }  
 }
