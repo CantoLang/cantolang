@@ -57,7 +57,7 @@ public class IndexedInstanceReference extends NamedDefinition {
     }
 
     public NameNode getNameNode() {
-        return new NameWithIndexes(instance.getName(), indexes);
+        return new NameWithArgs(instance.getName(), indexes);
     }
 
     
@@ -202,7 +202,7 @@ public class IndexedInstanceReference extends NamedDefinition {
             coll = (CollectionInstance) obj;
         } else { 
             boolean isTable = !index.isNumericIndex(context);
-            CollectionDefinition collectionDef = new CollectionDefinition();
+            CollectionDefinition collectionDef = new CollectionDefinition(new NameNode(obj.getClass().getSimpleName()));
             collectionDef.setOwner(this);
             if (isTable) {           
                 coll = new ResolvedTable(collectionDef, context, null, null, obj);    

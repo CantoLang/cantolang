@@ -97,12 +97,12 @@ public class ResolvedTable extends ResolvedCollection {
             if (contents != null) {
 
                 // table defined with an TableInitExpression
-                if (contents instanceof ArgumentList) {
+                if (contents instanceof List<?>) {
                     List<Dim> dims = def.getDims();
                     Dim majorDim = dims.get(0);
                     Dim.TYPE dimType = majorDim.getType();
 
-                    ArgumentList elements = (ArgumentList) contents;
+                    List<?> elements = (List<?>) contents;
                     int size = 0;
                     if (dimType == Dim.TYPE.DEFINITE) {
                         size = majorDim.getSize();
@@ -156,11 +156,11 @@ public class ResolvedTable extends ResolvedCollection {
     }
 
 
-    private void addElements(Context context, List<Construction> elements, Map<String, Object> table) throws Redirection {
+    private void addElements(Context context, List<?> elements, Map<String, Object> table) throws Redirection {
         if (elements != null) {
-            Iterator<Construction> it = elements.iterator();
+            Iterator<?> it = elements.iterator();
             while (it.hasNext()) {
-                Construction item = it.next();
+                Object item = it.next();
                 if (item instanceof TableElement) {
                     TableElement element = (TableElement) item;
                     String key = (element.isDynamic() ? element.getDynamicKey(context).getString() : element.getKey().getString());

@@ -3311,6 +3311,52 @@ public class Context {
         return null;
     }
 
+    /** Returns a copy of the passed argument list with any arguments that 
+     *  reference parameters in this context replaced by the arguments referenced 
+     *  by those parameters.  If no arguments reference parameters, the original
+     *  argument list is returned. 
+     */
+    public ArgumentList getUltimateArgs(ArgumentList args) {
+        if (args == null) {
+            return null;
+        }
+
+        ArgumentList newArgs = null;
+        Iterator<Construction> it = args.iterator();
+        int n = 0;
+        while (it.hasNext()) {
+            Construction arg = it.next();
+            if (arg instanceof Instantiation) {
+                Instantiation argInstance = (Instantiation) arg;
+                if (argInstance.isParameterKind()) {
+                    if (newArgs == null) {
+                        newArgs = new ArgumentList(args);
+                    }
+                    Construction newArg = null;
+                    Object obj = getArgumentForParameter(argInstance.getReferenceName(), argInstance.isParameterChild(), argInstance.isContainerParameter(this));
+                    if (obj != null) {
+                        if (obj instanceof ArgumentList) {
+                            ArgumentList argHolder = (ArgumentList) obj;
+                            newArg = argHolder.get(0);
+                            if (argHolder.isDynamic()) {
+                                newArgs.setDynamic(true);
+                            }
+                        } else {
+                            newArg = (Construction) obj;
+                        }
+                        newArgs.set(n, newArg);
+                    }
+                }
+            }
+            n++;
+        }
+        if (newArgs != null) {
+            return newArgs;
+        } else {
+            return args;
+        }
+    }
+    
     public ParameterList getParameters() {
         if (topScope != null) {
             return topScope.params;
@@ -3322,6 +3368,61 @@ public class Context {
         return new ContextIterator();
     }
 
+    public boolean equalsOrPrecedes(Object obj) {
+        if (obj instanceof Context) {
+            Context context = (Context) obj;
+            if (rootContext == context.rootContext) {
+                if (stateCount == context.stateCount && getLoopIndex() <= context.getLoopIndex()) {
+                    return true;
+                } else if (stateCount < context.stateCount) {
+                    Iterator<Scope> it = context.iterator();
+                    while (it.hasNext()) {
+                        Scope entry = (Scope) it.next();
+                        if (entry.equals(topScope)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } else if (obj instanceof ContextMarker) {
+            ContextMarker marker = (ContextMarker) obj;
+            if (rootContext == marker.rootContext) {
+                if (stateCount == marker.stateCount && getLoopIndex() <= marker.loopIndex) {
+                    return true;
+                } else if (stateCount < marker.stateCount) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+   public boolean isCompatible(Context context) {
+        if (context != null && rootContext == context.rootContext) {
+            if (stateCount == context.stateCount) {
+                return true;
+            } else if (stateCount < context.stateCount) {
+                if (topScope != null) {
+                    Iterator<Scope> it = context.iterator();
+                    while (it.hasNext()) {
+                        Scope scope = it.next();
+                        if (scope.equals(topScope)) {
+                            return true;
+                        }
+                    }
+                }
+            } else if (context.topScope != null) {
+                Iterator<Scope> it = iterator();
+                while (it.hasNext()) {
+                    Scope scope = it.next();
+                    if (scope.equals(context.topScope)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     /** Modify the name used to cache a value with indexes, to discriminate
      *  cached collections from cached elements.

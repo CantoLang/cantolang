@@ -133,6 +133,10 @@ public class ExternalDefinition extends ComplexDefinition {
     private ArgumentList args = null;
     private List<Dim> dims = null;
 
+    public ExternalDefinition(NameNode name) {
+        super(name);
+    }
+
     public ExternalDefinition(ExternalDefinition def) {
         this(def.getNameNode(), def.getParent(), def.getOwner(), def.getSuper(), def.getAccess(), def.getDurability(), def.getObject(), null);
     }
@@ -927,7 +931,7 @@ public class ExternalDefinition extends ComplexDefinition {
                      object = ((Value) object).getData();
 
                  } else if (object instanceof ValueGenerator) {
-                     object = ((ValueGenerator) object).getData(ownerContext);
+                     object = ((ValueGenerator) object).getValue(ownerContext).getData();
 
                  } else if (object instanceof Value) {
                      object = ((Value) object).getData();
@@ -969,6 +973,7 @@ public class ExternalDefinition extends ComplexDefinition {
 }
 
 class PartialDefinition extends ExternalDefinition {
+    private static final Log LOG = Log.getLogger(PartialDefinition.class);
 
     protected NameNode[] nameParts;
     protected ExternalDefinition baseDef;
@@ -1320,14 +1325,13 @@ class MethodDefinition extends ExternalDefinition {
     private Method method;
 
     public MethodDefinition(ExternalDefinition owner, Method method, ArgumentList args) {
-        super();
+        super(new NameWithArgs(method.getName(), args));
         this.method = method;
 
         setOwner(owner);
         setObject(owner.getContents());
         setAccess(owner.getAccess());
         setDurability(Durability.DYNAMIC);
-        setName(new NameWithArgs(method.getName(), args));
         setArguments(args);
         setExternalClass(method.getReturnType());
         setType(createType());
@@ -1434,7 +1438,7 @@ class MethodConstruction extends ExternalConstruction {
             
             // dereference value generators
             } else if (arg instanceof ValueGenerator) {
-                Object argVal = ((ValueGenerator) arg).getData(context);
+                Object argVal = ((ValueGenerator) arg).getValue(context).getData();
                 if ((argVal == null || argVal.equals(NullValue.NULL_VALUE)) && arg instanceof CantoNode) {
                     Definition argOwner = ((CantoNode) arg).getOwner();
                     int numUnpushes = 0;
@@ -1444,7 +1448,7 @@ class MethodConstruction extends ExternalConstruction {
                             context.unpush();
                         }
                         if (numUnpushes > 0) {
-                            argVal = ((ValueGenerator) arg).getData(context);
+                            argVal = ((ValueGenerator) arg).getValue(context).getData();
                         }
                     } catch (Throwable t) {
                         String message = "Unable to initialize argument for external method: " + t.toString();
@@ -1733,9 +1737,11 @@ class MethodConstruction extends ExternalConstruction {
 
 
 class FieldDefinition extends ExternalDefinition {
+    private static final Log LOG = Log.getLogger(FieldDefinition.class);
     protected Field field;
  
     public FieldDefinition(ExternalDefinition owner, Field field) {
+        super(new NameNode(field.getName()));
         this.field = field;
         setOwner(owner);
         setObject(owner.getContents());
@@ -1760,7 +1766,7 @@ class FieldDefinition extends ExternalDefinition {
                 if (object instanceof Value) {
                     object = ((Value) object).getData();
                 } else if (object instanceof ValueGenerator) {
-                    object = ((ValueGenerator) object).getData(context);
+                    object = ((ValueGenerator) object).getValue(context).getData();
                 }
 
                 Object instance;
