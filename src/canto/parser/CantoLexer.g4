@@ -84,7 +84,7 @@ HEX_FLOAT_LITERAL: '0' [xX] (HexDigits '.'? | HexDigits? '.' HexDigits) [pP] [+-
 BOOL_LITERAL: 'true' | 'false';
 
 STRING_LITERAL:
-    '\'' (~['\\\r\n] | EscapeSequence) '\''
+    '\'' (~['\\\r\n] | EscapeSequence)* '\''
     | '"' (~["\\\r\n] | EscapeSequence)* '"'
 ;
 

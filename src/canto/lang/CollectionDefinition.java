@@ -199,7 +199,7 @@ public class CollectionDefinition extends ComplexDefinition {
         }
     }
 
-    protected void setDims(List<Dim> dims) {
+    public void setDims(List<Dim> dims) {
         this.dims = dims;
         int numDims = dims.size();
         Dim majorDim = (Dim) dims.get(numDims - 1);

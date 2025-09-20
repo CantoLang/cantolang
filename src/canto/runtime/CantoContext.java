@@ -170,7 +170,7 @@ public class CantoContext implements canto_context {
     }
     
     public String toString() {
-        return context.toHTML();
+        return context.toString();
     }
 }
 

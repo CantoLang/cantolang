@@ -1,0 +1,12 @@
+// Simple Canto test file
+// This will be used for parser integration tests
+
+site test {
+    hello = "world"
+
+    number = 42
+
+    flag_holder {
+        boolean flag = true
+    }
+}

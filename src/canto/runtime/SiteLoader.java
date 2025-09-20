@@ -16,15 +16,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 
 import canto.lang.*;
-import canto.parser.CantoLexer;
-import canto.parser.CantoParser;
-import canto.parser.CantoParserBaseVisitor;
 import canto.runtime.CantoServer;
 import cantocore.CoreSource;
 
@@ -530,7 +524,7 @@ public class SiteLoader {
             CantoNode parseResult = loader.getParseResult();
             if (parseResult != null) {
                 LOG.info("--- LINK PASS ---");
-                parseResult.jjtAccept(new Linker(), null);
+                new Linker().visit(parseResult, null);
             }
         }
     }
@@ -552,6 +546,28 @@ public class SiteLoader {
         
         public Linker(boolean errorOnUnresolvedType) {
         	this.errorOnUnresolvedType = errorOnUnresolvedType;
+        }
+    	
+        public Object visit(CantoNode node, Object data) {
+            if (node == null) {
+                return data;
+            }
+            // First handle this node
+            Object result = handleNode(node, data);
+            // Then visit all children
+            visitChildren(node, result);
+            return result;
+        }
+        
+        private void visitChildren(CantoNode node, Object data) {
+            if (node.getNumChildren() > 0) {
+                for (int i = 0; i < node.getNumChildren(); i++) {
+                    CantoNode child = node.getChild(i);
+                    if (child != null) {
+                        visit(child, data);
+                    }
+                }
+            }
         }
     	
     	public Object handleNode(CantoNode node, Object data) {
@@ -579,7 +595,7 @@ public class SiteLoader {
 
             } else if (node instanceof NamedDefinition) {
                 // resolve children first
-                super.handleNode(node, data);
+                visitChildren(node, data);
                 
                 NamedDefinition def = (NamedDefinition) node;
                 def.resolveKeeps();
@@ -634,7 +650,7 @@ public class SiteLoader {
 //                //((NamedDefinition) node).resolveKeeps();
 //            
             }
-            return super.handleNode(node, data);
+            return data;
         }
     }
     

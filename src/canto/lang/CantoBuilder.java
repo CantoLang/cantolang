@@ -68,7 +68,7 @@ public class CantoBuilder {
         return exception;
     }
 
-    public CompilationUnit buildSite() {
+    public Site buildSite() {
         CompilationUnit unit = null;
         try {
             unit = (CompilationUnit) parser.compilationUnit().accept(visitor);
@@ -76,7 +76,7 @@ public class CantoBuilder {
             exception = e;
             LOG.error("Error building site", e);
         }
-        return unit;
+        return unit.getSite();
     }
 
     public ComplexName buildComplexName() {
@@ -93,8 +93,14 @@ public class CantoBuilder {
     private class CantoVisitor extends CantoParserBaseVisitor<CantoNode> { 
 
         @Override
+        public CantoNode visitCompilationUnit(CantoParser.CompilationUnitContext ctx) {
+            Site site = (Site) ctx.getChild(0).accept(this);
+            CompilationUnit unit = new CompilationUnit(site);
+            return unit;
+        }
+        
+        @Override
         public CantoNode visitSiteDefinition(CantoParser.SiteDefinitionContext ctx) {
-            
             Name name = (Name) ctx.identifier().accept(this);
             Block block = (Block) ctx.siteBlock().accept(this);
             CompilationUnit unit = new CompilationUnit(name, block);

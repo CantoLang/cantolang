@@ -157,6 +157,10 @@ public class Context {
         return size;
     }
     
+    public Map<String, Object> getKeep() {
+        return topScope.getKeep();
+    }
+    
     // -------------------------------------------
     // push, pop, peek, etc.
     

@@ -30,7 +30,7 @@ compilationUnit
     | coreDefinition
     | domainDefinition
     | defaultSiteDefinition
-    )*
+    ) EOF
     ;
 
 siteDefinition

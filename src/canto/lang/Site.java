@@ -17,7 +17,7 @@ import canto.runtime.Log;
 *
 * @author Michael St. Hippolyte
 */
-public class Site extends MultiUnitDefinition {
+public class Site extends ComplexDefinition {
     private static final Log LOG = Log.getLogger(Site.class);
 
     public static Access defaultExternalAccess = Access.PUBLIC;
