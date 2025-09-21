@@ -157,6 +157,7 @@ public class NotEqualsOperator extends RelationalOperator {
         }
     }
 
+    @Override
     public String toString() {
         if (ignoreCase) {
             return " ~!= ";

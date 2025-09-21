@@ -37,6 +37,7 @@ public class BitwiseOrOperator extends BitwiseOperator {
         return op1 | op2;
     }
 
+    @Override
     public String toString() {
         return " | ";
     }

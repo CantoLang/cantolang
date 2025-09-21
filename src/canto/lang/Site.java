@@ -35,6 +35,10 @@ public class Site extends ComplexDefinition {
         super(new NameNode(name));
     }
 
+    public Site(NameNode name) {
+        super(name);
+    }
+
     public Site(String domain, String name) {
         super(new NameNode(name));
         setDomainName(domain);

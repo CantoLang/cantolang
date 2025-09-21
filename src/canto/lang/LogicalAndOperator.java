@@ -25,6 +25,7 @@ public class LogicalAndOperator extends BooleanOperator {
         return val2.getBoolean();
     }
 
+    @Override
     public String toString() {
         return " && ";
     }

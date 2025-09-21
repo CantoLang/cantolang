@@ -46,6 +46,7 @@ public class LessThanOrEqualOperator extends RelationalOperator {
         }
     }
 
+    @Override
     public String toString() {
         if (ignoreCase) {
             return " ~<= ";

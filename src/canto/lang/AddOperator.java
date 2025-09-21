@@ -118,6 +118,7 @@ public class AddOperator extends ArithmeticOperator {
         }
     }
 
+    @Override
     public String toString() {
         return " + ";
     }

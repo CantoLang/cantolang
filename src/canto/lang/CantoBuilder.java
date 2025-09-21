@@ -20,6 +20,7 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import canto.parser.CantoLexer;
@@ -101,10 +102,12 @@ public class CantoBuilder {
         
         @Override
         public CantoNode visitSiteDefinition(CantoParser.SiteDefinitionContext ctx) {
-            Name name = (Name) ctx.identifier().accept(this);
+            NameNode name = (NameNode) ctx.identifier().accept(this);
             Block block = (Block) ctx.siteBlock().accept(this);
-            CompilationUnit unit = new CompilationUnit(name, block);
-            return unit;
+            Site site = new Site(name);
+            site.setType(site.createType());
+            site.setContents(block);
+            return site;
         }
         
         @Override
@@ -149,6 +152,24 @@ public class CantoBuilder {
                     docComment = ctx.doc.getText();
                 } else if (child == ctx.keep) {
                     keepNode = (KeepNode) ctx.keep.accept(this);
+                } else {
+                    def = (Definition) child.accept(this);
+                }
+            }
+            return def;
+        }
+        
+        private Definition handleDefinition(ParseTree doc, ParseTree keep, ParserRuleContext ctx) {
+            Definition def = null;
+            String docComment = null;
+            KeepNode keepNode = null;
+            int numNodes = ctx.getChildCount();
+            for (int i = 0; i < numNodes; i++) {
+                ParseTree child = ctx.getChild(i);
+                if (child == doc) {
+                    docComment = doc.getText();
+                } else if (child == keep) {
+                    keepNode = (KeepNode) keep.accept(this);
                 } else {
                     def = (Definition) child.accept(this);
                 }

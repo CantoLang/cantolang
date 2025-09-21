@@ -15,10 +15,13 @@ import java.util.*;
  */
 public class NullIterator<E> implements Iterator<E> {
 
+    @Override
     public boolean hasNext() { return false; }
     
+    @Override
     public E next() { throw new NoSuchElementException("this is a NullIterator"); }
     
+    @Override
     public void remove() { throw new UnsupportedOperationException("NullIterator does not support remove()"); }
 }
 

@@ -60,6 +60,7 @@ public class MultiplyOperator extends ArithmeticOperator {
         throw new UnsupportedOperationException("'*' operator not defined for arrays");
     }
 
+    @Override
     public String toString() {
         return " * ";
     }

@@ -36,6 +36,7 @@ public class RightUnsignedShiftOperator extends ShiftOperator {
         throw new UnsupportedOperationException("'>>>' operator not defined for strings");
     }
 
+    @Override
     public String toString() {
         return " >>> ";
     }

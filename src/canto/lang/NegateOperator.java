@@ -46,6 +46,7 @@ public class NegateOperator extends UnaryOperator {
         return result;
     }
 
+    @Override
     public String toString() {
         return "-";
     }

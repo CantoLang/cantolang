@@ -66,6 +66,7 @@ public class InOperator extends BinaryOperator {
         return PrimitiveType.BOOLEAN;
     }
 
+    @Override
     public String toString() {
         return " in ";
     }

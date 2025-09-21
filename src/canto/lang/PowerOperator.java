@@ -47,6 +47,7 @@ public class PowerOperator extends ArithmeticOperator {
     }
 
 
+    @Override
     public String toString() {
         return "**";
     }

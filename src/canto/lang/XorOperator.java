@@ -36,6 +36,7 @@ public class XorOperator extends BitwiseOperator {
         return op1 ^ op2;
     }
 
+    @Override
     public String toString() {
         return " ^ ";
     }

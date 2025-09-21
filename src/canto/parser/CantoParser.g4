@@ -104,7 +104,7 @@ literalBlock
     ;
 
 topDefinition
-    : doc = DOC_COMMENT? keep = topKeepPrefix? pub = PUBLIC? dur = topDurability?
+    : doc = DOC_COMMENT? keep = topKeepPrefix? access = PUBLIC? dur = topDurability?
     ( collectionElementDefinition
     | collectionDefinition
     | elementDefinition
@@ -113,7 +113,7 @@ topDefinition
     ;
 
 definition
-    : doc = DOC_COMMENT? keep = keepPrefix? loc = LOCAL? dur = durability?
+    : doc = DOC_COMMENT? keep = keepPrefix? access = LOCAL? dur = durability?
     ( collectionElementDefinition
     | collectionDefinition
     | elementDefinition

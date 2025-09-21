@@ -23,15 +23,18 @@ public class SingleItemIterator<E> implements Iterator<E> {
         this.item = item;
     }
    
+    @Override
     public boolean hasNext() {
         return !done;
     }
     
+    @Override
     public E next() {
         done = true;
         return item;
     }
    
+    @Override
     public void remove() {
         throw new UnsupportedOperationException("SingleItemIterator does not support the remove method.");
     }

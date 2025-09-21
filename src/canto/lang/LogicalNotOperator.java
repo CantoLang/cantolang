@@ -26,6 +26,7 @@ public class LogicalNotOperator extends UnaryOperator {
         return PrimitiveType.BOOLEAN;
     }
 
+    @Override
     public String toString() {
         return "!";
     }

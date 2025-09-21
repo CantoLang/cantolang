@@ -161,6 +161,7 @@ public class EqualsOperator extends RelationalOperator {
         }
     }
 
+    @Override
     public String toString() {
         if (ignoreCase) {
             return " ~== ";

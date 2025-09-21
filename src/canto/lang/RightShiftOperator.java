@@ -37,6 +37,7 @@ public class RightShiftOperator extends ShiftOperator {
         return op1.substring(0, op1.length() - op2);
     }
 
+    @Override
     public String toString() {
         return " >> ";
     }
