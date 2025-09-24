@@ -151,20 +151,26 @@ abstract public class CantoNode {
         if (childList != null) {
             children = new CantoNode[childList.size()];
             childList.toArray(children);
+            for (CantoNode child : children) {
+                child.setParent(this);
+            }
         } else {
             children = null;
         }
     }
 
-    void addChildren(CantoNode node) {
+    void addChildren(List<CantoNode> childList) {
         int currentLen = (children == null ? 0 : children.length);
-        int newLen = currentLen + (node.children == null ? 0 : node.children.length);
+        int newLen = currentLen + (childList.size());
         if (newLen > currentLen) {
             CantoNode c[] = new CantoNode[newLen];
             if (children != null) {
                 System.arraycopy(children, 0, c, 0, currentLen);
             }
-            System.arraycopy(node.children, 0, c, currentLen, node.children.length);
+            for (int i = 0; i < childList.size(); i++) {
+                c[currentLen + i] = childList.get(i);
+                c[currentLen + i].parent = this;
+            }
             children = c;
         }
     }

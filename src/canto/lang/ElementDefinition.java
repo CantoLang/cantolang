@@ -8,14 +8,13 @@
 
 package canto.lang;
 
-import java.util.List;
 import java.util.Map;
 
 import canto.runtime.CantoObjectWrapper;
 import canto.runtime.Log;
 
 /**
- * ElementDefinition is a definition whose content is a single objet.
+ * ElementDefinition is a definition whose content is a single object.
  */
 
 public class ElementDefinition extends Definition {

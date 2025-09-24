@@ -21,11 +21,11 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
-import canto.parser.CantoParser.AnyanyContext;
 import canto.parser.CantoParserBaseVisitor;
 import canto.runtime.Log;
 
@@ -142,37 +142,69 @@ public class CantoBuilder {
     
         @Override
         public CantoNode visitTopDefinition(CantoParser.TopDefinitionContext ctx) {
-            Definition def = null;
-            String docComment = null;
-            KeepNode keepNode = null;
-            int numNodes = ctx.getChildCount();
-            for (int i = 0; i < numNodes; i++) {
-                ParseTree child = ctx.getChild(i);
-                if (child == ctx.doc) {
-                    docComment = ctx.doc.getText();
-                } else if (child == ctx.keep) {
-                    keepNode = (KeepNode) ctx.keep.accept(this);
-                } else {
-                    def = (Definition) child.accept(this);
-                }
-            }
+            Definition def = handleDefinition(ctx.doc, ctx.keep, ctx.access, ctx.dur, ctx);
             return def;
         }
         
-        private Definition handleDefinition(ParseTree doc, ParseTree keep, ParserRuleContext ctx) {
+        @Override
+        public CantoNode visitDefinition(CantoParser.DefinitionContext ctx) {
+            Definition def = handleDefinition(ctx.doc, ctx.keep, ctx.access, ctx.dur, ctx);
+            return def;
+        }
+        
+        private Definition.Access getAccess(Token access) {
+            if (access == null) {
+                return Definition.Access.SITE;
+            }
+            String s = access.getText();
+            if (s.equals("public")) {
+                return Definition.Access.PUBLIC;
+            } else if (s.equals("local")) {
+                return Definition.Access.LOCAL;
+            } else {
+                return Definition.Access.SITE;
+            }
+        }
+
+        private Definition.Durability getDurability(ParseTree dur) {
+            if (dur == null) {
+                return Definition.Durability.IN_CONTEXT;
+            }
+            String s = dur.getText();
+            if (s.equals("dynamic")) {
+                return Definition.Durability.DYNAMIC;
+            } else if (s.equals("global")) {
+                return Definition.Durability.GLOBAL;
+            } else if (s.equals("cosmic")) {
+                return Definition.Durability.COSMIC;
+            } else if (s.equals("static")) {
+                return Definition.Durability.STATIC;
+            } else {
+                return Definition.Durability.IN_CONTEXT;
+            }
+        }
+        
+        private Definition handleDefinition(Token doc, ParseTree keep, Token access, ParseTree dur, ParserRuleContext ctx) {
             Definition def = null;
-            String docComment = null;
             KeepNode keepNode = null;
             int numNodes = ctx.getChildCount();
             for (int i = 0; i < numNodes; i++) {
                 ParseTree child = ctx.getChild(i);
-                if (child == doc) {
-                    docComment = doc.getText();
-                } else if (child == keep) {
+                if (child == keep) {
                     keepNode = (KeepNode) keep.accept(this);
                 } else {
                     def = (Definition) child.accept(this);
                 }
+            }
+            if (def != null) {
+                if (doc != null) {
+                    def.setDocComment(doc.getText());
+                }
+                if (keepNode != null) {
+                    ((NamedDefinition) def).addKeep(keepNode);
+                }
+                def.setAccess(getAccess(access));
+                def.setDurability(getDurability(dur));
             }
             return def;
         }
@@ -194,7 +226,32 @@ public class CantoBuilder {
 
         @Override
         public CantoNode visitBlockDefinition(CantoParser.BlockDefinitionContext ctx) {
-            return ctx.accept(this);
+            CantoParser.BlockDefNameContext nameCtx = ctx.blockDefName();
+            NameNode name = (NameNode) nameCtx.identifier().accept(this);
+            ParseTree typeCtx = nameCtx.simpleType();
+            if (typeCtx == null) {
+                typeCtx = nameCtx.multiType();
+            }
+            Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+            
+            ParseTree blockCtx = ctx.block(0);
+            if (blockCtx == null) {
+                blockCtx = ctx.emptyBlock();
+                if (blockCtx == null) {
+                    blockCtx = ctx.abstractBlock();
+                    if (blockCtx == null) {
+                        blockCtx = ctx.externalBlock();
+                    }
+                }
+            }
+            Block block = (Block) blockCtx.accept(this);
+            ParseTree catchCtx = ctx.block(1);
+            if (catchCtx != null) {
+                Block catchBlock = (Block) catchCtx.accept(this);
+                block.setCatchBlock(catchBlock);
+            }
+            ComplexDefinition blockDef = new ComplexDefinition(superType, name, block);
+            return blockDef;
         }
 
         @Override
@@ -205,16 +262,33 @@ public class CantoBuilder {
         }
         
         @Override
-        public CantoNode visitElementDefName(CantoParser.ElementDefNameContext ctx) {
-            //: simpleType? identifier paramSuffix? 
-            return ctx.accept(this);
-        }
-
-        @Override
         public CantoNode visitBlockDefName(CantoParser.BlockDefNameContext ctx) {
             //: multiType identifier (paramSuffix | multiParamSuffix)?
             //| simpleType? identifier (paramSuffix | multiParamSuffix)?
             return ctx.accept(this);
+        }
+
+        @Override
+        public CantoNode visitSimpleType(CantoParser.SimpleTypeContext ctx) {
+            if (ctx.identifier() != null) {
+                return ctx.identifier().accept(this);
+            } else if (ctx.qualifiedName() != null) {
+                return ctx.qualifiedName().accept(this);
+            } else if (ctx.BOOLEAN() != null) {
+                return (NameNode) PrimitiveType.BOOLEAN;
+            } else if (ctx.INT() != null) {
+                return (NameNode) PrimitiveType.INT;
+            } else if (ctx.STRING() != null) {
+                return (NameNode) PrimitiveType.STRING;
+            } else if (ctx.FLOAT() != null) {
+                return (NameNode) PrimitiveType.FLOAT;
+            } else if (ctx.CHAR() != null) {
+                return (NameNode) PrimitiveType.CHAR;
+            } else if (ctx.BYTE() != null) {
+                return (NameNode) PrimitiveType.BYTE;
+            } else {
+                return null;
+            }
         }
 
         @Override

@@ -42,7 +42,7 @@ public class SiteLoader {
     private String sourceString;
     private String filter;
     private Object[] sources = null;
-    private CompilationUnit[] parseResults = null;
+    private Site[] parseResults = null;
     private Exception[] exceptions = null;
     private site_config siteConfig = null;
 
@@ -229,7 +229,7 @@ public class SiteLoader {
             synchronized (loadedFiles) {
                 int size = loaders.size();
                 sources = new Object[size];
-                parseResults = new CompilationUnit[size];
+                parseResults = new Site[size];
                 exceptions = new Exception[size];
     
                 for (int i = 0; i < size; i++) {
@@ -373,7 +373,7 @@ public class SiteLoader {
         return sources;
     }
 
-    public CompilationUnit[] getParseResults() {
+    public Site[] getParseResults() {
         return parseResults;
     }
 
@@ -680,7 +680,7 @@ public class SiteLoader {
 
     private class CantoSourceLoader implements Runnable {
 
-        private CompilationUnit parseResult = null;
+        private Site parseResult = null;
         private Exception exception = null;
         private Object source;
         private Thread loaderThread = null;
@@ -690,7 +690,7 @@ public class SiteLoader {
             this.source = source;
         }
 
-        public CompilationUnit getParseResult() {
+        public Site getParseResult() {
             return parseResult;
         }
         
@@ -747,8 +747,8 @@ public class SiteLoader {
         public void run() {
             try {
                 CantoBuilder cantoBuilder = new CantoBuilder(source);
-                CompilationUnit parseResult = cantoBuilder.buildSite();
-                core.addCompilationUnit(parseResult);
+                Site parseResult = cantoBuilder.buildSite();
+                core.addSite(parseResult);
                 exception = cantoBuilder.getException();
                 this.parseResult = parseResult;
 

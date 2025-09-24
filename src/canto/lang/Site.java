@@ -97,39 +97,6 @@ public class Site extends ComplexDefinition {
         return globalKeep;
     }
     
-    /** Add a site's content to this site */
-    synchronized void addContents(Site site) {
-        CantoNode newContents = site.getContents();
-        CantoNode oldContents = getContents();
-        if (oldContents == null) {
-            setContents(newContents);
-        } else {
-            oldContents.addChildren(newContents);
-        }
-
-        List<Name> newAdopts = site.getAdoptedSiteList();
-        if (newAdopts != null) {
-            if (adopts == null) {
-                adopts = new ArrayList<Name>(newAdopts);
-            } else {
-                adopts.addAll(newAdopts);
-            }
-        }
-        
-        List<ExternStatement> newExterns = site.externs;
-        if (newExterns != null) {
-            if (externs == null) {
-                externs = new ArrayList<ExternStatement>(newExterns);
-            } else {
-                externs.addAll(newExterns);
-            }
-        }
-        
-        if (siteConfig == null) {
-            siteConfig = site.siteConfig;
-        }
-    }
-
     /** If the contents have not been initialized, getContents returns a block containing
      *  the definitions which are immediate children of the site.
      */

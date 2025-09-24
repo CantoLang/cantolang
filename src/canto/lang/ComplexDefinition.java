@@ -37,6 +37,10 @@ public class ComplexDefinition extends NamedDefinition {
         super(name);
     }
   
+    public ComplexDefinition(Type superType, NameNode name, CantoNode contents) {
+        super(superType, name, contents);
+    }
+  
     public ComplexDefinition(Definition def, Context context) {
         super(def, context);
         if (def instanceof ComplexDefinition) {

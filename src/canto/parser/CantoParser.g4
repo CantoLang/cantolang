@@ -190,7 +190,7 @@ tableElement
 
 
 elementDefinition
-    : elementDefName ASSIGN expression SEMICOLON?
+    : simpleType? identifier params? ASSIGN expression SEMICOLON?
     ;
 
 blockDefinition
@@ -248,10 +248,6 @@ collectionDefName
     | simpleType? identifier params? collectionSuffix
     ;
     
-elementDefName
-    : simpleType? identifier params? 
-    ;
-
 blockDefName
     : multiType identifier (params | multiParams)?
     | simpleType? identifier (params | multiParams)?

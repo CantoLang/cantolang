@@ -61,6 +61,11 @@ public class NamedDefinition extends Definition {
         super(name);
     }
 
+    public NamedDefinition(Type superType, NameNode name, CantoNode contents) {
+        super(name);
+        init(superType, name, contents);
+    }
+
     public NamedDefinition(Definition def, Context context) {
         super(def, context);
         if (def instanceof NamedDefinition) {
@@ -80,20 +85,20 @@ public class NamedDefinition extends Definition {
         }
     }
 
-    public NamedDefinition(String name, CantoNode parent, Definition owner, Type superType, Definition.Access access, Definition.Durability dur, Object value) {
-        super();
-        
-        setAccess(access);
-        setDurability(dur);
-        setOwner(owner);
-        ComplexDefinition complexOwner = ComplexDefinition.getComplexOwner(owner);
-        if (complexOwner != null) {
-            setDefinitionTable(complexOwner.getDefinitionTable());
-        }
-        setParent(parent);
-        CantoNode valueNode = (value instanceof CantoNode ? (CantoNode) value : new PrimitiveValue(value));
-        init(superType, new NameNode(name), valueNode);
-    }
+//    public NamedDefinition(String name, CantoNode parent, Definition owner, Type superType, Definition.Access access, Definition.Durability dur, Object value) {
+//        super();
+//        
+//        setAccess(access);
+//        setDurability(dur);
+//        setOwner(owner);
+//        ComplexDefinition complexOwner = ComplexDefinition.getComplexOwner(owner);
+//        if (complexOwner != null) {
+//            setDefinitionTable(complexOwner.getDefinitionTable());
+//        }
+//        setParent(parent);
+//        CantoNode valueNode = (value instanceof CantoNode ? (CantoNode) value : new PrimitiveValue(value));
+//        init(superType, new NameNode(name), valueNode);
+//    }
     
     public void init(Type supertype, NameNode name, CantoNode contents) {
         setSuper(supertype);
@@ -118,6 +123,8 @@ public class NamedDefinition extends Definition {
                 setAlias((NameNode) reference);
             }
         }
+        contents.setParent(this);
+        contents.setOwner(this);
         setContents(contents);
     }
 
