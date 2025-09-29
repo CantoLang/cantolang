@@ -14,7 +14,7 @@ import canto.runtime.CantoObjectWrapper;
 import canto.runtime.Log;
 
 /**
- * ElementDefinition is a definition whose content is a single object.
+ * ElementDefinition defines an element in an array or table.
  */
 
 public class ElementDefinition extends Definition {

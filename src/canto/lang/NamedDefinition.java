@@ -101,6 +101,8 @@ public class NamedDefinition extends Definition {
 //    }
     
     public void init(Type supertype, NameNode name, CantoNode contents) {
+        int numChildren = (supertype == null ? 2 : 3);
+        children = new CantoNode[numChildren];
         setSuper(supertype);
         setName(name);
         setType(createType());
@@ -140,6 +142,11 @@ public class NamedDefinition extends Definition {
         return name;
     } 
 
+    @Override
+    public void setContents(CantoNode contents) {
+        super.setContents(contents);
+        children[children.length - 1] = contents;  // contents is always the last child
+    }
 
 
     /** Called in the validation pass to check aliases and remove any that point to
@@ -238,6 +245,7 @@ public class NamedDefinition extends Definition {
 
     protected void setName(NameNode name) {
         this.name = name;
+        children[children.length - 2] = name;  // name is always the second-to-last child]
     }
 
     protected void setType(Type type) {
@@ -474,6 +482,7 @@ public class NamedDefinition extends Definition {
     /** Sets the supertype. */
     protected void setSuper(Type supertype) {
         this.supertype = supertype;
+        children[0] = (CantoNode) supertype;   // super is always the first child
     }
 
     /** Returns true if this definition contains a <code>next</code> statement.

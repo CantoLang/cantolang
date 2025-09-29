@@ -8,6 +8,7 @@
 
 package canto.lang;
 
+import canto.util.SingleItemList;
 
 /**
  * A ValueExpression is a generic value container.
@@ -19,6 +20,12 @@ public class ValueExpression extends Expression {
 
     public ValueExpression() {
         super();
+    }
+    
+    public ValueExpression(CantoNode node) {
+        super();
+        ListNode<CantoNode> list = new ListNode<CantoNode>(new SingleItemList<CantoNode>(node));
+        addChildren(list);
     }
     
     private ValueExpression(ValueExpression expression) {

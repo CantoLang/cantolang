@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import java.util.*;
 
 /**
  * CollectionBuilder is the common base for classes that construct arrays and tables

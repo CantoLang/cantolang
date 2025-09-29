@@ -408,6 +408,7 @@ public class SiteLoader {
         for (Path entry: stream) {
             fileList.add(entry.toFile());
         }
+        stream.close();
         return (File[]) fileList.toArray(files);
     }
     

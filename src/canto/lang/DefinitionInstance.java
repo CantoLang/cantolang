@@ -8,7 +8,6 @@
 
 package canto.lang;
 
-import java.util.List;
 
 /**
  * DefinitionInstance is a wrapper for a definition with arguments and indexes.

@@ -8,9 +8,7 @@
 
 package canto.runtime;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Map;
 
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.util.*;
@@ -18,8 +16,6 @@ import org.eclipse.jetty.util.*;
 
 /**
  * Canto server based on the Jetty HTTP server.
- *
- * @author Michael St. Hippolyte
  */
 
 public class CantoJettyServer extends Server implements CantoStandaloneServer {

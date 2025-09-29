@@ -11,7 +11,6 @@ package canto.lang;
 import java.util.*;
 
 import canto.runtime.Log;
-import canto.util.*;
 
 
 /**

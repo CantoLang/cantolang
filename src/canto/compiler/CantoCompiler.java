@@ -19,7 +19,6 @@ import canto.lang.Definition;
 import canto.lang.Instantiation;
 import canto.lang.Redirection;
 import canto.runtime.SiteLoader;
-import canto.runtime.CantoServer;
 import canto.lang.Context;
 import canto.lang.Core;
 import canto.runtime.Log;
@@ -148,18 +147,12 @@ public class CantoCompiler {
 
         String cantoPath = null;
         String pageName = null;
-        boolean recursive = false;
-        boolean multiThreaded = false;
-        boolean autoLoadCore = true;
 
         System.out.println("\ncantoc compiler for Canto version " + Version.getVersion());
         System.out.println("Copyright (c) 2018-2024 by cantolang.org\n");
         for ( int i = 0; i < args.length; i++ ) {
             if ( args[ i ].charAt( 0 ) == '-' && args[ i ].length() > 1 ) {
                 switch ( args[ i ].charAt( 1 ) ) {
-                case 'c':
-                    autoLoadCore = false;
-                    break;
                 case 'f':
                     if ( i < args.length - 1 ) {
                         i++;
@@ -172,17 +165,11 @@ public class CantoCompiler {
                         logFileName = args[ i ];
                     }
                     break;
-                case 'm':
-                    multiThreaded = true;
-                    break;
                 case 'o':
                     if ( i < args.length - 1 ) {
                         i++;
                         DEFAULT_OUTPUT_DIRECTORY = args[ i ];
                     }
-                    break;
-                case 'r':
-                    recursive = true;
                     break;
                 case 'v':
                     break;

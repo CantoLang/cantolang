@@ -149,8 +149,7 @@ abstract public class CantoNode {
     
     protected void setChildren(List<CantoNode> childList) {
         if (childList != null) {
-            children = new CantoNode[childList.size()];
-            childList.toArray(children);
+            children = childList.toArray(new CantoNode[childList.size()]);
             for (CantoNode child : children) {
                 child.setParent(this);
             }

@@ -21,6 +21,7 @@ public class ListNode<E> extends CantoNode implements List<E> {
 
     public ListNode() {
         super();
+        list = new ArrayList<E>();
     }
 
     public ListNode(int capacity) {

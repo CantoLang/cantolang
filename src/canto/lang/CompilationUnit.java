@@ -16,11 +16,20 @@ import canto.runtime.Log;
 public class CompilationUnit extends CantoNode {
     private static final Log LOG = Log.getLogger(CompilationUnit.class);
     
-    private Site site;
+    private Site site = null;
     
-    public CompilationUnit(Site site) {
+    public CompilationUnit() {
         super();
-        this.site = site;
+    }
+    
+    public void addSite(Site site) {
+        if (this.site == null) {
+            this.site = site;
+        } else if (site.getName().equals(this.site.getName())) {
+            this.site.mergeSite(site);
+        } else {
+            throw new NameMismatchException("Site name mismatch in compilation unit: " + this.site.getName() + " and " + this.site.getName());
+        }
     }
     
     public Site getSite() {

@@ -20,6 +20,17 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class CantoParserTest {
 
+    // source code snippets to supply to tests
+    public static String[] IDENTIFIERS = {
+            "42",           // integer
+            "3.14",         // float  
+            "true",         // boolean
+            "false",        // boolean
+            "'hello'",      // string
+            "\"world\""     // string
+    };
+
+    
     private CantoLexer lexer;
     private CantoParser parser;
 
@@ -98,11 +109,33 @@ class CantoParserTest {
         Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
     }
 
-    @Test
-    @DisplayName("Parser should handle element definition")
-    void testElementDefinition() {
-        String input = "x = 42";
-        ParseTree tree = parseInput(input, "elementDefinition");
+    @ParameterizedTest
+    @DisplayName("Parser should handle various block definitions")
+    @ValueSource(strings = {
+            "d1 { int x = 5  x; }",
+            "d2 {= float x = 5.0  x;  =}",
+            "d3 [| text block 1 |]",
+            "d4(x) { x; }",
+            "int d5(int x) { x; }",
+            "d6 [`` literal block } { |] \\ [| ``]"
+    })
+    void testBlockDefinition(String input) {
+        ParseTree tree = parseInput(input, "blockDefinition");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
+    @DisplayName("Parser should handle various element definitions")
+    @ValueSource(strings = {
+            "x = 42",
+            "y(z) = z",
+            "w = f(5)",
+            "v = \"string\""
+    })
+    void testNamedElementDefinition(String input) {
+        ParseTree tree = parseInput(input, "namedElementDefinition");
         
         Assertions.assertThat(tree).isNotNull();
         Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);

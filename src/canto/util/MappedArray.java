@@ -22,9 +22,9 @@ import java.lang.reflect.Array;
  * items in the array.  The items are dereferenced as they are accessed.
  */
 
-public class MappedArray implements Map {
+public class MappedArray implements Map<String, Object> {
     private Object array = null;
-    private List list = null;
+    private List<Object> list = null;
     private Context context;
 
     public MappedArray(Object obj, Context context) {
@@ -33,7 +33,7 @@ public class MappedArray implements Map {
         }
         
         if (obj instanceof List) {
-            this.list = (List) obj;
+            this.list = (List<Object>) obj;
         } else if (obj.getClass().isArray()) {
             this.array = obj;
         } else {
@@ -110,27 +110,29 @@ public class MappedArray implements Map {
         return obj;
     }
 
-    public Object put(Object key, Object value) {
-        int k;
+    public Object put(String key, Object value) {
+        return put(Integer.parseInt(key.toString()), value);
+    }
+
+    public Object put(Number key, Object value) {
+        return put(((Number) key).intValue(), value);
+    }
+    
+    public Object put(int key, Object value) {
         Object oldValue;
         
-        if (key instanceof Number) {
-            k = ((Number) key).intValue();
-        } else {
-            k = Integer.parseInt(key.toString());
-        }
-
         if (array != null) {
-            oldValue = Array.get(array, k);
-            Array.set(array, k, value);
+            oldValue = Array.get(array, key);
+            Array.set(array, key, value);
         } else {
-            oldValue = list.get(k);
-            list.set(k, value);
+            oldValue = list.get(key);
+            list.set(key, value);
         }
         
         return oldValue;
     }
 
+    
     public Object remove(Object key) {
         // this class doesn't support remove, for now anyway
         throw new UnsupportedOperationException("MappedArray does not support remove()");

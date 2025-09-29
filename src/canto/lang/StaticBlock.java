@@ -8,6 +8,7 @@
 
 package canto.lang;
 
+import java.util.List;
 
 /**
  * A StaticBlock is a container whose children are static by default.
@@ -16,6 +17,10 @@ public class StaticBlock extends Block {
 
     public StaticBlock() {
         super();
+    }
+
+    public StaticBlock(List<CantoNode> children) {
+        super(children);
     }
 
     public boolean isStatic() {

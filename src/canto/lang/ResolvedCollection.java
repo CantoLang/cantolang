@@ -10,8 +10,6 @@ package canto.lang;
 
 import java.util.*;
 
-import canto.runtime.*;
-
 
 /**
  * An ResolvedCollection is a ResolvedInstance representing a collection.

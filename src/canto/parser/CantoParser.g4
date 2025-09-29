@@ -30,7 +30,7 @@ compilationUnit
     | coreDefinition
     | domainDefinition
     | defaultSiteDefinition
-    ) EOF
+    )* EOF
     ;
 
 siteDefinition
@@ -95,8 +95,12 @@ codeBlock
 
 textBlock
     : openDelim = (TEXT_OPEN | WTEXT_OPEN | TEXT_REOPEN | WTEXT_REOPEN)
-    (TEXT_CHUNK | block)*
+    (textChunk | block)*
     (closeDelim = TEXT_CLOSE | closeDelim = WTEXT_CLOSE | '|' closeDelim = TEXT_CLOSE | '/' closeDelim = TEXT_CLOSE | '|' closeDelim = WTEXT_CLOSE | '/' closeDelim = WTEXT_CLOSE) 
+    ;
+
+textChunk
+    : TEXT_CHUNK
     ;
 
 literalBlock
@@ -107,7 +111,7 @@ topDefinition
     : doc = DOC_COMMENT? keep = topKeepPrefix? access = PUBLIC? dur = topDurability?
     ( collectionElementDefinition
     | collectionDefinition
-    | elementDefinition
+    | namedElementDefinition
     | blockDefinition
     )
     ;
@@ -116,7 +120,7 @@ definition
     : doc = DOC_COMMENT? keep = keepPrefix? access = LOCAL? dur = durability?
     ( collectionElementDefinition
     | collectionDefinition
-    | elementDefinition
+    | namedElementDefinition
     | blockDefinition
     )
     ;
@@ -189,7 +193,7 @@ tableElement
     ;
 
 
-elementDefinition
+namedElementDefinition
     : simpleType? identifier params? ASSIGN expression SEMICOLON?
     ;
 
@@ -322,11 +326,6 @@ specialName
     | TYPE args?
     ;
 
-name
-   : specialName
-   | identifier
-   ;
-
 identifier
    : IDENTIFIER
    ;
@@ -374,23 +373,17 @@ floatLiteral
     | HEX_FLOAT_LITERAL
     ;
     
-primary
-    : LPAREN expression RPAREN
-    | instantiation
-    | literal
-    ;
-
 instantiation
-    : (nameComponent)+
+    : nameComponent (DOT nameComponent)*
     ;
 
 nameComponent
-    : name (index | args)*
+    : (specialName | identifier) args? (index)*
     ;
 
 expression
-    : LPAREN simpleType RPAREN expression                       #NestedExpression
-    | primary                                                   #Element
+    : LPAREN simpleType RPAREN expression                       #TypeExpression
+    | LPAREN expression LPAREN                                  #NestedExpression
     | op = (PLUS | MINUS | TILDE | BANG) expression             #UnaryExpression
     | expression op = ISA simpleType                            #IsaExpression
     | expression op = (STAR | SLASH | MOD) expression           #MulDivExpression
@@ -405,6 +398,8 @@ expression
     | expression op = OROR expression                           #LogicalOrExpression
     | <assoc = right> expression op = (QMARK | QQ)
                       expression COLON expression               #ChoiceExpression 
+    | instantiation                                             #InstantiationExpression
+    | literal                                                   #LiteralExpression
     ;
 
     
