@@ -16,6 +16,11 @@ package canto.lang;
  */
 public class TypeOperator extends UnaryOperator {
 
+    public TypeOperator(Type type) {
+        super();
+        setChild(0, (CantoNode) type);
+    }
+    
     public Value operate(Value val) {
         Type type = (Type) getChild(0);
         return type.convert(val);

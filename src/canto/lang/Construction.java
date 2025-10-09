@@ -40,13 +40,22 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
 
     private void setContents(CantoNode contents) {
         this.contents = contents;
+        if (contents != null) {
+            contents.setParent(this);
+        }
     }
 
     protected Construction(List<CantoNode> children) {
         super();
         setChildren(children);
+        for (CantoNode child : children) {
+            child.setParent(this);
+        }
     }
 
+    /**
+     * Generate the data represented by this construction in the specified context.
+     */
     abstract public Object generateData(Context context, Definition def);
     
 

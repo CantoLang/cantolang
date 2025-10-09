@@ -15,8 +15,10 @@ package canto.lang;
 
 public class IsaExpression extends Expression {
 
-    public IsaExpression() {
+    public IsaExpression(CantoNode operand, Type type) {
         super();
+        setChild(0, operand);
+        setChild(1, (CantoNode) type);
     }
 
     private IsaExpression(IsaExpression expression) {

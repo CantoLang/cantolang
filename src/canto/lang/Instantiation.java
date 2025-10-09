@@ -130,7 +130,10 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
     
     /** Copies an instantiation but substitues different indexes and arguments. **/
     public Instantiation(Instantiation instance, ArgumentList args, IndexList indexes) {
-        super(instance);
+        super();
+        this.owner = instance.owner;
+        this.parent = instance.parent;
+        this.children = instance.children;
         this.localDef = instance.localDef;
         this.explicitDef = instance.explicitDef;
         this.classDef = instance.classDef;

@@ -19,8 +19,10 @@ package canto.lang;
 
 public class UnaryExpression extends Expression {
 
-    public UnaryExpression() {
+    public UnaryExpression(UnaryOperator operator, CantoNode operand) {
         super();
+        setChild(0, operator);
+        setChild(1, operand);
     }
 
     public UnaryExpression(UnaryExpression expression) {
@@ -32,7 +34,7 @@ public class UnaryExpression extends Expression {
         Value operand = getChildValue(context, 1);
         return op.operate(operand);
     }
-
+    
     public Type getType(Context context, boolean generate) {
         UnaryOperator op = (UnaryOperator) getChild(0);
         return op.getResultType(getChildType(context, generate, 1));

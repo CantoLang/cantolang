@@ -211,11 +211,12 @@ construction
     ;
     
 conditional
-    : condType = (IF | WITH | WITHOUT) expression block (elseIfPart)* (elsePart)?
+    : ( cond = IF expression
+      | cond = (WITH | WITHOUT) identifier) block (elseIfPart)* (elsePart)?
     ;
 
 elseIfPart
-    : doc = DOC_COMMENT? ELSE condType = (IF | WITH | WITHOUT) expression block
+    : doc = DOC_COMMENT? ELSE (cond = IF expression | cond = (WITH | WITHOUT) identifier) block
     ;
 
 elsePart
@@ -396,8 +397,9 @@ expression
     | expression op = BITOR expression                          #BitOrExpression
     | expression op = ANDAND expression                         #LogicalAndExpression
     | expression op = OROR expression                           #LogicalOrExpression
-    | <assoc = right> expression op = (QMARK | QQ)
-                      expression COLON expression               #ChoiceExpression 
+    | <assoc = right>
+      (expression op = QMARK | identifier op = QQ)
+       expression COLON expression                              #ChoiceExpression 
     | instantiation                                             #InstantiationExpression
     | literal                                                   #LiteralExpression
     ;

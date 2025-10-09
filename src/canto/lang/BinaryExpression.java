@@ -24,6 +24,14 @@ public class BinaryExpression extends Expression {
         super();
     }
 
+    protected BinaryExpression(CantoNode left, BinaryOperator operator, CantoNode right) {
+        super();
+        setChild(0, left);
+        setChild(1, operator);
+        setChild(2, right);
+    }
+    
+    
     private BinaryExpression(BinaryExpression expression) {
         super(expression);
     }

@@ -95,13 +95,19 @@ class CantoParserTest {
     @ParameterizedTest
     @DisplayName("Parser should handle various block types")
     @ValueSource(strings = {
+
             "{ x = 5;\n \"code block 1\"; }",
             "{= x = 5;\n \"code block 2\"; =}",
             "[| text block 1 |]",
             "[/ text block 2 |]",
             "[| text block 3 /]",
             "[/ text block 4 /]",
-            "[`` literal block } { |] \\ [| ``]"
+            "[`` literal block } { |] \\ [| ``]",
+            "[| text {= z; =} text |]",
+            "{ x = 5 [| nested block |] x; }",
+            "{ q = 50 [| first nested |] x = 100 [| second nested |] q; x; }",
+            "{ y = 'z' [| nested {= y; =} nested |] x = y }"
+    
     })
     void testBlock(String block) {
         ParseTree tree = parseInput(block, "block");
@@ -117,7 +123,8 @@ class CantoParserTest {
             "d3 [| text block 1 |]",
             "d4(x) { x; }",
             "int d5(int x) { x; }",
-            "d6 [`` literal block } { |] \\ [| ``]"
+            "d6 [`` literal block } { |] \\ [| ``]",
+            "d7(z) [| text {= z; =} block 2 |]"
     })
     void testBlockDefinition(String input) {
         ParseTree tree = parseInput(input, "blockDefinition");

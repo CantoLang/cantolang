@@ -10,13 +10,16 @@ package canto.lang;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
+import canto.parser.CantoParser.ExpressionContext;
 import canto.parser.CantoParser.NameComponentContext;
 import canto.runtime.Log;
 
@@ -26,6 +29,32 @@ import canto.runtime.Log;
 public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> { 
 
     private static final Log LOG = Log.getLogger(CantoVisitor.class);
+
+    private static Map<Integer, AbstractOperator> ops = Map.ofEntries(
+            Map.entry(Integer.valueOf(CantoParser.PLUS), new AddOperator()),
+            Map.entry(Integer.valueOf(CantoParser.MINUS), new SubtractOperator()),
+            Map.entry(Integer.valueOf(CantoParser.STAR), new MultiplyOperator()),
+            Map.entry(Integer.valueOf(CantoParser.SLASH), new DivideByOperator()),
+            Map.entry(Integer.valueOf(CantoParser.MOD), new ModOperator()),
+            Map.entry(Integer.valueOf(CantoParser.STARSTAR), new PowerOperator()),
+            Map.entry(Integer.valueOf(CantoParser.EQ), new EqualsOperator()),
+            Map.entry(Integer.valueOf(CantoParser.NE), new NotEqualsOperator()),
+            Map.entry(Integer.valueOf(CantoParser.LT), new LessThanOperator()),
+            Map.entry(Integer.valueOf(CantoParser.LE), new LessThanOrEqualOperator()),
+            Map.entry(Integer.valueOf(CantoParser.GT), new GreaterThanOperator()),
+            Map.entry(Integer.valueOf(CantoParser.GE), new GreaterThanOrEqualOperator()),
+            Map.entry(Integer.valueOf(CantoParser.ANDAND), new LogicalAndOperator()),
+            Map.entry(Integer.valueOf(CantoParser.OROR), new LogicalOrOperator()),
+            Map.entry(Integer.valueOf(CantoParser.BITAND), new BitwiseAndOperator()),
+            Map.entry(Integer.valueOf(CantoParser.BITOR), new BitwiseOrOperator()),
+            Map.entry(Integer.valueOf(CantoParser.CARET), new XorOperator()),
+            Map.entry(Integer.valueOf(CantoParser.LSHIFT), new LeftShiftOperator()),
+            Map.entry(Integer.valueOf(CantoParser.RSHIFT), new RightShiftOperator()),
+            Map.entry(Integer.valueOf(CantoParser.RUSHIFT), new RightUnsignedShiftOperator()),
+            Map.entry(Integer.valueOf(CantoParser.IN), new InOperator()),
+            Map.entry(Integer.valueOf(CantoParser.BANG), new LogicalNotOperator()),
+            Map.entry(Integer.valueOf(CantoParser.TILDE), new BitflipOperator())
+            );
     
     @Override
     public CantoNode visitCompilationUnit(CantoParser.CompilationUnitContext ctx) {
@@ -228,6 +257,45 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitTextBlock(CantoParser.TextBlockContext ctx) {
+        int openDelim = ctx.openDelim.getType();
+        int closeDelim = ctx.closeDelim.getType();
+        boolean trimLeading = (openDelim == CantoLexer.TEXT_OPEN || openDelim == CantoLexer.TEXT_REOPEN);
+        boolean trimTrailing = (closeDelim == CantoLexer.TEXT_CLOSE);
+        ListNode<CantoNode> nodes = new ListNode<CantoNode>();
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            ParseTree child = ctx.getChild(i);
+            if (child instanceof CantoParser.TextChunkContext) {
+                String text = child.getText();
+                if (text.length() > 0) {
+                    if (nodes.size() == 0 && trimLeading) {
+                        text = text.stripLeading();
+                    }
+                    if (i == ctx.getChildCount() - 2 && trimTrailing) {
+                        text = text.stripTrailing();
+                    }
+                    StaticText staticText = new StaticText(text);
+                    nodes.add(staticText);
+                }
+                
+            } else if (child instanceof CantoParser.BlockContext) {
+                CantoNode node = child.accept(this);
+                if (node != null) {
+                    nodes.add(node);
+                }
+            }
+        }
+        return new StaticBlock(nodes);
+    }
+
+    @Override
+    public CantoNode visitTextChunk(CantoParser.TextChunkContext ctx) {
+        String name = ctx.getText();
+        return new NameNode(name);
+    }
+
+    
+    @Override
+    public CantoNode visitLiteralBlock(CantoParser.LiteralBlockContext ctx) {
         ListNode<CantoNode> nodes = new ListNode<CantoNode>();
         for (int i = 0; i < ctx.getChildCount(); i++) {
             CantoNode node = ctx.getChild(i).accept(this);
@@ -291,6 +359,88 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitInstantiationExpression(CantoParser.InstantiationExpressionContext ctx) {
         return ctx.instantiation().accept(this);
+    }
+
+    @Override
+    public CantoNode visitAddSubExpression(CantoParser.AddSubExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitMulDivExpression(CantoParser.MulDivExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitShiftExpression(CantoParser.ShiftExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitRelExpression(CantoParser.RelExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitEqExpression(CantoParser.EqExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitBitAndExpression(CantoParser.BitAndExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitBitXorExpression(CantoParser.BitXorExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitBitOrExpression(CantoParser.BitOrExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitLogicalAndExpression(CantoParser.LogicalAndExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitLogicalOrExpression(CantoParser.LogicalOrExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
+    public CantoNode visitUnaryExpression(CantoParser.UnaryExpressionContext ctx) {
+        CantoNode operand = ctx.expression().accept(this);
+        UnaryOperator op = (UnaryOperator) ops.get(Integer.valueOf(ctx.op.getType()));
+        Expression expression = new UnaryExpression(op, operand);
+        return expression;
+    }
+
+    @Override
+    public CantoNode visitIsaExpression(CantoParser.IsaExpressionContext ctx) {
+        CantoNode operand = ctx.expression().accept(this);
+        Type type = (Type) ctx.simpleType().accept(this);
+        Expression expression = new IsaExpression(operand, type);
+        return expression;
+    }
+
+    private CantoNode handleBinaryExpression(CantoParser.ExpressionContext ctx, Token opToken) {
+        CantoNode left = ctx.getRuleContext(ExpressionContext.class, 0).accept(this);
+        CantoNode right = ctx.getRuleContext(ExpressionContext.class, 1).accept(this);
+        BinaryOperator op = (BinaryOperator) ops.get(Integer.valueOf(opToken.getType()));
+        Expression expression = new BinaryExpression(left, op, right);
+        return expression;
+    }
+
+    @Override
+    public CantoNode visitTypeExpression(CantoParser.TypeExpressionContext ctx) {
+        Type type = (Type) ctx.simpleType().accept(this);
+        CantoNode operand = ctx.expression().accept(this);
+        Expression expression = new UnaryExpression(new TypeOperator(type), operand);
+        return expression;
     }
 
     @Override
