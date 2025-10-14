@@ -20,17 +20,6 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class CantoParserTest {
 
-    // source code snippets to supply to tests
-    public static String[] IDENTIFIERS = {
-            "42",           // integer
-            "3.14",         // float  
-            "true",         // boolean
-            "false",        // boolean
-            "'hello'",      // string
-            "\"world\""     // string
-    };
-
-    
     private CantoLexer lexer;
     private CantoParser parser;
 
@@ -47,6 +36,7 @@ class CantoParserTest {
         lexer = new CantoLexer(CharStreams.fromString(input));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         parser = new CantoParser(tokens);
+        parser.setTrace(true);
         Method method;
         try {
             method = CantoParser.class.getMethod(rule);
@@ -93,9 +83,55 @@ class CantoParserTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Parser should handle various instantiations")
+    @ValueSource(strings = {
+        "x;",
+        "x(1);",
+        "x(y);",
+        "x(y,z);",
+        "w(x,y,z);",
+        "f(5,'test',true);",
+        "a.b.c;",
+        "a(x).b;",
+        "m[0];",
+        "m[0][1];",
+        "m[0](x);"
+    })
+    void testInstantiation(String input) {
+        ParseTree tree = parseInput(input, "instantiation");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
+    @DisplayName("Parser should handle various expressions")
+    @ValueSource(strings = {
+        "(1+x)",
+        "(x+1)",
+        "1",
+        "(x)",
+        "x + 5",
+        "(x - 5)",
+        "x * y - z / 5",
+        "a && b",
+        "a ^ b",
+        "a % b",
+        "a >> b",
+        "a << b + 2"
+    })
+    void testExpression(String input) {
+        ParseTree tree = parseInput(input, "expression");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
     @DisplayName("Parser should handle various block types")
     @ValueSource(strings = {
 
+            "{ x = 5 [| nested block |] x; }",
             "{ x = 5;\n \"code block 1\"; }",
             "{= x = 5;\n \"code block 2\"; =}",
             "[| text block 1 |]",
@@ -104,7 +140,6 @@ class CantoParserTest {
             "[/ text block 4 /]",
             "[`` literal block } { |] \\ [| ``]",
             "[| text {= z; =} text |]",
-            "{ x = 5 [| nested block |] x; }",
             "{ q = 50 [| first nested |] x = 100 [| second nested |] q; x; }",
             "{ y = 'z' [| nested {= y; =} nested |] x = y }"
     
@@ -128,6 +163,22 @@ class CantoParserTest {
     })
     void testBlockDefinition(String input) {
         ParseTree tree = parseInput(input, "blockDefinition");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
+    @DisplayName("Parser should handle various conditionals")
+    @ValueSource(strings = {
+            "if (x) { x; }",
+            "if x { x; } else { z; }",
+            "if y > 0 { y; } else [| zero |]",
+            "if (y == 'hello') [| x |] else if (y == 'goodbye') [| bye |]",
+            "if f(x) > 0 { x; } else if (y + z < 100) { z; } else if x - y + z >= 0 { y; } else { w; }"
+    })
+    void testConditional(String input) {
+        ParseTree tree = parseInput(input, "conditional");
         
         Assertions.assertThat(tree).isNotNull();
         Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);

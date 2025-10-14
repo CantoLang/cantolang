@@ -20,6 +20,13 @@ public class ChoiceExpression extends Expression {
         super();
     }
 
+    public ChoiceExpression(CantoNode cond, CantoNode ifTrue, CantoNode ifFalse) {
+        super();
+        setChild(0, cond);
+        setChild(1, ifTrue);
+        setChild(2, ifFalse);
+    }
+
     private ChoiceExpression(ChoiceExpression expression) {
         super(expression);
     }

@@ -10,13 +10,13 @@ package canto.lang;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import canto.parser.CantoLexer;
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
 import canto.parser.CantoParser.ExpressionContext;
@@ -259,8 +259,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     public CantoNode visitTextBlock(CantoParser.TextBlockContext ctx) {
         int openDelim = ctx.openDelim.getType();
         int closeDelim = ctx.closeDelim.getType();
-        boolean trimLeading = (openDelim == CantoLexer.TEXT_OPEN || openDelim == CantoLexer.TEXT_REOPEN);
-        boolean trimTrailing = (closeDelim == CantoLexer.TEXT_CLOSE);
+        boolean trimLeading = (openDelim == CantoParser.TEXT_OPEN || openDelim == CantoParser.TEXT_REOPEN);
+        boolean trimTrailing = (closeDelim == CantoParser.TEXT_CLOSE);
         ListNode<CantoNode> nodes = new ListNode<CantoNode>();
         for (int i = 0; i < ctx.getChildCount(); i++) {
             ParseTree child = ctx.getChild(i);
@@ -357,8 +357,36 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
-    public CantoNode visitInstantiationExpression(CantoParser.InstantiationExpressionContext ctx) {
-        return ctx.instantiation().accept(this);
+    public CantoNode visitConditional(CantoParser.ConditionalContext ctx) {
+        int cond = ctx.cond.getType();
+        ValueSource condition = (ValueSource) (cond == CantoParser.IF ? ctx.expression().accept(this) : new WithPredicate(ctx.identifier().accept(this), cond == CantoParser.WITH));
+        Block body = (Block) ctx.block().accept(this);
+        List<CantoParser.ElseIfPartContext> elseIfParts = ctx.elseIfPart();
+        CantoParser.ElsePartContext elsePart = ctx.elsePart();
+        
+        ConditionalStatement conditional = null;
+        Block elseBody = (elsePart == null ? null : (Block) elsePart.accept(this));
+
+        if (elseIfParts != null) {
+            ListIterator<CantoParser.ElseIfPartContext> iter = elseIfParts.listIterator(elseIfParts.size());
+            ConditionalStatement elseIfConditional = null;
+            while (iter.hasPrevious()) {
+                CantoParser.ElseIfPartContext elseIfCtx = iter.previous();
+                int elseIfCond = elseIfCtx.cond.getType();
+                ValueSource elseIfCondition = (ValueSource) (elseIfCond == CantoParser.IF ? elseIfCtx.expression().accept(this) : new WithPredicate(elseIfCtx.identifier().accept(this), elseIfCond == CantoParser.WITH));
+                Block elseIfBody = (Block) elseIfCtx.block().accept(this);
+                if (elseIfConditional == null) {
+                    elseIfConditional = new ConditionalStatement(elseIfCondition, elseIfBody, elseBody);
+                } else {
+                    elseIfConditional = new ConditionalStatement(elseIfCondition, elseIfBody, elseIfConditional);
+                }
+            }
+            conditional = new ConditionalStatement(condition, body, elseIfConditional);
+        } else {
+            conditional = new ConditionalStatement(condition, body, elseBody);
+        }
+        
+        return conditional;
     }
 
     @Override
@@ -444,9 +472,38 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitChoiceExpression(CantoParser.ChoiceExpressionContext ctx) {
+        CantoNode cond = ctx.getRuleContext(ExpressionContext.class, 0).accept(this);
+        CantoNode ifTrue = ctx.getRuleContext(ExpressionContext.class, 1).accept(this);
+        CantoNode ifFalse = ctx.getRuleContext(ExpressionContext.class, 2).accept(this);
+        Expression expression = new ChoiceExpression(cond, ifTrue, ifFalse);
+        return expression;
+    }
+
+    @Override
+    public CantoNode visitChoiceWithExpression(CantoParser.ChoiceWithExpressionContext ctx) {
+        CantoNode cond = new WithPredicate(ctx.getRuleContext(ExpressionContext.class, 0).accept(this), true);
+        CantoNode ifTrue = ctx.getRuleContext(ExpressionContext.class, 1).accept(this);
+        CantoNode ifFalse = ctx.getRuleContext(ExpressionContext.class, 2).accept(this);
+        Expression expression = new ChoiceExpression(cond, ifTrue, ifFalse);
+        return expression;
+    }
+
+    @Override
+    public CantoNode visitNestedExpression(CantoParser.NestedExpressionContext ctx) {
+        return ctx.expression().accept(this);
+    }
+
+    @Override
     public CantoNode visitLiteralExpression(CantoParser.LiteralExpressionContext ctx) {
         Expression expression = new ValueExpression(ctx.literal().accept(this));
         return expression;
+    }
+
+    @Override
+    public CantoNode visitInstantiationExpression(CantoParser.InstantiationExpressionContext ctx) {
+        Instantiation instantiation = (Instantiation) ctx.instantiation().accept(this);
+        return instantiation;
     }
 
     @Override

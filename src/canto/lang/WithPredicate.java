@@ -18,8 +18,8 @@ public class WithPredicate extends Instantiation implements ValueGenerator {
 
     boolean with = true;
 
-    public WithPredicate(boolean with) {
-        super();
+    public WithPredicate(CantoNode reference, boolean with) {
+        super(reference);
         this.with = with;
     }
 

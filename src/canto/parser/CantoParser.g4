@@ -211,12 +211,11 @@ construction
     ;
     
 conditional
-    : ( cond = IF expression
-      | cond = (WITH | WITHOUT) identifier) block (elseIfPart)* (elsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) block (elseIfPart)* (elsePart)?
     ;
 
 elseIfPart
-    : doc = DOC_COMMENT? ELSE (cond = IF expression | cond = (WITH | WITHOUT) identifier) block
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) block
     ;
 
 elsePart
@@ -384,7 +383,7 @@ nameComponent
 
 expression
     : LPAREN simpleType RPAREN expression                       #TypeExpression
-    | LPAREN expression LPAREN                                  #NestedExpression
+    | LPAREN expression RPAREN                                  #NestedExpression
     | op = (PLUS | MINUS | TILDE | BANG) expression             #UnaryExpression
     | expression op = ISA simpleType                            #IsaExpression
     | expression op = (STAR | SLASH | MOD) expression           #MulDivExpression
@@ -397,11 +396,11 @@ expression
     | expression op = BITOR expression                          #BitOrExpression
     | expression op = ANDAND expression                         #LogicalAndExpression
     | expression op = OROR expression                           #LogicalOrExpression
-    | <assoc = right>
-      (expression op = QMARK | identifier op = QQ)
+    | <assoc = right> expression op = QMARK
        expression COLON expression                              #ChoiceExpression 
-    | instantiation                                             #InstantiationExpression
+    | <assoc = right> identifier op = QQ
+       expression COLON expression                              #ChoiceWithExpression 
     | literal                                                   #LiteralExpression
+    | instantiation                                             #InstantiationExpression
     ;
-
     
