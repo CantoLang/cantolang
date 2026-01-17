@@ -20,6 +20,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
 import canto.parser.CantoParser.ExpressionContext;
+import canto.parser.CantoParser.IteratorContext;
 import canto.parser.CantoParser.NameComponentContext;
 import canto.runtime.Log;
 
@@ -387,6 +388,23 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         }
         
         return conditional;
+    }
+
+    @Override
+    public CantoNode visitLoop(CantoParser.LoopContext ctx) {
+        ForStatement loop = new ForStatement();
+        List<CantoParser.IteratorContext> iteratorCtxs = ctx.iterator();
+        for (CantoParser.IteratorContext iteratorCtx : iteratorCtxs) {
+            ForStatement.IteratorValues iteratorValues = (ForStatement.IteratorValues) iteratorCtx.accept(this);
+            loop.addIteratorValues(iteratorValues);
+        }
+        loop.setBody((Block) ctx.block().accept(this));
+        return loop;
+    }
+
+    @Override
+    public CantoNode visitCollectionIterator(CantoParser.CollectionIteratorContext ctx) {
+        return null;
     }
 
     @Override

@@ -52,7 +52,17 @@ class CantoExpressionParserTest {
     @DisplayName("Parser should handle various expressions")
     @ValueSource(strings = {
         "(1)",
-        "(x)"
+        "(x)",
+        "1",
+        "x",
+        "a + b",
+        "(a - b)",
+        "(a) * b",
+        "a / (b)",
+        "a | b",
+        "a & b",
+        "a + 2 * b - 3 / c",
+        "a + (2 * (b - 3)) / c"
     })
     void testExpression(String input) {
         ParseTree tree = parseInput(input, "expression");

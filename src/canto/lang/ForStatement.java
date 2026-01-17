@@ -22,8 +22,14 @@ import canto.runtime.Log;
 
 public class ForStatement extends Construction implements ConstructionContainer, ConstructionGenerator {
     private static final Log LOG = Log.getLogger(ForStatement.class);
-    
+
+    /** how multiple iterators may be combined */
+    public enum Combination {
+        AND, OR
+    }
+
     private IteratorValues vals;
+    private Combination combination = Combination.AND;
     private Block body;
 
     public ForStatement() {
@@ -42,6 +48,10 @@ public class ForStatement extends Construction implements ConstructionContainer,
         }
     }
 
+    protected void setCombination(Combination combination) {
+        this.combination = combination;
+    }
+    
     public boolean isPrimitive() {
         return false;
     }

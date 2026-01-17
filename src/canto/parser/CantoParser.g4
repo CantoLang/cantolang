@@ -223,7 +223,7 @@ elsePart
     ; 
 
 loop
-    : FOR iterator (connector = (AND | OR) iterator)* block
+    : FOR iterator ((connector = AND iterator)* | (connector = OR iterator)*) block
     ;
     
 iterator
