@@ -2,7 +2,7 @@
  * 
  * ResolvedInstance.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -347,7 +347,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         return super.toString() + " (resolved)";
     }
 
-    public Name getNameNode() {
+    public NameNode getNameNode() {
         if (reference instanceof NameNode) {
             return (NameNode) reference;
         } else {

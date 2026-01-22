@@ -278,7 +278,16 @@ public class ForStatement extends Construction implements ConstructionContainer,
         private ValueSource until;
         private IteratorValues next;
 
-        public IteratorValues() {}
+        public IteratorValues(DefParameter forDef, Construction in, ValueSource where, ValueSource until, ValueSource from, ValueSource to, ValueSource through, ValueSource by) {
+            this.forDef = forDef;
+            this.in = in;
+            this.from = from;
+            this.to = to;
+            this.through = through;
+            this.by = by;
+            this.where = where;
+            this.until = until;
+        }
 
         /** Returns <code>false</code> */
         public boolean isPrimitive() {
@@ -304,16 +313,6 @@ public class ForStatement extends Construction implements ConstructionContainer,
             return forDef;
         }
 
-        protected void set(DefParameter forDef, Construction in, ValueSource from, ValueSource to, ValueSource through, ValueSource by, ValueSource where, ValueSource until, boolean optional) {
-            this.forDef = forDef;
-            this.in = in;
-            this.from = from;
-            this.to = to;
-            this.through = through;
-            this.by = by;
-            this.where = where;
-            this.until = until;
-        }
 
         public void addNext(IteratorValues next) {
             if (this.next == null) {

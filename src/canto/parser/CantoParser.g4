@@ -236,7 +236,7 @@ collectionIterator
     ;
 
 stepIterator
-    : simpleType? identifier FROM expression (TO expression)? (BY expression)?
+    : simpleType? identifier FROM expression ((to = TO | through = THROUGH) expression)? (BY expression)?
     ;
 
 collectionSuffix

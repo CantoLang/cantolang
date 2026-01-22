@@ -79,6 +79,7 @@ public class StringReference {
             sp.append((char) retval);
         }
         offset = 0;
+        reader.close();
     }
 
     public int getLength() {

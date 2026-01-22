@@ -2,7 +2,7 @@
  * 
  * CountDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -28,9 +28,8 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     private IndexList indexes;
 
     public CountDefinition(Definition def) {
-        super(def);
+        super(countType, new NameNode(Name.COUNT));
         this.def = def;
-        super.init(countType, new NameNode(Name.COUNT), null);
         
         args = null;
         indexes = null;

@@ -25,7 +25,12 @@ public class DefParameter extends NamedDefinition {
     /** Construct an explicitly named parameter.  */
     public DefParameter(NameNode name) {
         super(name);
-        setType(DefaultType.TYPE);
+        setAccess(Access.LOCAL);
+    }
+
+    /** Construct an explicitly named and typed parameter.  */
+    public DefParameter(Type supertype, NameNode name) {
+        super(supertype, name);
         setAccess(Access.LOCAL);
     }
 

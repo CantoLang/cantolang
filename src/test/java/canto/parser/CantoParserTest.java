@@ -185,6 +185,25 @@ class CantoParserTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Parser should handle various loops")
+    @ValueSource(strings = {
+            "for x in a { x; }",
+            "for char c in b [| c = {= c; =} |]",
+            "for int x from 1 to 10 by 2 { x; }",
+            "for x in a[1] { x; }",
+            "for y in a.b.c { for z in d { y; z; } }",
+            "for x in a and y in b { x; y; }",
+            "for x in a until x == 'X' { x; }",
+            "for int y in b where y > 0 { y; }"
+    })
+    void testLoop(String input) {
+        ParseTree tree = parseInput(input, "loop");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
     @DisplayName("Parser should handle various element definitions")
     @ValueSource(strings = {
             "x = 42",

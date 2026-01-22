@@ -2,7 +2,7 @@
  * 
  * NamedDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -57,8 +57,14 @@ public class NamedDefinition extends Definition {
     private List<KeepNode> keeps = null;
     transient private List<KeepNode> keepsAndSuperKeeps = null;
 
-    public NamedDefinition(Name name) {
+    public NamedDefinition(NameNode name) {
         super(name);
+        init(null, name, null);
+    }
+
+    public NamedDefinition(Type superType, NameNode name) {
+        super(name);
+        init(superType, name, null);
     }
 
     public NamedDefinition(Type superType, NameNode name, CantoNode contents) {
@@ -85,27 +91,17 @@ public class NamedDefinition extends Definition {
         }
     }
 
-//    public NamedDefinition(String name, CantoNode parent, Definition owner, Type superType, Definition.Access access, Definition.Durability dur, Object value) {
-//        super();
-//        
-//        setAccess(access);
-//        setDurability(dur);
-//        setOwner(owner);
-//        ComplexDefinition complexOwner = ComplexDefinition.getComplexOwner(owner);
-//        if (complexOwner != null) {
-//            setDefinitionTable(complexOwner.getDefinitionTable());
-//        }
-//        setParent(parent);
-//        CantoNode valueNode = (value instanceof CantoNode ? (CantoNode) value : new PrimitiveValue(value));
-//        init(superType, new NameNode(name), valueNode);
-//    }
     
     public void init(Type supertype, NameNode name, CantoNode contents) {
         int numChildren = (supertype == null ? 2 : 3);
         children = new CantoNode[numChildren];
         setSuper(supertype);
         setName(name);
-        setType(createType());
+        if (contents != null) {
+            setType(createType());
+        } else {
+            setType(DefaultType.TYPE);
+        }
         
         // external definitions have complex names; the params are on the last part
         if (name instanceof ComplexName) {
@@ -117,17 +113,19 @@ public class NamedDefinition extends Definition {
             setParamLists(null);
         }
 
-        // if the contents are a single named instantiation, make this an alias
-        if (contents instanceof Instantiation) {
-            Instantiation instance = (Instantiation) contents;
-            CantoNode reference = instance.getReference();
-            if (reference instanceof NameNode) {
-                setAlias((NameNode) reference);
+        if (contents != null) {
+            // if the contents are a single named instantiation, make this an alias
+            if (contents instanceof Instantiation) {
+                Instantiation instance = (Instantiation) contents;
+                CantoNode reference = instance.getReference();
+                if (reference instanceof NameNode) {
+                    setAlias((NameNode) reference);
+                }
             }
+            contents.setParent(this);
+            contents.setOwner(this);
+            setContents(contents);
         }
-        contents.setParent(this);
-        contents.setOwner(this);
-        setContents(contents);
     }
 
     public String getName() {

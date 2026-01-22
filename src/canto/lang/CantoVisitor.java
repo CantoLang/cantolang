@@ -309,15 +309,11 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitCollectionDefName(CantoParser.CollectionDefNameContext ctx) {
-        //   : collectionType identifier paramSuffix?
-        //   | simpleType? identifier paramSuffix? collectionSuffix
         return ctx.accept(this);
     }
     
     @Override
     public CantoNode visitBlockDefName(CantoParser.BlockDefNameContext ctx) {
-        //: multiType identifier (paramSuffix | multiParamSuffix)?
-        //| simpleType? identifier (paramSuffix | multiParamSuffix)?
         return ctx.accept(this);
     }
 
@@ -404,7 +400,31 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitCollectionIterator(CantoParser.CollectionIteratorContext ctx) {
-        return null;
+        NameNode name = (NameNode) ctx.identifier().accept(this);
+        ParseTree typeCtx = ctx.simpleType();
+        Type supertype = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+        DefParameter forDef = new DefParameter(supertype, name);
+        Expression collectionExpr = (Expression) ctx.expression(0).accept(this);
+        int i = 1;
+        Expression where = (ctx.WHERE() != null ? (Expression) ctx.expression(i++).accept(this) : null);
+        Expression until = (ctx.UNTIL() != null ? (Expression) ctx.expression(i++).accept(this) : null);
+        ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, collectionExpr, where, until, null, null, null, null);
+        return iteratorValues;
+    }
+    
+    @Override
+    public CantoNode visitStepIterator(CantoParser.StepIteratorContext ctx) {
+        NameNode name = (NameNode) ctx.identifier().accept(this);
+        ParseTree typeCtx = ctx.simpleType();
+        Type supertype = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+        DefParameter forDef = new DefParameter(supertype, name);
+        Expression from = (Expression) ctx.expression(0).accept(this);
+        int i = 1;
+        Expression to = (ctx.TO() != null ? (Expression) ctx.expression(i++).accept(this) : null);
+        Expression through = (ctx.THROUGH() != null ? (Expression) ctx.expression(i++).accept(this) : null);
+        Expression by = (ctx.BY() != null ? (Expression) ctx.expression(i++).accept(this) : null);
+        ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, null, null, null, from, to, through, by);
+        return iteratorValues;
     }
 
     @Override
