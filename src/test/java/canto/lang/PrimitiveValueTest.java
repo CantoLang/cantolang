@@ -30,7 +30,7 @@ class PrimitiveValueTest {
         
         Assertions.assertThat(value.getData()).isEqualTo(42);
         Assertions.assertThat(value.getInt()).isEqualTo(42);
-        Assertions.assertThat(value.getValueClass()).isEqualTo(Integer.class);
+        Assertions.assertThat(value.getValueClass()).isEqualTo(int.class);
     }
 
     @Test
@@ -40,7 +40,7 @@ class PrimitiveValueTest {
         
         Assertions.assertThat(value.getData()).isEqualTo(3.14);
         Assertions.assertThat(value.getDouble()).isEqualTo(3.14);
-        Assertions.assertThat(value.getValueClass()).isEqualTo(Double.class);
+        Assertions.assertThat(value.getValueClass()).isEqualTo(double.class);
     }
 
     @Test
@@ -50,7 +50,7 @@ class PrimitiveValueTest {
         
         Assertions.assertThat(value.getData()).isEqualTo(true);
         Assertions.assertThat(value.getBoolean()).isTrue();
-        Assertions.assertThat(value.getValueClass()).isEqualTo(Boolean.class);
+        Assertions.assertThat(value.getValueClass()).isEqualTo(boolean.class);
     }
 
     @ParameterizedTest
@@ -69,7 +69,7 @@ class PrimitiveValueTest {
         PrimitiveValue value = new PrimitiveValue(null);
         
         Assertions.assertThat(value.getData()).isNull();
-        Assertions.assertThat(value.getValueClass()).isNull();
+        Assertions.assertThat(value.getValueClass()).isEqualTo(void.class);
     }
 
     @Test

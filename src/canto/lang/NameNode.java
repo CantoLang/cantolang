@@ -47,6 +47,9 @@ public class NameNode extends CantoNode implements Name {
     }
 
     public void setName(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("name cannot be set to null");
+        }
         this.name = name;
         cachedName = stripDelims(name);
         parts = cachedName.split("\\.");
@@ -192,7 +195,12 @@ public class NameNode extends CantoNode implements Name {
     public String toString(String prefix) {
         return name;
     }
+    @Override
+    public String toString() {
+        return name;
+    }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof Name) {
             String thisName = getName();

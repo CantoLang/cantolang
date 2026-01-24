@@ -309,12 +309,62 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitCollectionDefName(CantoParser.CollectionDefNameContext ctx) {
-        return ctx.accept(this);
+        NameNode name = (NameNode) ctx.identifier().accept(this);
+        ParseTree paramsCtx = ctx.params();
+
+        if (paramsCtx != null) {
+            ParameterList params = visitParamsHelper((CantoParser.ParamsContext) paramsCtx);
+            List<ParameterList> paramsList = new ArrayList<>(1);
+            paramsList.add(params);
+            return new NameWithParams(name.getName(), paramsList);
+        }
+
+        return name;
     }
-    
+
     @Override
     public CantoNode visitBlockDefName(CantoParser.BlockDefNameContext ctx) {
-        return ctx.accept(this);
+        NameNode name = (NameNode) ctx.identifier().accept(this);
+        ParseTree paramsCtx = ctx.params();
+        ParseTree multiParamsCtx = ctx.multiParams();
+
+        if (multiParamsCtx != null) {
+            // multiParams is: params (COMMA params)+
+            List<ParameterList> paramsList = new ArrayList<>();
+            CantoParser.MultiParamsContext multiCtx = (CantoParser.MultiParamsContext) multiParamsCtx;
+
+            for (CantoParser.ParamsContext pCtx : multiCtx.params()) {
+                ParameterList params = visitParamsHelper(pCtx);
+                paramsList.add(params);
+            }
+            return new NameWithParams(name.getName(), paramsList);
+
+        } else if (paramsCtx != null) {
+            ParameterList params = visitParamsHelper((CantoParser.ParamsContext) paramsCtx);
+            List<ParameterList> paramsList = new ArrayList<>(1);
+            paramsList.add(params);
+            return new NameWithParams(name.getName(), paramsList);
+        }
+
+        return name;
+    }
+
+    /**
+     * Helper method to construct a ParameterList from a ParamsContext.
+     * params: LPAREN (param (COMMA param)*)? RPAREN
+     */
+    private ParameterList visitParamsHelper(CantoParser.ParamsContext ctx) {
+        ParameterList paramList = new ParameterList();
+
+        for (CantoParser.ParamContext paramCtx : ctx.param()) {
+            ParseTree typeCtx = paramCtx.simpleType();
+            Type paramType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+            NameNode paramName = (NameNode) paramCtx.identifier().accept(this);
+            DefParameter param = new DefParameter(paramType, paramName);
+            paramList.add(param);
+        }
+
+        return paramList;
     }
 
     @Override
@@ -404,11 +454,11 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ParseTree typeCtx = ctx.simpleType();
         Type supertype = (typeCtx == null ? null : (Type) typeCtx.accept(this));
         DefParameter forDef = new DefParameter(supertype, name);
-        Expression collectionExpr = (Expression) ctx.expression(0).accept(this);
+        Construction collection = (Construction) ctx.expression(0).accept(this);
         int i = 1;
-        Expression where = (ctx.WHERE() != null ? (Expression) ctx.expression(i++).accept(this) : null);
-        Expression until = (ctx.UNTIL() != null ? (Expression) ctx.expression(i++).accept(this) : null);
-        ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, collectionExpr, where, until, null, null, null, null);
+        Construction where = (ctx.WHERE() != null ? (Construction) ctx.expression(i++).accept(this) : null);
+        Construction until = (ctx.UNTIL() != null ? (Construction) ctx.expression(i++).accept(this) : null);
+        ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, collection, where, until, null, null, null, null);
         return iteratorValues;
     }
     
@@ -418,11 +468,11 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ParseTree typeCtx = ctx.simpleType();
         Type supertype = (typeCtx == null ? null : (Type) typeCtx.accept(this));
         DefParameter forDef = new DefParameter(supertype, name);
-        Expression from = (Expression) ctx.expression(0).accept(this);
+        Construction from = (Construction) ctx.expression(0).accept(this);
         int i = 1;
-        Expression to = (ctx.TO() != null ? (Expression) ctx.expression(i++).accept(this) : null);
-        Expression through = (ctx.THROUGH() != null ? (Expression) ctx.expression(i++).accept(this) : null);
-        Expression by = (ctx.BY() != null ? (Expression) ctx.expression(i++).accept(this) : null);
+        Construction to = (ctx.TO() != null ? (Construction) ctx.expression(i++).accept(this) : null);
+        Construction through = (ctx.THROUGH() != null ? (Construction) ctx.expression(i++).accept(this) : null);
+        Construction by = (ctx.BY() != null ? (Construction) ctx.expression(i++).accept(this) : null);
         ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, null, null, null, from, to, through, by);
         return iteratorValues;
     }

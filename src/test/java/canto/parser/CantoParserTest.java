@@ -75,7 +75,7 @@ class CantoParserTest {
         "'hello'",      // string
         "\"world\""     // string
     })
-    void testLiterals(String literal) {
+    void testLiteral(String literal) {
         ParseTree tree = parseInput(literal, "literal");
         
         Assertions.assertThat(tree).isNotNull();
