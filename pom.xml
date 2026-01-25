@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>cantolang</groupId>
   <artifactId>cantolang</artifactId>
@@ -7,6 +7,7 @@
   <description>Canto compiler and runtime engine</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <testSourceDirectory>test</testSourceDirectory>
     <resources>
       <resource>
         <directory>src</directory>
@@ -37,7 +38,7 @@
             <sourceDirectory>src/canto/parser</sourceDirectory>
             <outputDirectory>target/generated-sources/antlr4/canto/parser</outputDirectory>
             <visitor>true</visitor>
-            <listener>true</listener>
+            <listener>false</listener>
             <treatWarningsAsErrors>true</treatWarningsAsErrors>
             <arguments>
                 <argument>-package</argument>
