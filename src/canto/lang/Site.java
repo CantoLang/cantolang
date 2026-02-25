@@ -44,6 +44,11 @@ public class Site extends ComplexDefinition {
         setDomainName(domain);
     }
 
+    public Site(String domain, NameNode name) {
+        super(name);
+        setDomainName(domain);
+    }
+
     public DefinitionTable setNewDefinitionTable() {
     	DefinitionTable defTable = new DefinitionHash(); 
         setDefinitionTable(defTable);

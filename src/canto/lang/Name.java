@@ -23,23 +23,29 @@ public interface Name {
     /** The name of unnamed objects other than a site. */
     public final static String ANONYMOUS = "";
 
-    /** The name of an unnamed site. */
-    public final static String DEFAULT = "default";
-
-    /** The definition of the current instantiation. */
-    public final static String DEF = "def";
-
     /** A special name referring to the table where the current instantiation is cached. */
     public final static String CACHE = "cache";
 
     /** A special name referring to the container of the current instantiation. */
     public final static String CONTAINER = "container";
 
+    /** A special name referring to the core. */
+    public final static String CORE = "core";
+
+    /** A special name referring to the cosmos. */
+    public final static String COSMOS = "cosmos";
+
     /** A special name referring to the size of a collection. */
     public final static String COUNT = "count";
 
-    /** A special name referring to the core. */
-    public final static String CORE = "core";
+    /** The definition of the current instantiation. */
+    public final static String DEF = "def";
+
+    /** The name of an unnamed site. */
+    public final static String DEFAULT = "default";
+
+    /** A special name referring to the globe. */
+    public final static String GLOBE = "globe";
 
     /** A special name referring to the current context. */
     public final static String HERE = "here";

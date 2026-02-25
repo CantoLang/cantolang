@@ -45,13 +45,6 @@
                 <argument>canto.parser</argument>
             </arguments>
         </configuration>
-        <executions>
-            <execution>
-                <goals>
-                    <goal>antlr4</goal>
-                </goals>
-            </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

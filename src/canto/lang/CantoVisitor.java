@@ -20,7 +20,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
 import canto.parser.CantoParser.ExpressionContext;
-import canto.parser.CantoParser.IteratorContext;
 import canto.parser.CantoParser.NameComponentContext;
 import canto.runtime.Log;
 
@@ -67,14 +66,57 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         }
         return unit;
     }
+
+    private Site handleSiteDefinition(String domain, NameNode name, Block block) {
+        Site site = new Site(domain, name);
+        site.setType(site.createType());
+        site.setContents(block);
+        return site;
+    }
     
     @Override
     public CantoNode visitSiteDefinition(CantoParser.SiteDefinitionContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
         Block block = (Block) ctx.siteBlock().accept(this);
-        Site site = new Site(name);
-        site.setType(site.createType());
-        site.setContents(block);
+        Site site = handleSiteDefinition(Name.SITE, name, block);
+        return site;
+    }
+    
+    @Override
+    public CantoNode visitCoreDefinition(CantoParser.CoreDefinitionContext ctx) {
+        Block block = (Block) ctx.siteBlock().accept(this);
+        Core core = new Core();
+        core.setContents(block);
+        return core;
+    }
+    
+    @Override
+    public CantoNode visitCosmosDefinition(CantoParser.CosmosDefinitionContext ctx) {
+        Block block = (Block) ctx.siteBlock().accept(this);
+        Site site = handleSiteDefinition(Name.COSMOS, new NameNode(Name.COSMOS), block);
+        return site;
+    }
+    
+    @Override
+    public CantoNode visitGlobeDefinition(CantoParser.GlobeDefinitionContext ctx) {
+        Block block = (Block) ctx.siteBlock().accept(this);
+        Site site = handleSiteDefinition(Name.GLOBE, new NameNode(Name.GLOBE), block);
+        return site;
+    }
+    
+    @Override
+    public CantoNode visitDefaultSiteDefinition(CantoParser.DefaultSiteDefinitionContext ctx) {
+        Block block = (Block) ctx.siteBlock().accept(this);
+        Site site = handleSiteDefinition(Name.SITE, new NameNode(Name.DEFAULT), block);
+        return site;
+    }
+    
+    @Override
+    public CantoNode visitDomainDefinition(CantoParser.DomainDefinitionContext ctx) {
+        Block block = (Block) ctx.siteBlock().accept(this);
+        NameNode domain = (NameNode) ctx.identifier(0).accept(this);
+        NameNode name = (NameNode) ctx.identifier(1).accept(this);
+        Site site = handleSiteDefinition(domain.getName(), name, block);
         return site;
     }
     
@@ -313,7 +355,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ParseTree paramsCtx = ctx.params();
 
         if (paramsCtx != null) {
-            ParameterList params = visitParamsHelper((CantoParser.ParamsContext) paramsCtx);
+            ParameterList params = paramsHelper((CantoParser.ParamsContext) paramsCtx);
             List<ParameterList> paramsList = new ArrayList<>(1);
             paramsList.add(params);
             return new NameWithParams(name.getName(), paramsList);
@@ -334,13 +376,13 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             CantoParser.MultiParamsContext multiCtx = (CantoParser.MultiParamsContext) multiParamsCtx;
 
             for (CantoParser.ParamsContext pCtx : multiCtx.params()) {
-                ParameterList params = visitParamsHelper(pCtx);
+                ParameterList params = paramsHelper(pCtx);
                 paramsList.add(params);
             }
             return new NameWithParams(name.getName(), paramsList);
 
         } else if (paramsCtx != null) {
-            ParameterList params = visitParamsHelper((CantoParser.ParamsContext) paramsCtx);
+            ParameterList params = paramsHelper((CantoParser.ParamsContext) paramsCtx);
             List<ParameterList> paramsList = new ArrayList<>(1);
             paramsList.add(params);
             return new NameWithParams(name.getName(), paramsList);
@@ -353,7 +395,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
      * Helper method to construct a ParameterList from a ParamsContext.
      * params: LPAREN (param (COMMA param)*)? RPAREN
      */
-    private ParameterList visitParamsHelper(CantoParser.ParamsContext ctx) {
+    private ParameterList paramsHelper(CantoParser.ParamsContext ctx) {
         ParameterList paramList = new ParameterList();
 
         for (CantoParser.ParamContext paramCtx : ctx.param()) {

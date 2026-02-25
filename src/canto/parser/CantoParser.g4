@@ -26,7 +26,9 @@ globeDefinition
 
 compilationUnit
     :
-    ( siteDefinition
+    ( cosmosDefinition
+    | globeDefinition
+    | siteDefinition
     | coreDefinition
     | domainDefinition
     | defaultSiteDefinition
