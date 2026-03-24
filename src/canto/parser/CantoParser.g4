@@ -178,9 +178,15 @@ arrayElementList
     ;
 
 arrayElement
-    : expression | collectionInitBlock
+    : expression | arrayDynamicInitExpression
     ;
 
+arrayDynamicInitExpression
+    : arrayConditional
+    | arrayLoop
+    | arrayInitBlock
+    ;
+    
 tableInitBlock
     : EMPTY_TABLE
     | LCURLY tableElementList? RCURLY
@@ -224,8 +230,24 @@ elsePart
     : doc = DOC_COMMENT? ELSE block
     ; 
 
+arrayConditional
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayInitBlock (arrayElseIfPart)* (arrayElsePart)?
+    ;
+
+arrayElseIfPart
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayInitBlock
+    ;
+
+arrayElsePart
+    : doc = DOC_COMMENT? ELSE arrayInitBlock
+    ; 
+
 loop
     : FOR iterator ((connector = AND iterator)* | (connector = OR iterator)*) block
+    ;
+    
+arrayLoop
+    : FOR iterator ((connector = AND iterator)* | (connector = OR iterator)*) arrayInitBlock
     ;
     
 iterator

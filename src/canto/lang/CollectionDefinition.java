@@ -2,7 +2,7 @@
  * 
  * CollectionDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -38,6 +38,10 @@ public class CollectionDefinition extends ComplexDefinition {
     
     public CollectionDefinition(NameNode name) {
         super(name);
+    }
+
+    public CollectionDefinition(Type superType, NameNode name, CantoNode contents) {
+        super(superType, name, contents);
     }
 
     public CollectionDefinition(CollectionDefinition def, Context context) {
@@ -346,6 +350,7 @@ public class CollectionDefinition extends ComplexDefinition {
                     }
                 }
             }
+            dynamic_initialized = true;
         }
         return dynamic;
     }
