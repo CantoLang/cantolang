@@ -2,7 +2,7 @@
  * 
  * AbstractType.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -262,7 +262,7 @@ abstract public class AbstractType extends NameNode implements Type {
 
         Definition def = getDefinition();
         if (def == null) {
-            ArgumentList args = getArguments(context);
+            ConstructionList args = getArguments(context);
             for (Definition owner = getOwner(); owner != null; owner = owner.getOwner()) {
                 // skip parameters and their immediate owners (the definitions they are
                 // parameters for)
@@ -408,7 +408,7 @@ abstract public class AbstractType extends NameNode implements Type {
     
     /** Returns true if this type can be the supertype of a type with the specified parameters. **/
     public boolean canBeSuperForParams(ParameterList params, Context context) {
-        ArgumentList typeArgs = getArguments(context);
+        ConstructionList typeArgs = getArguments(context);
         int numArgs = (typeArgs == null ? 0 : typeArgs.size());
         int numParams = (params == null ? 0 : params.size());
         if (numArgs == 0) {
@@ -458,7 +458,7 @@ abstract public class AbstractType extends NameNode implements Type {
 
     abstract public List<Dim> getDims();
 
-    abstract public ArgumentList getArguments(Context context);
+    abstract public ConstructionList getArguments(Context context);
 
     abstract public Value convert(Value val);
 

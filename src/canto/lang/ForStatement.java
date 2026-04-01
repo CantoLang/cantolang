@@ -2,7 +2,7 @@
  * 
  * ForStatement.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -406,7 +406,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                             }
     
                             if (def.isAliasInContext(context)) {
-                                ArgumentList args = instance.getArguments();
+                                ConstructionList args = instance.getArguments();
                                 ParameterList params = def.getParamsForArgs(args, context);
                                 context.push(def, params, args, true);
                                 numPushes++;
@@ -427,7 +427,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
                         // push the collection definition on the stack, because getting
                         // the iterator may trigger the instantiation of the array
 
-                        ArgumentList args = instance.getArguments();
+                        ConstructionList args = instance.getArguments();
                         IndexList indexes = instance.getIndexes();
                         CollectionInstance collection = ((CollectionDefinition) def).getCollectionInstance(context, args, indexes);
                         it  = collection.constructionIterator();
@@ -759,12 +759,12 @@ class CombinedIterator implements Iterator<Construction> {
 
 class Combo extends Construction {
 
-    private ArgumentList list;
+    private ConstructionList list;
     
     public Combo(Construction obj1, Construction obj2) {
         super();
         int n = (obj1 instanceof Combo ? ((Combo) obj1).list.size() : 1) + (obj2 instanceof Combo ? ((Combo) obj2).list.size() : 1);
-        list = new ArgumentList(n);
+        list = new ConstructionList(n);
         if (obj1 instanceof Combo) {
             list.addAll(((Combo) obj1).list);
         } else {

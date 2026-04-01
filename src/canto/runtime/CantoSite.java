@@ -180,17 +180,17 @@ public class CantoSite extends CantoDomain {
     }
 
 
-    public Instantiation getPageInstance(String pageName, ArgumentList[] argLists, Context argContext) {
+    public Instantiation getPageInstance(String pageName, ConstructionList[] argLists, Context argContext) {
         return getInstance("response", pageName, argLists, argContext);
     }
 
-    public Instantiation getGeneralResponseInstance(ArgumentList[] argLists, Context argContext) {
+    public Instantiation getGeneralResponseInstance(ConstructionList[] argLists, Context argContext) {
         return getInstance(null, "general_response", argLists, argContext);
     }
 
 
-    public ArgumentList[] getGeneralResponseArgumentLists(String name, Construction requestParams, Construction cantoRequest, Construction cantoSession) {
-        ArgumentList[] args = new ArgumentList[4];
+    public ConstructionList[] getGeneralResponseConstructionLists(String name, Construction requestParams, Construction cantoRequest, Construction cantoSession) {
+        ConstructionList[] args = new ConstructionList[4];
 
         StaticText nameArg = new StaticText(name);
 
@@ -198,37 +198,37 @@ public class CantoSite extends CantoDomain {
         nameRequestAndSession.add(nameArg);
         nameRequestAndSession.add(cantoRequest);
         nameRequestAndSession.add(cantoSession);
-        args[0] = new ArgumentList(nameRequestAndSession);
+        args[0] = new ConstructionList(nameRequestAndSession);
 
         List<Construction> nameAndRequest = new ArrayList<Construction>(2);
         nameAndRequest.add(nameArg);
         nameAndRequest.add(cantoRequest);
-        args[1] = new ArgumentList(nameAndRequest);
+        args[1] = new ConstructionList(nameAndRequest);
 
         List<Construction> nameAndParams = new ArrayList<Construction>(2);
         nameAndParams.add(nameArg);
         nameAndParams.add(requestParams);
-        args[2] = new ArgumentList(nameAndParams);
+        args[2] = new ConstructionList(nameAndParams);
 
         List<Construction> nameOnly = new SingleItemList<Construction>(nameArg);
-        args[3] = new ArgumentList(nameOnly);
+        args[3] = new ConstructionList(nameOnly);
 
         return args;
     }
 
-    public ArgumentList[] getArgumentLists(Construction requestParams, Construction cantoRequest, Construction cantoSession) {
-        ArgumentList[] args = new ArgumentList[4];
+    public ConstructionList[] getConstructionLists(Construction requestParams, Construction cantoRequest, Construction cantoSession) {
+        ConstructionList[] args = new ConstructionList[4];
 
         List<Construction> requestAndSession = new ArrayList<Construction>(2);
         requestAndSession.add(cantoRequest);
         requestAndSession.add(cantoSession);
-        args[0] = new ArgumentList(requestAndSession);
+        args[0] = new ConstructionList(requestAndSession);
 
         List<Construction> paramsOnly = new SingleItemList<Construction>(requestParams);
-        args[1] = new ArgumentList(paramsOnly);
+        args[1] = new ConstructionList(paramsOnly);
         
         List<Construction> requestOnly = new SingleItemList<Construction>(cantoRequest);
-        args[2] = new ArgumentList(requestOnly);
+        args[2] = new ConstructionList(requestOnly);
 
         args[3] = null;
 
@@ -286,7 +286,7 @@ public class CantoSite extends CantoDomain {
     
     
     public int respond(String pageName, Construction paramsArg, Construction requestArg, Construction sessionArg, Context context, PrintStream out) throws Redirection {
-        ArgumentList[] argLists = getArgumentLists(paramsArg, requestArg, sessionArg);
+        ConstructionList[] argLists = getConstructionLists(paramsArg, requestArg, sessionArg);
         Instantiation page = getPageInstance(cleanForCanto(pageName), argLists, context);
         boolean respondWithPage = true;
         
@@ -328,7 +328,7 @@ public class CantoSite extends CantoDomain {
                     
                 } else {
                     objName = pageName;
-                    argLists = getGeneralResponseArgumentLists(pageName, paramsArg, requestArg, sessionArg);
+                    argLists = getGeneralResponseConstructionLists(pageName, paramsArg, requestArg, sessionArg);
                     instance = getGeneralResponseInstance(argLists, context);
                 }
                 if (instance == null) {
@@ -362,7 +362,7 @@ public class CantoSite extends CantoDomain {
                         }
                         if (pageInstance != null) {
                             Definition pageDef = pageInstance.getDefinition(context);
-                            ArgumentList pageArgs = pageInstance.getArguments();
+                            ConstructionList pageArgs = pageInstance.getArguments();
                             ParameterList pageParams = pageDef.getParamsForArgs(pageArgs, context);
                             context.push(pageDef, pageParams, pageArgs, true);
                             data = instance.getData(context);
@@ -379,7 +379,7 @@ public class CantoSite extends CantoDomain {
                         }
                         if (pageInstance != null) {
                             Definition pageDef = pageInstance.getDefinition(context);
-                            ArgumentList pageArgs = pageInstance.getArguments();
+                            ConstructionList pageArgs = pageInstance.getArguments();
                             ParameterList pageParams = pageDef.getParamsForArgs(pageArgs, context);
                             context.push(pageDef, pageParams, pageArgs, true);
                             data = instance.getData(context);

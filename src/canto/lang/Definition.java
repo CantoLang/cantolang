@@ -2,7 +2,7 @@
  * 
  * Definition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -381,7 +381,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return false;
     }
 
-    public Definition getChildDefinition(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, Definition resolver) {
+    public Definition getChildDefinition(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, Definition resolver) {
         try {
             Object obj = getChild(name, args, indexes, parentArgs, argContext, false, true, null, resolver);
             if (obj instanceof Definition) {
@@ -411,7 +411,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
 
     /** Get a child of this definition as a definition. This only works for named definitions. 
      */
-    public Definition getDefinitionChild(NameNode childName, Context context, ArgumentList args) {
+    public Definition getDefinitionChild(NameNode childName, Context context, ConstructionList args) {
         return null;
     }
     
@@ -419,7 +419,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
      *  false, return the definition, else instantiate it and return the result.  If <code>generate</code>
      *  is true and a definition is not found, return UNDEFINED.
      */
-    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (generate) {
             return UNDEFINED;
         } else {
@@ -445,9 +445,9 @@ abstract public class Definition extends CantoNode implements Name, Construction
      *  type parameter is only used if the child definition is external, in which case it
      *  is the Canto supertype of the external object.
      **/
-    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) {
+    public Object getChildData(NameNode childName, Type type, Context context, ConstructionList args) {
         Object data = null;
-        ArgumentList childArgs = childName.getArguments();
+        ConstructionList childArgs = childName.getArguments();
         IndexList childIndexes = childName.getIndexes();
 
         // see if the argument definition has a child definition by that name
@@ -550,7 +550,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return data;
     }
 
-    public ParameterList getParamsForArgs(ArgumentList args, Context context, boolean validate) {
+    public ParameterList getParamsForArgs(ConstructionList args, Context context, boolean validate) {
         ParameterList params = null;
         List<ParameterList> paramLists = getParamLists();
         int numParamLists = (paramLists == null ? 0 : paramLists.size());
@@ -564,7 +564,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
     }
 
 
-    public Scope getEntryForArgs(ArgumentList args, Context context) throws Redirection {
+    public Scope getEntryForArgs(ConstructionList args, Context context) throws Redirection {
         ParameterList params = getParamsForArgs(args, context);
         // if args is nonnull and params is null or smaller than args, there is no match.
         if (args != null && args.size() > 0 && (params == null || params.size() < args.size())) {
@@ -574,11 +574,11 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return context.newScope(getDefinitionFlavor(context, params), this, params, args);
     }
 
-    public ParameterList getParamsForArgs(ArgumentList args, Context argContext) {
+    public ParameterList getParamsForArgs(ConstructionList args, Context argContext) {
         return getMatch(args, argContext);
     }
 
-    public Definition getDefinitionForArgs(ArgumentList args, Context argContext) {
+    public Definition getDefinitionForArgs(ConstructionList args, Context argContext) {
         ParameterList params = getParamsForArgs(args, argContext);
         // if args is nonnull and params is null or smaller than args, there is no match.
         if (args != null && args.size() > 0 && (params == null || params.size() < args.size())) {
@@ -602,7 +602,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
      *
      *  Returns the most closely matching parameter list, or null if none matches.
      */
-    protected ParameterList getMatch(ArgumentList args, Context argContext) {
+    protected ParameterList getMatch(ConstructionList args, Context argContext) {
         ParameterList params = null;
         List<ParameterList> paramLists = getParamLists(); 
         if (paramLists != null) {
@@ -624,9 +624,9 @@ abstract public class Definition extends CantoNode implements Name, Construction
      *  all the passed argument lists and select the best match (if any).
      *
      *  Returns an array of ListNodes with two elements, a ParameterList
-     *  and an ArgumentList, or null if none matches.
+     *  and an ConstructionList, or null if none matches.
      */
-    public ListNode<?>[] getMatch(ArgumentList[] argLists, Context argContext) {
+    public ListNode<?>[] getMatch(ConstructionList[] argLists, Context argContext) {
         ListNode<?>[] paramsAndArgs = null; 
         ListNode<?> args = null;
         ListNode<?> params = null;
@@ -637,7 +637,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
             while (itParams.hasNext()) {
                 ParameterList p = itParams.next();
                 for (int i = 0; i < argLists.length; i++) {
-                    ArgumentList a = argLists[i];
+                    ConstructionList a = argLists[i];
                     int s = p.getScore(a, argContext, this);
                     if (s < score) {
                         params = p;
@@ -752,7 +752,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return false;
     }
 
-    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
+    public CollectionDefinition getCollectionDefinition(Context context, ConstructionList args) {
         return null;
     }
 
@@ -771,7 +771,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
-    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
+    public Object instantiate(ConstructionList args, IndexList indexes, Context context) throws Redirection {
         Definition initializedDef = context.initDef(this, args, indexes);
         if (initializedDef == null && indexes != null) {
             initializedDef = context.initDef(this, args, null);
@@ -785,7 +785,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
         }
     }
         
-    private Object _instantiate(Context context, ArgumentList args, IndexList indexes) throws Redirection {        
+    private Object _instantiate(Context context, ConstructionList args, IndexList indexes) throws Redirection {        
         if ((dur == Durability.GLOBAL || dur == Durability.STATIC) && staticData.data != null && (args == null || !args.isDynamic())) {
             return staticData.data;
         }
@@ -804,7 +804,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
     }
 
     /* TODO: this is probably the best place to coerce the constructed data into the proper type for this definition. */
-    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    protected Object construct(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         // dynamic objects are objects such as arrays with logic in their
         // initialization expressions
         Definition def = this;
@@ -820,7 +820,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
 
     
     /** Returns an object wrapping this definition with arguments and indexes. */ 
-    public DefinitionInstance getDefInstance(ArgumentList args, IndexList indexes) {
+    public DefinitionInstance getDefInstance(ConstructionList args, IndexList indexes) {
         return new DefinitionInstance(this, args, indexes);
     }
     

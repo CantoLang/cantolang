@@ -25,18 +25,18 @@ public class ResolvedInstance extends Instantiation implements Value {
     private Definition def;
 
     
-    public static ArgumentList resolveArguments(ArgumentList args, Context context) {
+    public static ConstructionList resolveArguments(ConstructionList args, Context context) {
         if (args == null || args.size() == 0) {
             return args;
         }
-        ArgumentList resolvedArgs = args;
+        ConstructionList resolvedArgs = args;
         Context sharedContext = context;
         for (int i = 0; i < args.size(); i++) {
             Construction arg = args.get(i);
             if (arg instanceof Instantiation && !(arg instanceof ResolvedInstance)) {
                 Instantiation argInstance = ((Instantiation) arg).getUltimateInstance(sharedContext);
                 if (resolvedArgs == args) {
-                    resolvedArgs = new ArgumentList(args);
+                    resolvedArgs = new ConstructionList(args);
                     sharedContext = context.clone(false);
                 }
                 ResolvedInstance ri = (argInstance instanceof ResolvedInstance ? (ResolvedInstance) argInstance : new ResolvedInstance(argInstance, sharedContext, true));
@@ -50,17 +50,17 @@ public class ResolvedInstance extends Instantiation implements Value {
         return resolvedArgs;
     }
     
-    public static ArgumentList instantiateArguments(ArgumentList args, Context context) {
+    public static ConstructionList instantiateArguments(ConstructionList args, Context context) {
         if (args == null || args.size() == 0) {
             return args;
         }
-        ArgumentList resolvedArgs = args;
+        ConstructionList resolvedArgs = args;
         for (int i = 0; i < args.size(); i++) {
             Construction arg = args.get(i);
             if (arg instanceof Instantiation) {
                 Instantiation argInstance = (Instantiation) arg;
                 if (resolvedArgs == args) {
-                    resolvedArgs = new ArgumentList(args);
+                    resolvedArgs = new ConstructionList(args);
                 }
                 Object data = argInstance.generateData(context, null);
                 resolvedArgs.set(i, new PrimitiveValue(data));
@@ -71,7 +71,7 @@ public class ResolvedInstance extends Instantiation implements Value {
     } 
 
     
-    public ResolvedInstance(Definition def, Context context, ArgumentList args, IndexList indexes) {
+    public ResolvedInstance(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(def, args, indexes);
 
         if (def instanceof BoundDefinition) {
@@ -138,7 +138,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         args = instance.args;
 //        if (args != null && args.size() > 0) {
 //            int numArgs = args.size();
-//            ArgumentList resolvedArgs = new ArgumentList(Context.newArrayList(numArgs, Construction.class));
+//            ConstructionList resolvedArgs = new ConstructionList(Context.newArrayList(numArgs, Construction.class));
 //            try {
 //                for (int i = 0; i < numArgs; i++) {
 //                    Construction arg = args.get(i);
@@ -243,7 +243,7 @@ public class ResolvedInstance extends Instantiation implements Value {
         return super.getType(resolutionContext, generate);
     }
 
-    public Object instantiate(Context context, Definition definition, ArgumentList args, IndexList indexes) throws Redirection {
+    public Object instantiate(Context context, Definition definition, ConstructionList args, IndexList indexes) throws Redirection {
         //resolutionContext.validateSize();
         Object data = null;
         int numPushes = 0;

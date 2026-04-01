@@ -2,7 +2,7 @@
  * 
  * CollectionBuilder.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -20,7 +20,7 @@ abstract public class CollectionBuilder {
     }
 
     
-    public static CollectionInstance createCollectionInstanceForDef(Definition def, Context context, ArgumentList args, IndexList indexes, Object collectionData) {
+    public static CollectionInstance createCollectionInstanceForDef(Definition def, Context context, ConstructionList args, IndexList indexes, Object collectionData) {
         if (def.isArray()) {
             return new ResolvedArray(def, context, args, indexes, collectionData);
         } else if (def.isTable()) {
@@ -34,12 +34,12 @@ abstract public class CollectionBuilder {
     /** Creates a resolved instance of this collection in the specified context with the specified
      *  arguments.
      */
-    abstract public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection;
+    abstract public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes) throws Redirection;
 
     /** Wraps the passed data in a collection instance in the specified context with the specified
      *  arguments.
      */
-    abstract public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection;
+    abstract public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes, Object collectionData) throws Redirection;
 
 }
 

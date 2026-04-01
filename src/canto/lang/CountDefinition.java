@@ -24,7 +24,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     //private int count;
     private ResolvedInstance ri = null;
     private PrimitiveValue value = null;
-    private ArgumentList args;
+    private ConstructionList args;
     private IndexList indexes;
 
     public CountDefinition(Definition def) {
@@ -38,7 +38,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
         setDurability(Durability.DYNAMIC);
     }
 
-    public CountDefinition(Definition def, Context context, ArgumentList args, IndexList indexes) {
+    public CountDefinition(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(PrimitiveType.INT.getDefinition(), context);
         setName(new NameNode(Name.COUNT));
         if (def instanceof ExternalDefinition) {
@@ -81,7 +81,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
                 } else {
                     Instantiation instance;
                     if (def.equals(context.peek().def) && context.size() > 1) {
-                        ArgumentList instanceArgs = context.getArguments();
+                        ConstructionList instanceArgs = context.getArguments();
                         context.unpush();
                         unpushed = true;
                         instance = new Instantiation(def, instanceArgs, null);
@@ -190,7 +190,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     /** Returns a copy of this count definition initialized for the specified context.  The
      *  passed arguments are ignored.
      */
-    public Object initForContext(Context context, ArgumentList args, IndexList indexes) {
+    public Object initForContext(Context context, ConstructionList args, IndexList indexes) {
         if (initContext == null || !initContext.equals(context)) {
             return new CountDefinition(def, context, this.args, this.indexes);
         } else {

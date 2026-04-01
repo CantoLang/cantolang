@@ -2,7 +2,7 @@
  * 
  * KeysDefinition.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -32,7 +32,7 @@ public class KeysDefinition extends CollectionDefinition {
     	this(def, context, null, null);
     }
 
-    public KeysDefinition(Definition def, Context context, ArgumentList args, IndexList indexes) {
+    public KeysDefinition(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(new NameNode(Name.KEYS));
         if (def instanceof ExternalDefinition) {
         	try {
@@ -114,7 +114,7 @@ public class KeysDefinition extends CollectionDefinition {
             keys = new EmptyList<String>();
         }
 
-        super.init(keysType, new NameNode(Name.KEYS), new ArgumentList(new StringValueList(keys)));
+        super.init(keysType, new NameNode(Name.KEYS), new ConstructionList(new StringValueList(keys)));
     }
 
  

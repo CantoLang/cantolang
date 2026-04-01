@@ -2,7 +2,7 @@
  * 
  * IndexedMethodDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -21,7 +21,7 @@ import canto.util.Holder;
 public class IndexedMethodDefinition extends MethodDefinition {
     private IndexList indexes;
 
-    public IndexedMethodDefinition(ExternalDefinition owner, Method method, ArgumentList args, IndexList indexes ) {
+    public IndexedMethodDefinition(ExternalDefinition owner, Method method, ConstructionList args, IndexList indexes ) {
         super(owner, method, args);
         this.indexes = indexes;
     }

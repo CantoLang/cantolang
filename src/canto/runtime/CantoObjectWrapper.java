@@ -48,7 +48,7 @@ public class CantoObjectWrapper {
     /** Constructs a new CantoWrapperObject, given a definition, data
      *  and context.
      */
-    public CantoObjectWrapper(Definition def, ArgumentList args, IndexList indexes, Context context) {
+    public CantoObjectWrapper(Definition def, ConstructionList args, IndexList indexes, Context context) {
         def = def.getSubdefInContext(context);
         ResolvedInstance ri = new ResolvedInstance(def, context, args, indexes);
         construction = ri;
@@ -79,7 +79,7 @@ public class CantoObjectWrapper {
         return construction;
     }
     
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         if (construction instanceof Instantiation) {
             return ((Instantiation) construction).getArguments();
         } else {
@@ -101,7 +101,7 @@ public class CantoObjectWrapper {
         }
     }
 
-    public Object getChildData(NameNode name, Type type, ArgumentList args) {
+    public Object getChildData(NameNode name, Type type, ConstructionList args) {
         //context.validateSize();
         try {
             return def.getChildData(name, type, getContext(), args);
@@ -113,7 +113,7 @@ public class CantoObjectWrapper {
     public Object getChildData(NameNode name) {
         //context.validateSize();
         Definition parentDef = def;
-        ArgumentList args = getArguments();
+        ConstructionList args = getArguments();
         int n = name.numParts();
         try {
             if (n == 1) {
@@ -178,7 +178,7 @@ public class CantoObjectWrapper {
         return "(" + construction.toString() + ")";
     }
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, boolean generate, boolean trySuper, Object parentObject, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, boolean generate, boolean trySuper, Object parentObject, Definition resolver) throws Redirection {
         return def.getChild(node, args, indexes, parentArgs, getContext(), generate, trySuper, null, resolver);
     }
 

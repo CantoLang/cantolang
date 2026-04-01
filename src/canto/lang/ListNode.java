@@ -2,7 +2,7 @@
  * 
  * ListNode.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -118,7 +118,7 @@ public class ListNode<E> extends CantoNode implements List<E> {
     
     
     /** Convert this list into a string with the specified delimeters at each
-     *  end.  This is used to handle use of ArgumentList in colleciont
+     *  end.  This is used to handle use of ConstructionList in colleciont
      *  definitions.
      */
     public String toString(String leftDelim, String rightDelim) {

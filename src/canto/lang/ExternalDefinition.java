@@ -2,7 +2,7 @@
  * 
  * ExternalDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -130,7 +130,7 @@ public class ExternalDefinition extends ComplexDefinition {
 
     private Class<?> c = null;
     private Object object = null;
-    private ArgumentList args = null;
+    private ConstructionList args = null;
     private List<Dim> dims = null;
 
     public ExternalDefinition(NameNode name) {
@@ -141,20 +141,20 @@ public class ExternalDefinition extends ComplexDefinition {
         this(def.getNameNode(), def.getParent(), def.getOwner(), def.getSuper(), def.getAccess(), def.getDurability(), def.getObject(), null);
     }
 
-    public ExternalDefinition(ExternalDefinition def, ArgumentList args) {
+    public ExternalDefinition(ExternalDefinition def, ConstructionList args) {
         this(def.getNameNode(), def.getParent(), def.getOwner(), def.getSuper(), def.getAccess(), def.getDurability(), def.getObject(), args);
     }
 
-    //public ExternalDefinition(Definition owner, Type superType, int access, int dur, Object object, ArgumentList args) {
+    //public ExternalDefinition(Definition owner, Type superType, int access, int dur, Object object, ConstructionList args) {
     //    this(null, (CantoNode) owner, owner, superType, access, dur, object, args);
     //}
 
-    public ExternalDefinition(String internalName, CantoNode parent, Definition owner, Type superType, Access public1, Durability inContext, Object object, ArgumentList args) {
+    public ExternalDefinition(String internalName, CantoNode parent, Definition owner, Type superType, Access public1, Durability inContext, Object object, ConstructionList args) {
         this(createNameNode(internalName), parent, owner, superType, public1, inContext, object, args);
     }
         
         
-    public ExternalDefinition(NameNode name, CantoNode parent, Definition owner, Type superType, Access access, Durability dur, Object object, ArgumentList args) {
+    public ExternalDefinition(NameNode name, CantoNode parent, Definition owner, Type superType, Access access, Durability dur, Object object, ConstructionList args) {
         super(name);
         setAccess(access);
         setDurability(dur);
@@ -194,7 +194,7 @@ public class ExternalDefinition extends ComplexDefinition {
     }
 
 
-    public ExternalDefinition(ExternalDefinition def, Context context, ArgumentList args) throws Redirection {
+    public ExternalDefinition(ExternalDefinition def, Context context, ConstructionList args) throws Redirection {
         super(def, context);
         setAccess(def.getAccess());
         setDurability(def.getDurability());
@@ -226,7 +226,7 @@ public class ExternalDefinition extends ComplexDefinition {
         return initContext;
     }
 
-    public ExternalDefinition newForArgs(ArgumentList args) {
+    public ExternalDefinition newForArgs(ConstructionList args) {
         return new ExternalDefinition(this, args);
     }
 
@@ -359,11 +359,11 @@ public class ExternalDefinition extends ComplexDefinition {
         this.object = object;
     }
 
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         return args;
     }
 
-    protected void setArguments(ArgumentList args) {
+    protected void setArguments(ConstructionList args) {
         this.args = args;
     }
 
@@ -392,7 +392,7 @@ public class ExternalDefinition extends ComplexDefinition {
         }
     }
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
 
         ComplexName restOfName = null;
         int numNameParts = node.numParts();
@@ -505,7 +505,7 @@ public class ExternalDefinition extends ComplexDefinition {
                 // unfortunate that this causes a clone of the paramTypes array
                 Class<?>[] mParams = method.getParameterTypes();
                 if (mParams.length > numArgs && Context.class.isAssignableFrom(mParams[0])) {
-                    ArgumentList newArgs = new ArgumentList(numArgs + 1);
+                    ConstructionList newArgs = new ConstructionList(numArgs + 1);
                     newArgs.add(new PrimitiveValue(context));
                     if (numArgs > 0) {
                         newArgs.addAll(args);
@@ -853,7 +853,7 @@ public class ExternalDefinition extends ComplexDefinition {
         return new ExternalConstruction(this);
     }
 
-    public Definition getDefForContext(Context context, ArgumentList args) {
+    public Definition getDefForContext(Context context, ConstructionList args) {
         Definition def = this;
         if (!context.isCompatible(initContext)) {
             Class<?> c = getExternalClass(context);
@@ -905,7 +905,7 @@ public class ExternalDefinition extends ComplexDefinition {
         int numPushes = 0;
         try {
             ExternalDefinition owner = (ExternalDefinition) getOwner();
-            ArgumentList ownerArgs = owner.getArguments();
+            ConstructionList ownerArgs = owner.getArguments();
             Context ownerContext = owner.getInitContext();
             if (ownerContext == null) {
                 //numPushes = context.pushSupersAndAliases(owner, this, getArguments());
@@ -988,7 +988,7 @@ class PartialDefinition extends ExternalDefinition {
         nameParts = parts;
     }
 
-    public PartialDefinition(ExternalDefinition externalDef, ArgumentList args, NameNode[] parts) {
+    public PartialDefinition(ExternalDefinition externalDef, ConstructionList args, NameNode[] parts) {
         super(externalDef, args);
         if (externalDef instanceof PartialDefinition) {
             baseDef = ((PartialDefinition) externalDef).baseDef;
@@ -998,11 +998,11 @@ class PartialDefinition extends ExternalDefinition {
         nameParts = parts;
     }
 
-    public ExternalDefinition newForArgs(ArgumentList args) {
+    public ExternalDefinition newForArgs(ConstructionList args) {
         return new PartialDefinition(this, args, nameParts);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         Definition def = completeForContext(argContext);
         if (def == null) {
             return (generate ? null : UNDEFINED);
@@ -1055,7 +1055,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
         return externalDef.getName();
     }
 
-    public ExternalConstruction initExternalObject(Context context, ArgumentList instanceArgs) throws Redirection {
+    public ExternalConstruction initExternalObject(Context context, ConstructionList instanceArgs) throws Redirection {
         // a hack, but one that works because external defs are instantiated at runtime
         // per call rather than once at compile time
         if (context.equalsOrPrecedes(contextMarker)) {
@@ -1075,7 +1075,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
             String name = def.getFullName();
             LOG.debug("Initializing external object " + name);
 
-            ArgumentList args = def.getArguments();
+            ConstructionList args = def.getArguments();
             if (instanceArgs != null && instanceArgs.isDynamic()) {
                 args = instanceArgs;
             }
@@ -1083,7 +1083,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
 
             // don't count trailing MISSING_ARGs
             for (int i = numArgs - 1; i >= 0; i--) {
-                if (args.get(i) == ArgumentList.MISSING_ARG) {
+                if (args.get(i) == ConstructionList.MISSING_ARG) {
                     numArgs--;
                 } else {
                     break;
@@ -1109,7 +1109,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
     
             for (int i = 0; i < numArgs; i++) {
                 Object arg = args.get(i);
-                if (arg == ArgumentList.MISSING_ARG) {
+                if (arg == ConstructionList.MISSING_ARG) {
                     arg = null;
                 }
                 if (arg instanceof Instantiation && context.size() > 1) {
@@ -1199,7 +1199,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
         } else if (def.getDurability() == Definition.Durability.DYNAMIC) {
             cacheability = CACHE_STORABLE;
         } else {
-            ArgumentList args = (def instanceof ExternalDefinition ? ((ExternalDefinition) def).getArguments() : getArguments());
+            ConstructionList args = (def instanceof ExternalDefinition ? ((ExternalDefinition) def).getArguments() : getArguments());
             if (args != null && args.isDynamic()) {
                 cacheability = CACHE_STORABLE;
             } else {
@@ -1209,7 +1209,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
 
 // removed to match how Instantiation works
 //        
-//        ArgumentList args = def.getArguments();
+//        ConstructionList args = def.getArguments();
 //        if (args != null) {
 //            Iterator<Construction> it = args.iterator();
 //            while (it.hasNext()) {
@@ -1324,7 +1324,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
 class MethodDefinition extends ExternalDefinition {
     private Method method;
 
-    public MethodDefinition(ExternalDefinition owner, Method method, ArgumentList args) {
+    public MethodDefinition(ExternalDefinition owner, Method method, ConstructionList args) {
         super(new NameWithArgs(method.getName(), args));
         this.method = method;
 
@@ -1348,7 +1348,7 @@ class MethodDefinition extends ExternalDefinition {
             paramLists = Context.newArrayList(1, ParameterList.class);
             Class<?>[] paramTypes = method.getParameterTypes();
             List<DefParameter> params = Context.newArrayList(paramTypes.length, DefParameter.class);
-            ArgumentList args = getArguments();
+            ConstructionList args = getArguments();
             int numArgs = (args != null ? args.size() : 0);
             int j = 0;
             if (paramTypes.length > numArgs) {
@@ -1374,13 +1374,13 @@ class MethodDefinition extends ExternalDefinition {
         return method;
     }
 
-    public Definition getDefForContext(Context context, ArgumentList args) throws Redirection {
+    public Definition getDefForContext(Context context, ConstructionList args) throws Redirection {
         MethodConstruction mc = (MethodConstruction) getContents();
         mc.initExternalObject(context, args);
         return this;
     }
     
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         if (parentObj == null && generate == true) {
             ExternalConstruction construction = (ExternalConstruction) getContents();
             if (construction != null) {
@@ -1413,7 +1413,7 @@ class MethodConstruction extends ExternalConstruction {
         return (MethodDefinition) getExternalDefinition();
     }
 
-    public ExternalConstruction initExternalObject(Context context, ArgumentList args) throws Redirection {
+    public ExternalConstruction initExternalObject(Context context, ConstructionList args) throws Redirection {
         // a hack, but one that works because external defs are instantiated at runtime
         // per call rather than once at compile time
         if (context.equalsOrPrecedes(contextMarker)) {
@@ -1502,7 +1502,7 @@ class MethodConstruction extends ExternalConstruction {
             if (args.get(i) instanceof Construction && CollectionDefinition.isCollectionObject(argObjects[i])) {
                 Construction argInstance = (Construction) args.get(i);
                 String name = argInstance.getDefinitionName();
-                ArgumentList argArgs = argInstance.getArguments();
+                ConstructionList argArgs = argInstance.getArguments();
                 Definition argDef = context.getDefinition(name, null, argArgs);
                 if (argDef == null) {
                     argDef = argInstance.getDefinition(context);
@@ -1755,7 +1755,7 @@ class FieldDefinition extends ExternalDefinition {
         return new EmptyList<ParameterList>();
     }
 
-    public Definition getDefForContext(Context context, ArgumentList args) throws Redirection {
+    public Definition getDefForContext(Context context, ConstructionList args) throws Redirection {
         return this;
     }
     

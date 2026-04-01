@@ -2,7 +2,7 @@
  * 
  * Construction.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -254,7 +254,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
      * Returns the list of arguments associated with this construction, if any.  The
      * base class always returns null.
      */
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         return null;
     }
 
@@ -377,9 +377,9 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
                 Definition defInKeep = null;
                 //Definition nominalDefInKeep = null;
                 String name = getDefinitionName();
-                ArgumentList args = getArguments();
+                ConstructionList args = getArguments();
                 String defName = name;
-                ArgumentList defArgs = args;
+                ConstructionList defArgs = args;
                 if (isParameterChild()) {
                     Instantiation ultimateInstance = getUltimateInstance(context);
                     if (ultimateInstance != null) { 
@@ -492,7 +492,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
                         // if this is an identity, then the definition of the passed instantiation
                         // should already be cached; use it instead so children etc. resolve to it
                         Definition nominalDef = def;
-                        ArgumentList nominalArgs = args;
+                        ConstructionList nominalArgs = args;
                         ResolvedInstance ri = null;
                         
 
@@ -525,7 +525,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
                                 CantoNode node = (CantoNode) args.get(0);
                                 if (node instanceof Instantiation) {
                                     String argName = node.getName();
-                                    ArgumentList argArgs = ((Instantiation) node).getArguments();
+                                    ConstructionList argArgs = ((Instantiation) node).getArguments();
                                     IndexList argIndexes = ((Instantiation) node).getIndexes();
                                     holder = context.getDefHolder(argName, null, argArgs, argIndexes, false);
                                     if (holder != null && holder.def != null) {
@@ -732,7 +732,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
         } else {
             sb.append(reference.toString());
         }
-        if (sb.length() > 0 && trailingDelimiter && !(getParent() instanceof ArgumentList) && !(getParent() instanceof Index) && !(getParent() instanceof Expression)) {
+        if (sb.length() > 0 && trailingDelimiter && !(getParent() instanceof ConstructionList) && !(getParent() instanceof Index) && !(getParent() instanceof Expression)) {
             char endchar = sb.charAt(sb.length() - 1);
             if (endchar != '\n' && endchar != '\r') {
                 sb.append(";\n");

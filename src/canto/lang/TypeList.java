@@ -2,7 +2,7 @@
  * 
  * TypeList.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -373,7 +373,7 @@ public class TypeList extends ListNode<Type> implements Type {
             if (t.getDefinition().hasNext(context)) {
             	continue;
             }
-            ArgumentList typeArgs = t.getArguments(context);
+            ConstructionList typeArgs = t.getArguments(context);
             int numArgs = (typeArgs == null ? 0 : typeArgs.size());
             if (numParams == 0) {
                 if (numArgs == 0) {
@@ -405,7 +405,7 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns the arguments associated with this type, or an empty list
      *  if this type has no associated arguments.
      */
-    public ArgumentList getArguments(Context context) {
+    public ConstructionList getArguments(Context context) {
         throw new UnsupportedOperationException("TypeList doesn't support getArguments()");
     }
 
@@ -867,7 +867,7 @@ class MultiDefinition extends NamedDefinition {
     }
 
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         Redirection r = null;
         Object failed = (generate ? UNDEFINED : null);
         Iterator<Definition> it = definitions.iterator();

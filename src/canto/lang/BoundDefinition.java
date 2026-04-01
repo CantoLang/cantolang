@@ -2,7 +2,7 @@
  * 
  * BoundDefinition.java
  *
- * Copyright (c) 2018, 2019 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -41,7 +41,7 @@ public class BoundDefinition extends NamedDefinition {
     public boolean isGlobal()                  { return def.isGlobal(); }
     public Type getType()                      { return def.getType(); }
     
-    public Definition getDefinitionForArgs(ArgumentList args, Context argContext) {
+    public Definition getDefinitionForArgs(ConstructionList args, Context argContext) {
         return def.getDefinitionForArgs(args, boundContext);    
     }
 
@@ -96,7 +96,7 @@ public class BoundDefinition extends NamedDefinition {
     public NameNode getNameNode()              { return def.getNameNode(); }
     public boolean isAnonymous()               { return def.isAnonymous(); }
 
-    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
+    public Object instantiate(ConstructionList args, IndexList indexes, Context context) throws Redirection {
         return def.instantiate(args, indexes, boundContext);
     }
 
@@ -109,11 +109,11 @@ public class BoundDefinition extends NamedDefinition {
     	}
     }
 
-    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         return def.getChild(name, args, indexes, parentArgs, boundContext, generate, trySuper, parentObj, resolver);
     }
 
-    public Definition getChildDefinition(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, Definition resolver) {
+    public Definition getChildDefinition(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, Definition resolver) {
         return def.getChildDefinition(name, args, indexes, parentArgs, boundContext, resolver);
     }
 
@@ -127,15 +127,15 @@ public class BoundDefinition extends NamedDefinition {
 
     public KeepNode getKeep(String key)   { return def.getKeep(key); }
 
-    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) throws Redirection {
+    public Object getChildData(NameNode childName, Type type, Context context, ConstructionList args) throws Redirection {
         return def.getChildData(childName, type, boundContext, args);
     }
 
-    public ParameterList getParamsForArgs(ArgumentList args, Context argContext, boolean validate) {
+    public ParameterList getParamsForArgs(ConstructionList args, Context argContext, boolean validate) {
         return def.getParamsForArgs(args, boundContext, validate);
     }
 
-    public ParameterList getParamsForArgs(ArgumentList args, Context argContext) {
+    public ParameterList getParamsForArgs(ConstructionList args, Context argContext) {
         return def.getParamsForArgs(args, boundContext);
     }
 
@@ -174,11 +174,11 @@ public class BoundDefinition extends NamedDefinition {
     public boolean isExternal()                { return def.isExternal(); }
     public boolean isCollection()              { return def.isCollection(); }
     
-    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
+    public CollectionDefinition getCollectionDefinition(Context context, ConstructionList args) {
         return def.getCollectionDefinition(boundContext, args);
     }
 
-     public DefinitionInstance getDefInstance(ArgumentList args, IndexList indexes) {
+     public DefinitionInstance getDefInstance(ConstructionList args, IndexList indexes) {
         return def.getDefInstance(args, indexes);
    
     }
@@ -191,7 +191,7 @@ public class BoundDefinition extends NamedDefinition {
         return def.instantiate(boundContext);
     }
     
-    public ListNode<?>[] getMatch(ArgumentList[] argLists, Context argContext) {
+    public ListNode<?>[] getMatch(ConstructionList[] argLists, Context argContext) {
         return def.getMatch(argLists, boundContext);
     }
 

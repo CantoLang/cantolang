@@ -2,7 +2,7 @@
  * 
  * Instantiation.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -90,7 +90,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
     protected int kind = UNRESOLVED;
 
     protected CantoNode reference;
-    protected ArgumentList args = null;
+    protected ConstructionList args = null;
     protected IndexList indexes = null;
 
     public Instantiation() {
@@ -110,7 +110,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         resolve(null);
     }
 
-    public Instantiation(Object reference, ArgumentList args, IndexList indexes) {
+    public Instantiation(Object reference, ConstructionList args, IndexList indexes) {
         // this instantiation is unowned
         super();
         setReference(reference);
@@ -118,7 +118,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         setIndexes(indexes);
     }
     
-    public Instantiation(Object reference, ArgumentList args, IndexList indexes, Definition owner) {
+    public Instantiation(Object reference, ConstructionList args, IndexList indexes, Definition owner) {
         super();
         setOwner(owner);
         setReference(reference);
@@ -129,7 +129,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
     
     /** Copies an instantiation but substitues different indexes and arguments. **/
-    public Instantiation(Instantiation instance, ArgumentList args, IndexList indexes) {
+    public Instantiation(Instantiation instance, ConstructionList args, IndexList indexes) {
         super();
         this.owner = instance.owner;
         this.parent = instance.parent;
@@ -192,12 +192,12 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         }
     }
 
-    public void setArguments(ArgumentList args) {
+    public void setArguments(ConstructionList args) {
         this.args = args;
     }
 
     /** Returns the list of arguments this instantiation has, if any. */
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         return args;
     }
 
@@ -226,7 +226,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         if (getName().equals(Name.NEXT)) {
             return true;
         }
-        ArgumentList args = getArguments();
+        ConstructionList args = getArguments();
         if (args != null) {
             Iterator<Construction> it = args.iterator();
             while (it.hasNext()) {
@@ -245,7 +245,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         if (getName().equals(Name.SUB)) {
             return true;
         }
-        ArgumentList args = getArguments();
+        ConstructionList args = getArguments();
         if (args != null) {
             Iterator<Construction> it = args.iterator();
             while (it.hasNext()) {
@@ -624,7 +624,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 if (def == null) { // && !(isParam || isParamChild)) {
                     def = getDefinition(context);
                 }
-                ArgumentList args = getArguments();
+                ConstructionList args = getArguments();
                 int cacheability;
                 if (def == null) {
                     return NOT_CACHEABLE_INFO;
@@ -649,12 +649,12 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                         boolean dynamic = false;
                         if (isParam) {
                             Object arg;
-                            ArgumentList argArgs = null;
+                            ConstructionList argArgs = null;
                             arg = context.getArgumentForParameter(nameNode, false, inContainer);
                             if (arg != null) {
-                                if (arg instanceof ArgumentList) {
-                                    dynamic = ((ArgumentList) arg).isDynamic();
-                                } else if (arg != ArgumentList.MISSING_ARG && arg instanceof Instantiation) {
+                                if (arg instanceof ConstructionList) {
+                                    dynamic = ((ConstructionList) arg).isDynamic();
+                                } else if (arg != ConstructionList.MISSING_ARG && arg instanceof Instantiation) {
                                     argArgs = ((Instantiation) arg).getArguments();
                                     if (argArgs != null) {
                                         dynamic = argArgs.isDynamic();
@@ -720,7 +720,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return getNameModifier(getArguments(), getIndexes());
     }
 
-    public static String getNameModifier(ArgumentList args, IndexList indexes) {
+    public static String getNameModifier(ConstructionList args, IndexList indexes) {
         String modifier = null;
         //if (args != null && args.size() > 0) {
         //    modifier = args.toString();
@@ -788,9 +788,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 	   if (isParam || isParamChild) {
            NameNode name = (NameNode) reference;
            Object arg = context.getArgumentForParameter(name, isParamChild, isContainerParameter(context));
-           if (arg != null && arg != ArgumentList.MISSING_ARG) {
-               if (arg instanceof ArgumentList) {
-                   arg = ((ArgumentList) arg).get(0);
+           if (arg != null && arg != ConstructionList.MISSING_ARG) {
+               if (arg instanceof ConstructionList) {
+                   arg = ((ConstructionList) arg).get(0);
                }
                if (arg instanceof Instantiation) {
                    Instantiation instance = (Instantiation) arg;
@@ -866,9 +866,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         Definition def = null;
         NameNode restOfName = null;
         IndexList indexes = getIndexes();
-        ArgumentList args = getArguments();
+        ConstructionList args = getArguments();
         IndexList prefixIndexes = null;
-        ArgumentList prefixArgs = null;
+        ConstructionList prefixArgs = null;
 
 //if (getOwner() == null) {
 //  System.out.println("instance " + getName() + " has no owner");
@@ -961,7 +961,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                         if (prefixArgs == null && (holder.nominalArgs != null || holder.args != null)) {
                                             prefixArgs = (holder.nominalArgs != null ? holder.nominalArgs : holder.args);
                                             if (prefixArgs.isDynamic()) {
-                                                prefixArgs = new ArgumentList(prefixArgs);
+                                                prefixArgs = new ConstructionList(prefixArgs);
                                                 prefixArgs.setDynamic(false);
                                             }
                                         }
@@ -1163,7 +1163,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
     private static Definition lookupDef(NameNode name, IndexList indexes, CantoNode parent, NamedDefinition owner, Definition classDef, Context context, Definition resolver, boolean localScope) throws Redirection {
         Definition def = null;
-        ArgumentList args = name.getArguments();
+        ConstructionList args = name.getArguments();
         Definition defclass = context.peek().def;
 
         // first check for a special name
@@ -1459,7 +1459,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
     Definition getInstanceDef(Context context, boolean checkForParam, Definition resolver) throws Redirection {
 
         Definition def = null;
-        ArgumentList args = getArguments();
+        ConstructionList args = getArguments();
         IndexList indexes = getIndexes();
         if (reference instanceof Definition) {
             def = (Definition) reference;
@@ -1868,7 +1868,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                 }
 
                            } else if (def.isAliasInContext(context)) {
-                               ArgumentList args = instance.getArguments();
+                               ConstructionList args = instance.getArguments();
                                ParameterList params = def.getParamsForArgs(args, context);
                                if (params == null && args != null) {
                                    LOG.debug("arguments in " + name + " do not match parameters in " + def.getFullName());
@@ -1909,7 +1909,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return instantiate(context, def, getArguments(), getIndexes());
     }
 
-    public Object instantiate(Context context, Definition def, ArgumentList args, IndexList indexes) throws Redirection {
+    public Object instantiate(Context context, Definition def, ConstructionList args, IndexList indexes) throws Redirection {
         Object obj = null;
         if (isConcurrent()) {
             ConcurrentInstantiator ci = new ConcurrentInstantiator(context, def, args, indexes);
@@ -1936,11 +1936,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         Context concurrentContext;
         Object startLock = new Object();
         Definition def;
-        ArgumentList args;
+        ConstructionList args;
         IndexList indexes;
         Object status;
 
-        ConcurrentInstantiator(Context context, Definition def, ArgumentList args, IndexList indexes) {
+        ConcurrentInstantiator(Context context, Definition def, ConstructionList args, IndexList indexes) {
             concurrentContext = (Context) context.clone();
             this.def = def;
             this.args = args;
@@ -2015,7 +2015,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 //       } else {
 //           sb.append(reference.toString());
 //       }
-//       if (sb.length() > 0 && trailingDelimiter && !(getParent() instanceof ArgumentList) && !(getParent() instanceof Index) && !(getParent() instanceof Expression)) {
+//       if (sb.length() > 0 && trailingDelimiter && !(getParent() instanceof ConstructionList) && !(getParent() instanceof Index) && !(getParent() instanceof Expression)) {
 //           char endchar = sb.charAt(sb.length() - 1);
 //           if (endchar != '\n' && endchar != '\r') {
 //               sb.append(";\n");
@@ -2047,7 +2047,7 @@ class SubDefinition extends AliasedDefinition {
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
-    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
+    public Object instantiate(ConstructionList args, IndexList indexes, Context context) throws Redirection {
         return context.constructSub(def, def);
     }
 }

@@ -2,7 +2,7 @@
  * 
  * Type.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -92,7 +92,7 @@ public interface Type extends Name {
      *  empty list if this type has no associated arguments.  The context is needed to
      *  select the appropriate concrete type if this is a type list.
      */
-    public ArgumentList getArguments(Context context);
+    public ConstructionList getArguments(Context context);
 
     /** Returns the definition associated with this type. **/
     public Definition getDefinition();

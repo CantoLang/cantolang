@@ -2,7 +2,7 @@
  * 
  * ExternalArrayBuilder.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -92,9 +92,9 @@ abstract class CantoArrayAdapter implements CantoArray {
 class MethodArrayDefinition extends CantoArrayAdapter {
     private Object instance;
     private Method method;
-    private ArgumentList args;
+    private ConstructionList args;
 
-    public MethodArrayDefinition(Object instance, Method method, ArgumentList args) {
+    public MethodArrayDefinition(Object instance, Method method, ConstructionList args) {
         this.instance = instance;
         this.method = method;
         this.args = args;

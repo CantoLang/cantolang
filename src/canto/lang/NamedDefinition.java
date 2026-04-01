@@ -673,7 +673,7 @@ public class NamedDefinition extends Definition {
 //                    NameNode contentsName = instance.getReferenceName();
 //                    if (!node.equals(contentsName)) {
 //                        Definition contentDef = instance.getDefinition(context, this);
-//                        ArgumentList contentArgs = null;
+//                        ConstructionList contentArgs = null;
 //                        ParameterList contentParams = null;
 //        
 //                        if (contentDef == null || contentDef == this) {
@@ -706,7 +706,7 @@ public class NamedDefinition extends Definition {
 //                    if (type != null && type != DefaultType.TYPE && !type.isPrimitive() && !type.equals(getType())) {
 //                        Definition runtimeDef = type.getDefinition();
 //                        if (runtimeDef != null && !runtimeDef.equals(this) && runtimeDef.getName() != Name.THIS && runtimeDef.canHaveChildDefinitions()) {
-//                            ArgumentList typeArgs = type.getArguments(context);
+//                            ConstructionList typeArgs = type.getArguments(context);
 //                            ParameterList typeParams = runtimeDef.getParamsForArgs(typeArgs, context, false);
 //                            try {
 //                                context.push(runtimeDef, typeParams, typeArgs, false);
@@ -758,7 +758,7 @@ public class NamedDefinition extends Definition {
                                 if (def != null) {
                                     break;
                                 }
-                                ArgumentList aliasArgs = aliasInstance.getArguments();
+                                ConstructionList aliasArgs = aliasInstance.getArguments();
                                 ParameterList aliasParams = aliasDef.getParamsForArgs(aliasArgs, context);
                                 context.push(nd, aliasParams, aliasArgs, false);
                                 numAliasPushes++;
@@ -821,7 +821,7 @@ public class NamedDefinition extends Definition {
     }
 
     /** Get a child of this definition as a definition. This only works for named definitions. */
-    public Definition getDefinitionChild(NameNode childName, Context context, ArgumentList args) {
+    public Definition getDefinitionChild(NameNode childName, Context context, ConstructionList args) {
         AliasedDefinition adef = new AliasedDefinition(this, getNameNode());
         Definition def = adef.getDefForContext(context, args);
         return def.getChildDefinition(childName, context);
@@ -855,7 +855,7 @@ public class NamedDefinition extends Definition {
         return superdef;
     }
 
-    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
+    public CollectionDefinition getCollectionDefinition(Context context, ConstructionList args) {
         if (isAlias()) {
             Instantiation aliasInstance = getAliasInstance();
             Definition aliasDef = aliasInstance.getDefinition(context, this, false);
@@ -874,19 +874,19 @@ public class NamedDefinition extends Definition {
 
 
     /** Calls the generic version of createCollectionInstance. */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes) {
         return CollectionBuilder.createCollectionInstanceForDef(this, context, args, indexes, null);
     }
 
     /** Calls createCollectionInstance for the passed object. */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes, Object collectionData) {
         return CollectionBuilder.createCollectionInstanceForDef(this, context, args, indexes, collectionData);
     }
 
     /** Returns an instance of this collection in the specified context with the specified
      *  arguments.
      */
-    public CollectionInstance getCollectionInstance(Context context, ArgumentList args, IndexList indexes) {
+    public CollectionInstance getCollectionInstance(Context context, ConstructionList args, IndexList indexes) {
         CollectionInstance collection = null;
         String name = getName();
         String fullName = getFullNameInContext(context);
@@ -937,7 +937,7 @@ public class NamedDefinition extends Definition {
         
     }
     
-    protected Definition getExplicitDefinition(NameNode node, ArgumentList args, Context context) {
+    protected Definition getExplicitDefinition(NameNode node, ConstructionList args, Context context) {
         Definition def = getExplicitChildDefinition(node);
         if (def != null) {
             if (def.isFormalParam()) {
@@ -984,7 +984,7 @@ public class NamedDefinition extends Definition {
         return getSite().getExternalDefinition(this, node, DefaultType.TYPE, context);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (context == null) {
             throw new Redirection(Redirection.STANDARD_ERROR, "getChild requires a context; none provided.");
         } else if (context.peek() == null) {
@@ -1183,7 +1183,7 @@ public class NamedDefinition extends Definition {
             if (!name.equals(aliasName)) {
                 Instantiation nearAliasInstance = getAliasInstance(); 
                 Instantiation aliasInstance = nearAliasInstance.getUltimateInstance(context);
-                ArgumentList aliasArgs = aliasInstance.getArguments();     // aliasInstance.getUltimateInstance(context).getArguments();
+                ConstructionList aliasArgs = aliasInstance.getArguments();     // aliasInstance.getUltimateInstance(context).getArguments();
                 // avoid recursion
                 boolean nameEqualsArg = false;
                 if (aliasArgs != null && aliasArgs.size() > 0) {
@@ -1214,7 +1214,7 @@ public class NamedDefinition extends Definition {
                                 if (partDef == null) {
                                     break;
                                 }
-                                ArgumentList partArgs = partInstance.getArguments();
+                                ConstructionList partArgs = partInstance.getArguments();
                                 IndexList partIndexes = partInstance.getIndexes();
                                 if (partIndexes == null || partIndexes.size() == 0) {
                                     String nm = partName.getName();
@@ -1266,7 +1266,7 @@ public class NamedDefinition extends Definition {
             } else {
                 suffix = new ComplexName(node, 1, n);
             }
-            ArgumentList prefixArgs = prefix.getArguments();
+            ConstructionList prefixArgs = prefix.getArguments();
             ParameterList prefixParams = null;
             IndexList prefixIndexes = prefix.getIndexes();
             Definition prefixDef = null;
@@ -1297,7 +1297,7 @@ public class NamedDefinition extends Definition {
                 // definition and use that instead.
                 if (prefixDef.isAliasInContext(context)) {
                     NameNode alias = prefixDef.isParamAlias() ? prefixDef.getParamAlias() : prefixDef.getAliasInContext(context);
-                    ArgumentList aliasArgs = alias.getArguments();
+                    ConstructionList aliasArgs = alias.getArguments();
                     IndexList aliasIndexes = alias.getIndexes();
                     Definition aliasDef = null;
                     Scope aliasScope = context.getParameterScope(alias, false);
@@ -1400,7 +1400,7 @@ public class NamedDefinition extends Definition {
 //                    // will happen when/if the program tries to instantiate it.
 //                    
 //                    if (aliasDef != null) {
-//                        ArgumentList aliasArgs = aliasInstance.getArguments();
+//                        ConstructionList aliasArgs = aliasInstance.getArguments();
 //                        ParameterList aliasParams = aliasDef.getParamsForArgs(aliasArgs, context, false);
 //                        context.push(instantiatedDef, aliasParams, aliasArgs, false);
 //                        Object child = aliasDef.getChild(node, args, null, parentArgs, context, generate, trySuper, parentObj, resolver);
@@ -1436,7 +1436,7 @@ public class NamedDefinition extends Definition {
                                 && !context.contains(contentDef)
                                 && !contentDef.getOwner().equalsOrExtends(this)) { // && !contentDef.equals(resolver)) {
 
-                            ArgumentList contentArgs = instance.getArguments(); // contentType.getArguments(context);
+                            ConstructionList contentArgs = instance.getArguments(); // contentType.getArguments(context);
 
                             // make sure the value we are resolving is not one of the arguments
                             boolean nameEqualsArg = false;
@@ -1472,7 +1472,7 @@ public class NamedDefinition extends Definition {
 //                    if (type != null && type != DefaultType.TYPE && !type.isPrimitive() && !type.equals(getType())) {
 //                        Definition runtimeDef = type.getDefinition();
 //                        if (runtimeDef != null && runtimeDef.getName() != Name.THIS && runtimeDef.canHaveChildDefinitions()) {
-//                            ArgumentList typeArgs = type.getArguments(context);
+//                            ConstructionList typeArgs = type.getArguments(context);
 //                            ParameterList typeParams = runtimeDef.getParamsForArgs(typeArgs, context, false);
 //                            try {
 //                                context.push(runtimeDef, typeParams, typeArgs, false);
@@ -1496,7 +1496,7 @@ public class NamedDefinition extends Definition {
                 NamedDefinition nd = getSuperDefinition();
                 if (nd != null && (isCollection() == nd.isCollection())) {
                     Type st = getSuper(context);
-                    ArgumentList superArgs = st.getArguments(context);
+                    ConstructionList superArgs = st.getArguments(context);
                     // if one of the super arguments is the name we're looking for, avoid
                     // calling getParamsForArgs, which could lead to infinite recursion
                     List<ParameterList> paramLists = nd.getParamLists();
@@ -1561,7 +1561,7 @@ public class NamedDefinition extends Definition {
                             nd = precedingDef.getSuperDefinition();
                             if (!nd.equals(this) && nd.hasChildDefinition(node.getName(), false)) {
                                 Type superSt = precedingDef.getSuper();
-                                ArgumentList superSuperArgs = superSt.getArguments(context);
+                                ConstructionList superSuperArgs = superSt.getArguments(context);
                                 ParameterList superSuperParams = nd.getParamsForArgs(superSuperArgs, context);
                                 context.unpop(nd, superSuperParams, superSuperArgs);
                                 try {
@@ -1623,14 +1623,14 @@ public class NamedDefinition extends Definition {
                             CantoNode ref = refInstance.getReference();
                             if (ref instanceof ComplexName) {
                                 NameNode refName = (NameNode) ref;
-                                ArgumentList refArgs = args;
+                                ConstructionList refArgs = args;
                                 n = ref.getNumChildren();
                                 while (n > 1) {
                                     NameNode prefix = (NameNode) refName.getChild(0);
                                     refName = new ComplexName(refName, 1, n);
                                     n--;
                                     
-                                    ArgumentList prefixArgs = prefix.getArguments();
+                                    ConstructionList prefixArgs = prefix.getArguments();
                                     Instantiation prefixInstance = new Instantiation(prefix, def);
                                     Definition prefixDef = (Definition) prefixInstance.getDefinition(context);  // lookup(context, false);
                                     numPushes += context.pushSupersAndAliases(def, refArgs, prefixDef);
@@ -1832,7 +1832,7 @@ public class NamedDefinition extends Definition {
      *  if the definition is cacheable and a value is present in the cache,
      *  else constructs the definition with the passed arguments. 
      */
-    public Object get(Context context, ArgumentList args, IndexList indexes) {
+    public Object get(Context context, ConstructionList args, IndexList indexes) {
         Object data = null;
         if (getDurability() != Durability.DYNAMIC && (args == null || !args.isDynamic()) && indexes == null) {
             data = context.getData(this, getName(), args, null);

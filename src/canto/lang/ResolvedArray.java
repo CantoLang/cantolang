@@ -2,7 +2,7 @@
  * 
  * ResolvedArray.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -17,7 +17,7 @@ public class ResolvedArray extends ResolvedCollection {
     private CollectionDefinition collectionDef = null;
     protected CantoArray array = null;
 
-    public ResolvedArray(Definition def, Context context, ArgumentList args, IndexList indexes) {
+    public ResolvedArray(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(def, context, args, indexes);
         context = getResolutionContext();
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -30,7 +30,7 @@ public class ResolvedArray extends ResolvedCollection {
         }
     }
 
-    public ResolvedArray(Definition def, Context context, ArgumentList args, IndexList indexes, Object arrayData) {
+    public ResolvedArray(Definition def, Context context, ConstructionList args, IndexList indexes, Object arrayData) {
         super(def, context, args, indexes);
         
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -69,7 +69,7 @@ public class ResolvedArray extends ResolvedCollection {
     /** Creates an array based on the definition.  If the contents of the definition are
      *  of an unexpected type, a ClassCastException is thrown.
      */
-    private static CantoArray createArray(Definition def, Context context, ArgumentList args) throws Redirection {
+    private static CantoArray createArray(Definition def, Context context, ConstructionList args) throws Redirection {
         boolean pushed = false;
         Scope scope = context.peek();
         
@@ -96,8 +96,8 @@ public class ResolvedArray extends ResolvedCollection {
                 array = allocate(fixed, 0);
 
             // array defined with an ArrayInitExpression
-            } else if (contents instanceof ArgumentList) {
-                ArgumentList elements = (ArgumentList) contents;
+            } else if (contents instanceof ConstructionList) {
+                ConstructionList elements = (ConstructionList) contents;
                 int size = 0;
                 if (dimType == Dim.TYPE.DEFINITE) {
                     size = majorDim.getSize();

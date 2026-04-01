@@ -2,7 +2,7 @@
  * 
  * ComplexName.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -144,8 +144,8 @@ public class ComplexName extends NameNode implements Name, Initializable {
                 if (((NameNode) children[i]).isDynamic()) {
                     return true;
                 }
-            } else if (children[i] instanceof ArgumentList) {
-                if (((ArgumentList) children[i]).isDynamic()) {
+            } else if (children[i] instanceof ConstructionList) {
+                if (((ConstructionList) children[i]).isDynamic()) {
                     return true;
                 }
             }
@@ -212,15 +212,15 @@ public class ComplexName extends NameNode implements Name, Initializable {
 
 
     /** Returns the list of arguments associated with this name. */
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         // this name has arguments if the last child name has arguments, or
         // is followed by arguments.
         int n = children.length;
         for (int i = n - 1; i >= 0; i--) {
             if (children[i] instanceof NameNode) {
                 return ((NameNode) children[i]).getArguments();
-            } else if (children[i] instanceof ArgumentList) {
-                return (ArgumentList) children[i];
+            } else if (children[i] instanceof ConstructionList) {
+                return (ConstructionList) children[i];
             }
         }
         return null;

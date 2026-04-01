@@ -2,7 +2,7 @@
  * 
  * Parser for Canto
  *
- * Copyright (c) 2023-2025 by cantolang.org
+ * Copyright (c) 2023-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -178,13 +178,18 @@ arrayElementList
     ;
 
 arrayElement
-    : expression | arrayDynamicInitExpression
+    : expression | arrayDynamicInitExpression | collectionInitBlock
     ;
 
 arrayDynamicInitExpression
     : arrayConditional
     | arrayLoop
-    | arrayInitBlock
+    | arrayBlock
+    ;
+
+arrayBlock
+    : CODE_OPEN arrayElementList CODE_CLOSE
+    | LCURLY arrayElementList RCURLY
     ;
     
 tableInitBlock
@@ -198,9 +203,20 @@ tableElementList
 
 tableElement
     : expression COLON (expression | collectionInitBlock)
+    | tableDynamicInitExpression
     ;
 
+tableDynamicInitExpression
+    : tableConditional
+    | tableLoop
+    | tableBlock
+    ;
 
+tableBlock
+    : CODE_OPEN tableElementList CODE_CLOSE
+    | LCURLY tableElementList RCURLY
+    ;
+    
 namedElementDefinition
     : simpleType? identifier params? ASSIGN expression SEMICOLON?
     ;
@@ -231,15 +247,27 @@ elsePart
     ; 
 
 arrayConditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayInitBlock (arrayElseIfPart)* (arrayElsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayBlock (arrayElseIfPart)* (arrayElsePart)?
     ;
 
 arrayElseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayInitBlock
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayBlock
     ;
 
 arrayElsePart
-    : doc = DOC_COMMENT? ELSE arrayInitBlock
+    : doc = DOC_COMMENT? ELSE arrayBlock
+    ; 
+
+tableConditional
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) tableBlock (tableElseIfPart)* (tableElsePart)?
+    ;
+
+tableElseIfPart
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) tableBlock
+    ;
+
+tableElsePart
+    : doc = DOC_COMMENT? ELSE tableBlock
     ; 
 
 loop
@@ -247,7 +275,11 @@ loop
     ;
     
 arrayLoop
-    : FOR iterator ((connector = AND iterator)* | (connector = OR iterator)*) arrayInitBlock
+    : FOR iterator ((connector = AND iterator)* | (connector = OR iterator)*) arrayBlock
+    ;
+    
+tableLoop
+    : FOR iterator ((connector = AND iterator)* | (connector = OR iterator)*) tableBlock
     ;
     
 iterator

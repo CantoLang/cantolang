@@ -10,7 +10,7 @@ package canto.util;
 
 import java.util.Map;
 
-import canto.lang.ArgumentList;
+import canto.lang.ConstructionList;
 import canto.lang.Context;
 import canto.lang.Definition;
 import canto.lang.ResolvedInstance;
@@ -25,9 +25,9 @@ import canto.lang.ResolvedInstance;
 
 public class Holder {
     public Definition nominalDef;
-    public ArgumentList nominalArgs;
+    public ConstructionList nominalArgs;
     public Definition def;
-    public ArgumentList args;
+    public ConstructionList args;
     public Object data;
     public ResolvedInstance resolvedInstance;
     
@@ -41,7 +41,7 @@ public class Holder {
         this(null, null, null, null, null, cache, null);
     }
     
-    public Holder(Definition nominalDef, ArgumentList nominalArgs, Definition def, ArgumentList args, Context context, Object data, ResolvedInstance resolvedInstance) {
+    public Holder(Definition nominalDef, ConstructionList nominalArgs, Definition def, ConstructionList args, Context context, Object data, ResolvedInstance resolvedInstance) {
         this.nominalDef = nominalDef;
         this.nominalArgs = nominalArgs;
         this.def = def;

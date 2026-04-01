@@ -2,7 +2,7 @@
  * 
  * ComplexDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -134,7 +134,7 @@ public class ComplexDefinition extends NamedDefinition {
     }
 
 
-    protected Definition getExplicitDefinition(NameNode node, ArgumentList args, Context context) {
+    protected Definition getExplicitDefinition(NameNode node, ConstructionList args, Context context) {
         Definition def = getExplicitChildDefinition(node);
         if (def != null) {
             if (def.isFormalParam()) {

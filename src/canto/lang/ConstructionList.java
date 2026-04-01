@@ -1,8 +1,8 @@
 /* Canto Compiler and Runtime Engine
  * 
- * ArgumentList.java
+ * ConstructionList.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,9 +11,9 @@ package canto.lang;
 import java.util.*;
 
 /**
- * An ArgumentList is a list of arguments.
+ * An ConstructionList is a list of arguments.
  */
-public class ArgumentList extends ListNode<Construction> {
+public class ConstructionList extends ListNode<Construction> {
 
     /** Object inserted into argument lists on the stack to represent missing arguments. */
     public final static Construction MISSING_ARG = new Construction() {
@@ -57,30 +57,30 @@ public class ArgumentList extends ListNode<Construction> {
     private boolean array = false;
     private boolean table = false;
 
-    public ArgumentList() {
+    public ConstructionList() {
         super();
     }
 
-    public ArgumentList(boolean dynamic) {
+    public ConstructionList(boolean dynamic) {
         super(1);
         this.dynamic = dynamic;
     }
 
-    public ArgumentList(int capacity) {
+    public ConstructionList(int capacity) {
         super(capacity);
     }
 
-    public ArgumentList(ArgumentList args) {
+    public ConstructionList(ConstructionList args) {
         super(Context.newArrayList(args));
         setDynamic(args.isDynamic());
         setConcurrent(args.isConcurrent());
     }
     
-    public ArgumentList(List<Construction> list) {
+    public ConstructionList(List<Construction> list) {
         super(list);
     }
     
-    public ArgumentList(CantoNode[] nodes) {
+    public ConstructionList(CantoNode[] nodes) {
         super();
         init(nodes);
     }    
@@ -174,7 +174,7 @@ public class ArgumentList extends ListNode<Construction> {
 
 
     public Object clone() {
-        return new ArgumentList(this);
+        return new ConstructionList(this);
     }
 
     public String toString(String prefix) {

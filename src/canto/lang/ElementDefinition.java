@@ -2,7 +2,7 @@
  * 
  * ElementDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -153,7 +153,7 @@ public class ElementDefinition extends Definition {
     }
 
 
-    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         Object element = getElement(context);
         if (element instanceof Definition) {
             return ((Definition) element).getChild(name, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
@@ -162,7 +162,7 @@ public class ElementDefinition extends Definition {
             Definition def = instance.getDefinition(context);
             if (def != null) {
                 Context resolutionContext = context;
-                ArgumentList childArgs = args;
+                ConstructionList childArgs = args;
                 if (instance instanceof ResolvedInstance) {
                     resolutionContext = ((ResolvedInstance) instance).getResolutionContext();
                     if (args != null) {
@@ -170,7 +170,7 @@ public class ElementDefinition extends Definition {
                     }
                 }
                 indexes = context.resolveIndexes(indexes);
-                ArgumentList elementArgs = instance.getArguments();
+                ConstructionList elementArgs = instance.getArguments();
                 ParameterList elementParams = def.getParamsForArgs(elementArgs, resolutionContext);
                 resolutionContext.push(def, elementParams, elementArgs, false);
                 try {
@@ -179,7 +179,7 @@ public class ElementDefinition extends Definition {
                         Definition childDef = ((DefinitionInstance) child).def;
                         if (childDef != null && childDef.isAliasInContext(context)) {
                             Instantiation aliasInstance = childDef.getAliasInstanceInContext(context);
-                            ArgumentList aliasArgs = aliasInstance.getArguments();
+                            ConstructionList aliasArgs = aliasInstance.getArguments();
                             ParameterList aliasParams = childDef.getParamsForArgs(aliasArgs, resolutionContext);
                             resolutionContext.push(childDef, aliasParams, aliasArgs, false);
                             try {
@@ -233,9 +233,9 @@ public class ElementDefinition extends Definition {
 
 
     /** Instantiates a child definition in a specified context and returns the result. */
-    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) throws Redirection {
+    public Object getChildData(NameNode childName, Type type, Context context, ConstructionList args) throws Redirection {
         Object data = null;
-//        ArgumentList args = childName.getArguments();
+//        ConstructionList args = childName.getArguments();
 
         Object element = getElement(context);
         if (element instanceof Definition) {
@@ -245,7 +245,7 @@ public class ElementDefinition extends Definition {
             Instantiation elementInstance = (Instantiation) element;
             Definition def = elementInstance.getDefinition(context);
             if (def != null) {
-                ArgumentList elementArgs = elementInstance.getArguments();
+                ConstructionList elementArgs = elementInstance.getArguments();
                 Context resolutionContext = (elementInstance instanceof ResolvedInstance ? ((ResolvedInstance) elementInstance).getResolutionContext() : context);
                 ParameterList elementParams = def.getParamsForArgs(elementArgs, resolutionContext);
                 resolutionContext.push(def, elementParams, elementArgs, false);
@@ -350,7 +350,7 @@ System.err.println("***** ElementDefinition getBaseDefinition null due to null o
         return getBaseDefinition(context);
     }
 
-    protected ParameterList getMatch(ArgumentList args, Context argContext) {
+    protected ParameterList getMatch(ConstructionList args, Context argContext) {
         return getBaseDefinition(argContext).getMatch(args, argContext);
     }
 

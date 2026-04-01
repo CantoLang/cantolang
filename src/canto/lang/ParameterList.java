@@ -2,7 +2,7 @@
  * 
  * ParameterList.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -69,7 +69,7 @@ public class ParameterList extends ListNode<DefParameter> {
      *        (definitions with fewer parameters will have already been eliminated in step
      *        two above).
      */
-    public int getScore(ArgumentList args, Context argContext, Definition resolver) {
+    public int getScore(ConstructionList args, Context argContext, Definition resolver) {
         int numArgs = (args == null ? 0 : args.size());
         int numParams = size();
 
@@ -95,7 +95,7 @@ public class ParameterList extends ListNode<DefParameter> {
 
                 // see if the argument is a value that gets treated specially (e.g. null)
                 Object argObj = args.get(i);
-                if (argObj == ArgumentList.MISSING_ARG) {
+                if (argObj == ConstructionList.MISSING_ARG) {
                     score += Definition.ARG_MISSING;
                     continue;
                 } else if (argObj == null || argObj instanceof NullValue) {

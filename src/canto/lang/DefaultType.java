@@ -2,7 +2,7 @@
  * 
  * DefaultType.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -36,7 +36,7 @@ public class DefaultType extends AbstractType {
         return empty_dims;
     }
 
-    public ArgumentList getArguments(Context context) {
+    public ConstructionList getArguments(Context context) {
         return null;
     }
 

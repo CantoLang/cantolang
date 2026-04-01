@@ -2,7 +2,7 @@
  * 
  * Context.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -164,13 +164,13 @@ public class Context {
     // -------------------------------------------
     // push, pop, peek, etc.
     
-    public void push(Definition def, ParameterList params, ArgumentList args) {
+    public void push(Definition def, ParameterList params, ConstructionList args) {
         DefinitionInstance defInstance = getContextDefInstance(def, args);
         Scope scope = newScope(defInstance.def, defInstance.def, params, defInstance.args);
         push(scope);
     }
 
-    public void push(Definition def, ParameterList params, ArgumentList args, boolean newFrame) {
+    public void push(Definition def, ParameterList params, ConstructionList args, boolean newFrame) {
         DefinitionInstance defInstance = getContextDefInstance(def, args);
         if (defInstance.args != null && (defInstance.args != args || params == null)) {
             args = defInstance.args;
@@ -181,7 +181,7 @@ public class Context {
         push(scope);
     }
 
-    public void push(Definition instantiatedDef, Definition superdef, ParameterList params, ArgumentList args) {
+    public void push(Definition instantiatedDef, Definition superdef, ParameterList params, ConstructionList args) {
         DefinitionInstance defInstance = getContextDefInstance(instantiatedDef, args);
         if (defInstance.args != null && defInstance.args != args) {
             args = defInstance.args;
@@ -378,9 +378,9 @@ public class Context {
             scope.params = new ParameterList(newArrayList(scope.params));
         }
         if (scope.args == null || scope.args.size() == 0) {
-            scope.args = new ArgumentList(newArrayList(1, Construction.class));
+            scope.args = new ConstructionList(newArrayList(1, Construction.class));
         } else if (scope.args.size() == scope.origArgsSize) {
-            scope.args = new ArgumentList(newArrayList(scope.args));
+            scope.args = new ConstructionList(newArrayList(scope.args));
         }
 
         scope.params.add(param);
@@ -415,7 +415,7 @@ public class Context {
     }
 
 
-    public synchronized void unpop(Definition def, ParameterList params, ArgumentList args) {
+    public synchronized void unpop(Definition def, ParameterList params, ConstructionList args) {
         DefinitionInstance defInstance = getContextDefInstance(def, args);
         Definition contextDef = defInstance.def;
         if (defInstance.args != null && defInstance.args != args) {
@@ -527,7 +527,7 @@ public class Context {
      *  definition to push on the context.
      * @throws Redirection 
      */
-    private DefinitionInstance getContextDefInstance(Definition definition, ArgumentList args) {
+    private DefinitionInstance getContextDefInstance(Definition definition, ConstructionList args) {
         DefinitionInstance contextDefInstance = null;
 
         if (definition instanceof AliasedDefinition) {
@@ -629,12 +629,12 @@ public class Context {
 
         boolean checkForChild = (name.numParts() > 1);
         String checkName  = name.getName();
-        ArgumentList args = scope.args;
+        ConstructionList args = scope.args;
         int numArgs = args.size();
         ParameterList params = scope.params;
         int numParams = params.size();
 
-        ArgumentList argArgs = null;
+        ConstructionList argArgs = null;
         ParameterList argParams = null;
 
         Object arg = null;
@@ -670,7 +670,7 @@ public class Context {
         try {
             if (arg instanceof Definition) {
                 argDef = (Definition) arg;
-            } else if (arg != ArgumentList.MISSING_ARG) {
+            } else if (arg != ConstructionList.MISSING_ARG) {
                 argDef = param.getDefinitionFor(this, arg);
                 if (arg instanceof Instantiation && argDef != null) {
                     argInstance = (Instantiation) arg;
@@ -695,7 +695,7 @@ public class Context {
 
             // dereference the argument definition if the reference includes indexes
             NameNode paramNameNode = (checkForChild ? (NameNode) name.getChild(0) : name);
-            ArgumentList paramArgs = paramNameNode.getArguments();
+            ConstructionList paramArgs = paramNameNode.getArguments();
             IndexList paramIndexes = paramNameNode.getIndexes();
             if ((paramArgs != null && paramArgs.size() > 0) || (paramIndexes != null && paramIndexes.size() > 0)) {
                 Context argContext = this;
@@ -716,7 +716,7 @@ public class Context {
                 ComplexName childName = new ComplexName(name, 1, name.getNumChildren());
 
                 // see if the argument definition has a child definition by that name
-                ArgumentList childArgs = childName.getArguments();
+                ConstructionList childArgs = childName.getArguments();
                 Definition childDef = argDef.getChildDefinition(childName, childArgs, childName.getIndexes(), args, this, null);
 
                 // if not, then look for an aliased external definition
@@ -778,7 +778,7 @@ public class Context {
         }
     }
 
-    public Definition initDef(Definition def, ArgumentList args, IndexList indexes) {
+    public Definition initDef(Definition def, ConstructionList args, IndexList indexes) {
         ExternalDefinition externalDef = null;
         
         if (def instanceof ExternalDefinition) {
@@ -813,7 +813,7 @@ public class Context {
         return def;
     }
 
-    public Definition dereference(Definition def, ArgumentList args, IndexList indexes) {
+    public Definition dereference(Definition def, ConstructionList args, IndexList indexes) {
         if (indexes != null) {
             CollectionDefinition collectionDef = null;
 
@@ -823,7 +823,7 @@ public class Context {
             } 
     
             Definition checkDef = def;
-            ArgumentList checkArgs = args;
+            ConstructionList checkArgs = args;
             while (collectionDef == null && checkDef != null) {
                 int numAliasPushes = 0;
                 ParameterList aliasParams = checkDef.getParamsForArgs(checkArgs, this);
@@ -991,7 +991,7 @@ public class Context {
         }
 
         String checkName  = name.getName();
-        ArgumentList args = scope.args;
+        ConstructionList args = scope.args;
         int numArgs = args.size();
         ParameterList params = scope.params;
         int numParams = params.size();
@@ -1010,7 +1010,7 @@ public class Context {
         }
 
         if (arg != null && scope.args.isDynamic()) {
-            ArgumentList argHolder = new ArgumentList(true);
+            ConstructionList argHolder = new ConstructionList(true);
             argHolder.add(arg);
             return argHolder;
         } else {
@@ -1073,7 +1073,7 @@ public class Context {
         }
 
         String checkName  = name.getName();
-        ArgumentList args = scope.args;
+        ConstructionList args = scope.args;
         int numArgs = args.size();
         ParameterList params = scope.params;
         int numParams = params.size();
@@ -1091,7 +1091,7 @@ public class Context {
             }
         }
 
-        if (arg == null || arg == ArgumentList.MISSING_ARG) {
+        if (arg == null || arg == ConstructionList.MISSING_ARG) {
             return null;
 
         } else {
@@ -1129,7 +1129,7 @@ public class Context {
 
     private Object instantiateParameter(DefParameter param, Object arg, NameNode argName) throws Redirection {
         Object data = null;
-        ArgumentList argArgs = argName.getArguments();
+        ConstructionList argArgs = argName.getArguments();
         IndexList indexes = argName.getIndexes();
         int numUnpushes = 0;
         boolean pushedOwner = false;
@@ -1410,17 +1410,17 @@ public class Context {
         return new IndexList(resolvedIndexes);
     }
     
-    private ArgumentList resolveArguments(ArgumentList args) {
+    private ConstructionList resolveArguments(ConstructionList args) {
         if (args == null || args.size() == 0) {
             return args;
         }
-        ArgumentList resolvedArgs = args;
+        ConstructionList resolvedArgs = args;
         for (int i = 0; i < args.size(); i++) {
             Construction arg = args.get(i);
             if (arg instanceof Instantiation && !(arg instanceof ResolvedInstance)) {
                 Instantiation argInstance = (Instantiation) arg;
                 if (resolvedArgs == args) {
-                    resolvedArgs = new ArgumentList(args);
+                    resolvedArgs = new ConstructionList(args);
                 }
                 ResolvedInstance ri = new ResolvedInstance(argInstance, this, false);
                 resolvedArgs.set(i, ri);
@@ -1457,7 +1457,7 @@ public class Context {
 
         Context fallbackContext = this;
         Definition argDef = null;
-        ArgumentList args = null;
+        ConstructionList args = null;
         
         try {
             for (int i = 0; i < numUnpushes; i++) {
@@ -1676,7 +1676,7 @@ public class Context {
     }
 
 
-    private Object instantiateArgChild(ComplexName name, Type paramType, Definition def, ArgumentList args, IndexList indexes) {
+    private Object instantiateArgChild(ComplexName name, Type paramType, Definition def, ConstructionList args, IndexList indexes) {
 
         int n = name.numParts();
 
@@ -1728,7 +1728,7 @@ public class Context {
         }
     }
 
-    public Object getDescendant(Definition parentDef, ArgumentList args, NameNode name, boolean generate, Object parentObj) throws Redirection {
+    public Object getDescendant(Definition parentDef, ConstructionList args, NameNode name, boolean generate, Object parentObj) throws Redirection {
         Definition def = parentDef;
 
         // if this is a reference to a collection element, forward to its definition
@@ -1742,7 +1742,7 @@ public class Context {
 
         Definition childDef = null;
         NameNode childName = name.getFirstPart();
-        ArgumentList childArgs = childName.getArguments();
+        ConstructionList childArgs = childName.getArguments();
         boolean dynamicChild = (childArgs != null && childArgs.isDynamic());
         IndexList childIndexes = childName.getIndexes();
         int numPushes = 0;
@@ -1804,7 +1804,7 @@ public class Context {
                         numPushes += pushParts(aliasInstance);
                     }
             
-                    ArgumentList aliasArgs = aliasInstance.getArguments();
+                    ConstructionList aliasArgs = aliasInstance.getArguments();
                     IndexList aliasIndexes = aliasInstance.getIndexes();
                     Definition aliasDef = aliasInstance.getDefinition(this, def, false);  // def or nextDef?
                     if (aliasDef == null) {
@@ -1965,7 +1965,7 @@ public class Context {
     }
 
     private NameNode resolveArgsIndexes(NameNode name) {
-        ArgumentList args = name.getArguments();
+        ConstructionList args = name.getArguments();
         IndexList indexes = name.getIndexes();
 
         if ((args != null && args.size() > 0) || (indexes != null && indexes.size() < 0)) {
@@ -2005,7 +2005,7 @@ public class Context {
                 Definition partDef = null;
         
                 IndexList partIndexes = partName.getIndexes();
-                ArgumentList partArgs = partName.getArguments();
+                ConstructionList partArgs = partName.getArguments();
                 if (partIndexes == null || partIndexes.size() == 0) {
                     String nm = partName.getName();
                     String fullNm = owner.getFullNameInContext(this) + "." + nm;
@@ -2114,7 +2114,7 @@ public class Context {
         while (superDef != null) {
             Type st = def.getSuper(this);
             //if (superDef != topScope.superdef) {
-                ArgumentList args = st.getArguments(this);
+                ConstructionList args = st.getArguments(this);
                 ParameterList params = superDef.getParamsForArgs(args, this);
                 Scope scope = newScope(contextDef, superDef, params, args);
                 push(scope);
@@ -2154,7 +2154,7 @@ public class Context {
     }
     
     
-    public int pushSupersAndAliases(Definition def, ArgumentList args, Definition childDef) {
+    public int pushSupersAndAliases(Definition def, ConstructionList args, Definition childDef) {
         //validateSize();
         // track back through superdefinitions and aliases to push intermediate definitions
         if (childDef != null  /* && !isSpecialDefinition(childDef) */ ) {
@@ -2174,7 +2174,7 @@ public class Context {
         }
     }
 
-    public int pushSupersAndAliases(ComplexDefinition owner, Definition def, ArgumentList args) {
+    public int pushSupersAndAliases(ComplexDefinition owner, Definition def, ConstructionList args) {
         Definition instantiatedDef = def;
         DefinitionInstance defInstance = getContextDefInstance(instantiatedDef, args);
         def = defInstance.def;
@@ -2201,7 +2201,7 @@ public class Context {
             if (def.isAliasInContext(this)) {
                 Definition aliasDef = def;
                 int numAliasPushes = 0;
-                ArgumentList aliasArgs = args;
+                ConstructionList aliasArgs = args;
                 ParameterList aliasParams = def.getParamsForArgs(args, this);
                 while (aliasDef != null && aliasDef.isAliasInContext(this)) {
                     push(instantiatedDef, aliasParams, aliasArgs, false);
@@ -2241,7 +2241,7 @@ public class Context {
         return numPushes;
     }
 
-    synchronized private Object _instantiateArgChild(NameNode childName, Type paramType, Definition argDef, ArgumentList argArgs, IndexList argIndexes) {
+    synchronized private Object _instantiateArgChild(NameNode childName, Type paramType, Definition argDef, ConstructionList argArgs, IndexList argIndexes) {
         Object data = null;
         int numPushes = 0;
         int numUnpushes = 0;
@@ -2350,12 +2350,12 @@ public class Context {
         return null;
     }
 
-    private Object constructSuper(Definition def, ArgumentList args, Definition instantiatedDef) throws Redirection {
+    private Object constructSuper(Definition def, ConstructionList args, Definition instantiatedDef) throws Redirection {
         return constructSuper(def, args, instantiatedDef, null);
     }
 
     
-    private Object constructSuper(Definition def, ArgumentList args, Definition instantiatedDef, LinkedList<Definition> nextList) throws Redirection {
+    private Object constructSuper(Definition def, ConstructionList args, Definition instantiatedDef, LinkedList<Definition> nextList) throws Redirection {
         Object data = null;
         boolean pushed = false;
         boolean hasMore = (nextList != null && nextList.size() > 0);
@@ -2373,7 +2373,7 @@ public class Context {
 
             if (!hasMore && superDef != null && (superDef.hasSub(this) || numConstructions == 0)) {
                 Type st = def.getSuper(this);
-                ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                 NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                 data = constructSuper(superFlavor, superArgs, instantiatedDef);
 
@@ -2393,7 +2393,7 @@ public class Context {
 
                     } else if (object instanceof SuperStatement) {
                         Type st = def.getSuper(this);
-                        ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                        ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                         NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                         data = constructSuper(superFlavor, superArgs, instantiatedDef);
 
@@ -2449,7 +2449,7 @@ public class Context {
 
                             } else if (chunk instanceof SuperStatement) {
                                 Type st = def.getSuper(this);
-                                ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                                ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                                 NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                                 Object superData = constructSuper(superFlavor, superArgs, instantiatedDef);
                                 if (superData != null) {
@@ -2572,7 +2572,7 @@ public class Context {
                             throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                         } else {
                             Type st = def.getSuper(this);
-                            ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                            ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                             NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                             data = constructSuper(superFlavor, superArgs, instantiatedDef);
                         }
@@ -2655,7 +2655,7 @@ public class Context {
                                     throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                                 } else {
                                     Type st = def.getSuper(this);
-                                    ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                                    ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                                     NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                                     Object superData = constructSuper(superFlavor, superArgs, instantiatedDef);
                                     if (superData != null) {
@@ -2690,7 +2690,7 @@ public class Context {
     }
 
 
-    public Object construct(Definition definition, ArgumentList args) {
+    public Object construct(Definition definition, ConstructionList args) {
         Object data = null;
 
         boolean pushedSuperDef = false;
@@ -2768,7 +2768,7 @@ public class Context {
                 }
                 if ((aliasDef == null || !aliasDef.equalsOrExtends(superDef))
                         && (constructedDef == null || !constructedDef.equalsOrExtends(superDef))) {
-                    ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                    ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                     NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                     if (superFlavor != null && (superFlavor.hasSub(this) || (constructions == null || constructions.size() == 0))) {
                         NamedDefinition ndef = (NamedDefinition) peek().def;
@@ -2900,7 +2900,7 @@ public class Context {
                                     throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                                 } else {
                                     Type st = def.getSuper(this);
-                                    ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                                    ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                                     NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                                     data = constructSuper(superFlavor, superArgs, instantiatedDef, nextList);
                                 }
@@ -2950,7 +2950,7 @@ public class Context {
                                     throw new Redirection(Redirection.STANDARD_ERROR, "Undefined superdefinition reference in " + def.getFullName());
                                 } else {
                                     Type st = def.getSuper(this);
-                                    ArgumentList superArgs = (st != null ? st.getArguments(this) : null);
+                                    ConstructionList superArgs = (st != null ? st.getArguments(this) : null);
                                     NamedDefinition superFlavor = (NamedDefinition) superDef.getDefinitionForArgs(superArgs, this);
                                     Object obj = constructSuper(superFlavor, superArgs, instantiatedDef, nextList);
                                     if (obj != null && !obj.equals(NullValue.NULL_VALUE)) {
@@ -3056,14 +3056,14 @@ public class Context {
     /** Returns any cached data for a definition with the specified name
      *  in the current frame of the current context, or null if there is none.
      */
-    public Object getLocalData(String name, ArgumentList args, IndexList indexes) {
+    public Object getLocalData(String name, ConstructionList args, IndexList indexes) {
         return getData(null, name, args, indexes, true);
     }    
 
     /** Returns any cached data for a definition with the specified name
      *  in the current context, or null if there is none.
      */
-    public Object getData(Definition def, String name, ArgumentList args, IndexList indexes) {
+    public Object getData(Definition def, String name, ConstructionList args, IndexList indexes) {
         Object data = getData(def, name, args, indexes, false);
         LOG.debug(" - - - getting " + name + " from cache: - - - ");
         if (data == null) {
@@ -3074,7 +3074,7 @@ public class Context {
         return data;
     }    
 
-    synchronized private Object getData(Definition def, String name, ArgumentList args, IndexList indexes, boolean local) {
+    synchronized private Object getData(Definition def, String name, ConstructionList args, IndexList indexes, boolean local) {
         if (name == null || name.length() == 0) {
             return null;
         }
@@ -3105,7 +3105,7 @@ public class Context {
      *  equivalent of the specified definition in the current context, or null if there is none.
      */
     
-    public Definition getKeepDefinition(Definition def, ArgumentList args) {
+    public Definition getKeepDefinition(Definition def, ConstructionList args) {
         String name = def.getName();
         String fullName = def.getFullNameInContext(this);
         Definition defInKeep = getDefinition(name, fullName, args);
@@ -3138,7 +3138,7 @@ public class Context {
      *  or null if there is none.
      */
     
-    public Holder getKeepdHolderForDef(Definition def, ArgumentList args, IndexList indexes) {
+    public Holder getKeepdHolderForDef(Definition def, ConstructionList args, IndexList indexes) {
         String name = def.getName();
         String fullName = def.getFullNameInContext(this);
         Holder holder = getDefHolder(name, fullName, args, indexes, false);
@@ -3169,7 +3169,7 @@ public class Context {
     /** Returns the definition associated with cached data for a specified name
      *  in the current context, or null if there is none.
      */
-    public Definition getDefinition(String name, String fullName, ArgumentList args) {
+    public Definition getDefinition(String name, String fullName, ConstructionList args) {
         if (topScope == null || name == null || name.length() == 0) {
             return null;
         }
@@ -3182,7 +3182,7 @@ public class Context {
     /** Returns a Holder containing the definition and arguments associated with cached data for a 
      *  specified name in the current context, or null if there is none.
      */
-    synchronized public Holder getDefHolder(String name, String fullName, ArgumentList args, IndexList indexes, boolean local) {
+    synchronized public Holder getDefHolder(String name, String fullName, ConstructionList args, IndexList indexes, boolean local) {
         if (topScope == null || name == null || name.length() == 0) {
             return null;
         }
@@ -3218,20 +3218,20 @@ public class Context {
         return holder;
     }
 
-    public void putDefinition(Definition def, String name, ArgumentList args, IndexList indexes) {
+    public void putDefinition(Definition def, String name, ConstructionList args, IndexList indexes) {
         putData(def, args, indexes, name, null); //CantoNode.UNINSTANTIATED);
     }
     
     /** Keeps data associated with the specified name
      *  in the current context.
      */
-    public void putData(Definition def, ArgumentList args, IndexList indexes, String name, Object data) {
+    public void putData(Definition def, ConstructionList args, IndexList indexes, String name, Object data) {
         putData(def, args, def, args, indexes, name, data, null);
     }    
     /** Keeps data associated with the specified name
      *  in the current context.
      */
-    public void putData(Definition nominalDef, ArgumentList nominalArgs, Definition def, ArgumentList args, IndexList indexes, String name, Object data, ResolvedInstance resolvedInstance) {
+    public void putData(Definition nominalDef, ConstructionList nominalArgs, Definition def, ConstructionList args, IndexList indexes, String name, Object data, ResolvedInstance resolvedInstance) {
         Holder holder = new Holder(nominalDef, nominalArgs, def, args, this, data, resolvedInstance);
         putData(name, holder, indexes);
     }
@@ -3308,7 +3308,7 @@ public class Context {
         }
     }
 
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         if (topScope != null) {
             return topScope.args;
         }
@@ -3320,12 +3320,12 @@ public class Context {
      *  by those parameters.  If no arguments reference parameters, the original
      *  argument list is returned. 
      */
-    public ArgumentList getUltimateArgs(ArgumentList args) {
+    public ConstructionList getUltimateArgs(ConstructionList args) {
         if (args == null) {
             return null;
         }
 
-        ArgumentList newArgs = null;
+        ConstructionList newArgs = null;
         Iterator<Construction> it = args.iterator();
         int n = 0;
         while (it.hasNext()) {
@@ -3334,13 +3334,13 @@ public class Context {
                 Instantiation argInstance = (Instantiation) arg;
                 if (argInstance.isParameterKind()) {
                     if (newArgs == null) {
-                        newArgs = new ArgumentList(args);
+                        newArgs = new ConstructionList(args);
                     }
                     Construction newArg = null;
                     Object obj = getArgumentForParameter(argInstance.getReferenceName(), argInstance.isParameterChild(), argInstance.isContainerParameter(this));
                     if (obj != null) {
-                        if (obj instanceof ArgumentList) {
-                            ArgumentList argHolder = (ArgumentList) obj;
+                        if (obj instanceof ConstructionList) {
+                            ConstructionList argHolder = (ConstructionList) obj;
                             newArg = argHolder.get(0);
                             if (argHolder.isDynamic()) {
                                 newArgs.setDynamic(true);
@@ -3549,7 +3549,7 @@ public class Context {
         return data;
     }
 
-    public Object constructDef(Definition definition, ArgumentList args, IndexList indexes) throws Redirection {
+    public Object constructDef(Definition definition, ConstructionList args, IndexList indexes) throws Redirection {
         // initialization expressions
         if (definition instanceof DynamicObject) {
             definition = (Definition) ((DynamicObject) definition).initForContext(this, args, indexes);
@@ -3836,7 +3836,7 @@ public class Context {
     }
 
 
-    public Scope newScope(Definition def, Definition superdef, ParameterList params, ArgumentList args) {
+    public Scope newScope(Definition def, Definition superdef, ParameterList params, ConstructionList args) {
 
         Map<String, Object> scopeKeep = null;
         if (def instanceof Site) {

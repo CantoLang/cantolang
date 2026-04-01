@@ -2,7 +2,7 @@
  * 
  * NameNode.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -169,7 +169,7 @@ public class NameNode extends CantoNode implements Name {
     /** Returns the list of arguments associated with this name.  The base
      *  class always returns null.
      */
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         return null;
     }
 

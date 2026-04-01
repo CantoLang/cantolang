@@ -2,7 +2,7 @@
  * 
  * DynamicObject.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -22,7 +22,7 @@ public interface DynamicObject {
      *  definition instance).   If the object is already initialized or needs no
      *  initialization, this method returns the original object.
      */
-    public Object initForContext(Context context, ArgumentList args, IndexList indexes);
+    public Object initForContext(Context context, ConstructionList args, IndexList indexes);
 
     /** Returns true if this object is already initialized for the specified context,
      *  i.e., if <code>initForContext(context, args) == this</code> is true.

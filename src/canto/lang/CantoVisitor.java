@@ -2,7 +2,7 @@
  * 
  * CantoBuilder.java
  *
- * Copyright (c) 2024-2025 by cantolang.org
+ * Copyright (c) 2024-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -221,12 +221,28 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitCollectionElementDefinition(CantoParser.CollectionElementDefinitionContext ctx) {
-        return ctx.accept(this);
+        CantoParser.CollectionDefNameContext nameCtx = ctx.collectionDefName();
+        NameNode name = (NameNode) nameCtx.accept(this);
+        ParseTree typeCtx = nameCtx.collectionType();
+        if (typeCtx == null) {
+            typeCtx = nameCtx.simpleType();
+        }
+        Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+        CantoNode contents = ctx.expression().accept(this);
+        return new CollectionDefinition(superType, name, contents);
     }
 
     @Override
     public CantoNode visitCollectionDefinition(CantoParser.CollectionDefinitionContext ctx) {
-        return ctx.accept(this);
+        CantoParser.CollectionDefNameContext nameCtx = ctx.collectionDefName();
+        NameNode name = (NameNode) nameCtx.accept(this);
+        ParseTree typeCtx = nameCtx.collectionType();
+        if (typeCtx == null) {
+            typeCtx = nameCtx.simpleType();
+        }
+        Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+        CantoNode contents = ctx.collectionInitBlock().accept(this);
+        return new CollectionDefinition(superType, name, contents);
     }
     
     @Override
@@ -447,47 +463,169 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitConditional(CantoParser.ConditionalContext ctx) {
-        int cond = ctx.cond.getType();
-        ValueSource condition = (ValueSource) (cond == CantoParser.IF ? ctx.expression().accept(this) : new WithPredicate(ctx.identifier().accept(this), cond == CantoParser.WITH));
+        ValueSource condition = buildCondition(ctx.cond, ctx.expression(), ctx.identifier());
         Block body = (Block) ctx.block().accept(this);
-        List<CantoParser.ElseIfPartContext> elseIfParts = ctx.elseIfPart();
-        CantoParser.ElsePartContext elsePart = ctx.elsePart();
-        
-        ConditionalStatement conditional = null;
-        Block elseBody = (elsePart == null ? null : (Block) elsePart.accept(this));
-
-        if (elseIfParts != null) {
-            ListIterator<CantoParser.ElseIfPartContext> iter = elseIfParts.listIterator(elseIfParts.size());
-            ConditionalStatement elseIfConditional = null;
-            while (iter.hasPrevious()) {
-                CantoParser.ElseIfPartContext elseIfCtx = iter.previous();
-                int elseIfCond = elseIfCtx.cond.getType();
-                ValueSource elseIfCondition = (ValueSource) (elseIfCond == CantoParser.IF ? elseIfCtx.expression().accept(this) : new WithPredicate(elseIfCtx.identifier().accept(this), elseIfCond == CantoParser.WITH));
-                Block elseIfBody = (Block) elseIfCtx.block().accept(this);
-                if (elseIfConditional == null) {
-                    elseIfConditional = new ConditionalStatement(elseIfCondition, elseIfBody, elseBody);
-                } else {
-                    elseIfConditional = new ConditionalStatement(elseIfCondition, elseIfBody, elseIfConditional);
-                }
-            }
-            conditional = new ConditionalStatement(condition, body, elseIfConditional);
-        } else {
-            conditional = new ConditionalStatement(condition, body, elseBody);
+        Block elseBody = (ctx.elsePart() == null ? null : (Block) ctx.elsePart().accept(this));
+        List<ValueSource> elseIfConditions = new ArrayList<>();
+        List<Block> elseIfBodies = new ArrayList<>();
+        for (CantoParser.ElseIfPartContext eic : ctx.elseIfPart()) {
+            elseIfConditions.add(buildCondition(eic.cond, eic.expression(), eic.identifier()));
+            elseIfBodies.add((Block) eic.block().accept(this));
         }
-        
-        return conditional;
+        return buildConditionalChain(condition, body, elseIfConditions, elseIfBodies, elseBody);
     }
 
     @Override
     public CantoNode visitLoop(CantoParser.LoopContext ctx) {
-        ForStatement loop = new ForStatement();
-        List<CantoParser.IteratorContext> iteratorCtxs = ctx.iterator();
-        for (CantoParser.IteratorContext iteratorCtx : iteratorCtxs) {
-            ForStatement.IteratorValues iteratorValues = (ForStatement.IteratorValues) iteratorCtx.accept(this);
-            loop.addIteratorValues(iteratorValues);
+        return buildForStatement(ctx.iterator(), (Block) ctx.block().accept(this));
+    }
+
+    @Override
+    public CantoNode visitArrayInitBlock(CantoParser.ArrayInitBlockContext ctx) {
+        if (ctx.EMPTY_ARRAY() != null) {
+            return null;
         }
-        loop.setBody((Block) ctx.block().accept(this));
-        return loop;
+        ConstructionList elements = new ConstructionList();
+        CantoParser.ArrayElementListContext listCtx = ctx.arrayElementList();
+        if (listCtx != null) {
+            for (CantoParser.ArrayElementContext elemCtx : listCtx.arrayElement()) {
+                CantoNode element = elemCtx.accept(this);
+                if (element instanceof Construction) {
+                    elements.add((Construction) element);
+                } else if (element != null) {
+                    elements.add(new Instantiation(element));
+                }
+            }
+        }
+        return elements;
+    }
+
+    @Override
+    public CantoNode visitArrayElement(CantoParser.ArrayElementContext ctx) {
+        if (ctx.expression() != null) {
+            return ctx.expression().accept(this);
+        } else if (ctx.arrayDynamicInitExpression() != null) {
+            return ctx.arrayDynamicInitExpression().accept(this);
+        } else {
+            // nested collectionInitBlock — wrap in anonymous CollectionDefinition
+            CantoNode contents = ctx.collectionInitBlock().accept(this);
+            return new CollectionDefinition(null, new NameNode(""), contents);
+        }
+    }
+
+    @Override
+    public CantoNode visitArrayBlock(CantoParser.ArrayBlockContext ctx) {
+        ConstructionList elements = new ConstructionList();
+        CantoParser.ArrayElementListContext listCtx = ctx.arrayElementList();
+        if (listCtx != null) {
+            for (CantoParser.ArrayElementContext elemCtx : listCtx.arrayElement()) {
+                CantoNode element = elemCtx.accept(this);
+                if (element instanceof Construction) {
+                    elements.add((Construction) element);
+                } else if (element != null) {
+                    elements.add(new Instantiation(element));
+                }
+            }
+        }
+        return new ArrayBlock(elements);
+    }
+
+    @Override
+    public CantoNode visitArrayConditional(CantoParser.ArrayConditionalContext ctx) {
+        ValueSource condition = buildCondition(ctx.cond, ctx.expression(), ctx.identifier());
+        ArrayBlock body = (ArrayBlock) ctx.arrayBlock().accept(this);
+        ArrayBlock elseBody = (ctx.arrayElsePart() == null ? null
+                : (ArrayBlock) ctx.arrayElsePart().arrayBlock().accept(this));
+        List<ValueSource> elseIfConditions = new ArrayList<>();
+        List<Block> elseIfBodies = new ArrayList<>();
+        for (CantoParser.ArrayElseIfPartContext eic : ctx.arrayElseIfPart()) {
+            elseIfConditions.add(buildCondition(eic.cond, eic.expression(), eic.identifier()));
+            elseIfBodies.add((Block) eic.arrayBlock().accept(this));
+        }
+        return buildConditionalChain(condition, body, elseIfConditions, elseIfBodies, elseBody);
+    }
+
+    @Override
+    public CantoNode visitArrayLoop(CantoParser.ArrayLoopContext ctx) {
+        return buildForStatement(ctx.iterator(), (ArrayBlock) ctx.arrayBlock().accept(this));
+    }
+
+    @Override
+    public CantoNode visitTableInitBlock(CantoParser.TableInitBlockContext ctx) {
+        if (ctx.EMPTY_TABLE() != null) {
+            return null;
+        }
+        List<Object> elements = new ArrayList<>();
+        CantoParser.TableElementListContext listCtx = ctx.tableElementList();
+        if (listCtx != null) {
+            for (CantoParser.TableElementContext elemCtx : listCtx.tableElement()) {
+                CantoNode element = elemCtx.accept(this);
+                if (element != null) {
+                    elements.add(element);
+                }
+            }
+        }
+        return new ListNode<Object>(elements);
+    }
+
+    @Override
+    public CantoNode visitTableElement(CantoParser.TableElementContext ctx) {
+        if (ctx.tableDynamicInitExpression() != null) {
+            return ctx.tableDynamicInitExpression().accept(this);
+        }
+        CantoNode keyNode = ctx.expression(0).accept(this);
+        CantoNode valueNode = (ctx.collectionInitBlock() != null)
+                ? ctx.collectionInitBlock().accept(this)
+                : ctx.expression(1).accept(this);
+        // For nested collection values, wrap in anonymous CollectionDefinition
+        if (valueNode instanceof ConstructionList || valueNode instanceof ListNode) {
+            valueNode = new CollectionDefinition(null, new NameNode(""), valueNode);
+        }
+        TableElement element = new TableElement();
+        if (keyNode instanceof Value) {
+            element.setKey((Value) keyNode);
+        } else if (keyNode instanceof ValueGenerator) {
+            element.setDynamicKey((ValueGenerator) keyNode);
+        } else {
+            element.setKey(new PrimitiveValue(keyNode.toString()));
+        }
+        element.setElement(valueNode);
+        return element;
+    }
+
+    @Override
+    public CantoNode visitTableBlock(CantoParser.TableBlockContext ctx) {
+        List<Object> elements = new ArrayList<>();
+        CantoParser.TableElementListContext listCtx = ctx.tableElementList();
+        if (listCtx != null) {
+            for (CantoParser.TableElementContext elemCtx : listCtx.tableElement()) {
+                CantoNode element = elemCtx.accept(this);
+                if (element != null) {
+                    elements.add(element);
+                }
+            }
+        }
+        return new TableBlock(elements);
+    }
+
+    @Override
+    public CantoNode visitTableConditional(CantoParser.TableConditionalContext ctx) {
+        ValueSource condition = buildCondition(ctx.cond, ctx.expression(), ctx.identifier());
+        TableBlock body = (TableBlock) ctx.tableBlock().accept(this);
+        TableBlock elseBody = (ctx.tableElsePart() == null ? null
+                : (TableBlock) ctx.tableElsePart().tableBlock().accept(this));
+        List<ValueSource> elseIfConditions = new ArrayList<>();
+        List<Block> elseIfBodies = new ArrayList<>();
+        for (CantoParser.TableElseIfPartContext eic : ctx.tableElseIfPart()) {
+            elseIfConditions.add(buildCondition(eic.cond, eic.expression(), eic.identifier()));
+            elseIfBodies.add((Block) eic.tableBlock().accept(this));
+        }
+        return buildConditionalChain(condition, body, elseIfConditions, elseIfBodies, elseBody);
+    }
+
+    @Override
+    public CantoNode visitTableLoop(CantoParser.TableLoopContext ctx) {
+        return buildForStatement(ctx.iterator(), (TableBlock) ctx.tableBlock().accept(this));
     }
 
     @Override
@@ -700,12 +838,12 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         int numNodes = ctx.getChildCount();
         if (numNodes > 1) {
             String name = ctx.getChild(0).getText();
-            ArgumentList args = null;
+            ConstructionList args = null;
             IndexList indexes = null;
             
             CantoNode node = ctx.getChild(1).accept(this);
-            if (node instanceof ArgumentList) {
-                args = (ArgumentList) node;
+            if (node instanceof ConstructionList) {
+                args = (ConstructionList) node;
                 if (numNodes == 2) {
                     return new NameWithArgs(name, args);
                 } else {
@@ -743,6 +881,48 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             nodeList.add(identifier.accept(this));
         }
         return new ComplexName(nodeList);
+    }
+
+    // --- Shared helpers for conditional and loop building ---
+
+    private ValueSource buildCondition(Token condToken,
+            CantoParser.ExpressionContext exprCtx,
+            CantoParser.IdentifierContext idCtx) {
+        if (condToken.getType() == CantoParser.IF) {
+            return (ValueSource) exprCtx.accept(this);
+        } else {
+            return new WithPredicate(idCtx.accept(this), condToken.getType() == CantoParser.WITH);
+        }
+    }
+
+    private ConditionalStatement buildConditionalChain(
+            ValueSource condition, Block body,
+            List<ValueSource> elseIfConditions, List<Block> elseIfBodies,
+            Block elseBody) {
+        if (!elseIfConditions.isEmpty()) {
+            ListIterator<ValueSource> condIter = elseIfConditions.listIterator(elseIfConditions.size());
+            ListIterator<Block> bodyIter = elseIfBodies.listIterator(elseIfBodies.size());
+            ConditionalStatement chain = null;
+            while (condIter.hasPrevious()) {
+                ValueSource eic = condIter.previous();
+                Block eib = bodyIter.previous();
+                chain = (chain == null)
+                        ? new ConditionalStatement(eic, eib, elseBody)
+                        : new ConditionalStatement(eic, eib, chain);
+            }
+            return new ConditionalStatement(condition, body, chain);
+        } else {
+            return new ConditionalStatement(condition, body, elseBody);
+        }
+    }
+
+    private ForStatement buildForStatement(List<CantoParser.IteratorContext> iteratorCtxs, Block body) {
+        ForStatement loop = new ForStatement();
+        for (CantoParser.IteratorContext iterCtx : iteratorCtxs) {
+            loop.addIteratorValues((ForStatement.IteratorValues) iterCtx.accept(this));
+        }
+        loop.setBody(body);
+        return loop;
     }
 }  
 

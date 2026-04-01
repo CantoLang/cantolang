@@ -2,7 +2,7 @@
  * 
  * IndexedInstanceReference.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -97,7 +97,7 @@ public class IndexedInstanceReference extends NamedDefinition {
         }
     }
 
-    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    protected Object construct(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         Definition def = getElementDefinition(context);
         if (def == null) {
             return null;
@@ -130,7 +130,7 @@ public class IndexedInstanceReference extends NamedDefinition {
         return instance.getDefinition(context).getSuperDefinition(context); //collectionDef.getSuperDefinition(context);
     }
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         if (Name.COUNT.equals(node.getName())) {
             if (generate) {
                 CollectionInstance collection = getCollection();

@@ -2,7 +2,7 @@
  * 
  * ArrayBuilder.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -86,23 +86,23 @@ public class ArrayBuilder extends CollectionBuilder {
         this.arrayDef = arrayDef;
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         // this could be cached
         return new ResolvedArray(arrayDef, context, args, indexes);
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes, Object collectionData) throws Redirection {
         // this could be cached
         return new ResolvedArray(arrayDef, context, args, indexes, collectionData);
     }
 
-    public CantoArray getArray(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public CantoArray getArray(Context context, ConstructionList args, IndexList indexes) throws Redirection {
     	ResolvedArray array = (ResolvedArray) arrayDef.getCollectionInstance(context, args, indexes);
         return array.getArray();
     }
 
     /** Generates a list of constructions for a context. */
-    public List<Construction> generateConstructions(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public List<Construction> generateConstructions(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         CollectionInstance collection = arrayDef.getCollectionInstance(context, args, indexes);
         Iterator<?> it = collection.iterator();
         int n = collection.getSize();
@@ -323,7 +323,7 @@ class ArrayInstance implements CantoArray, DynamicObject {
                 data = null;
             } else {
                 // commented out to make cached_array_test work
-                //ArgumentList args = ultimateInstance.getArguments();
+                //ConstructionList args = ultimateInstance.getArguments();
                 //ParameterList params = def.getParamsForArgs(args, context);
                 //context.push(def, params, args, false);
                 try {
@@ -352,7 +352,7 @@ class ArrayInstance implements CantoArray, DynamicObject {
     }
 
 
-    public Object initForContext(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public Object initForContext(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         if (initContext == null && data == null) {
             return new ArrayInstance(valueGen, context);
         } else {
@@ -503,7 +503,7 @@ class DynamicArray implements CantoArray, DynamicObject {
         generateForContext(context);
     }
 
-    public Object initForContext(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public Object initForContext(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         if (initContext == null) {
             return new DynamicArray(statements, context);
         } else {

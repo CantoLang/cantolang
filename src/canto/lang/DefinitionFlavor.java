@@ -2,7 +2,7 @@
  * 
  * DefinitionFlavor.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -33,7 +33,7 @@ public class DefinitionFlavor extends ComplexDefinition {
     /** Overridden to always return the parameter list associated with this definition flavor,
      *  regardless of the arguments.
      */
-    protected ParameterList getMatch(ArgumentList args, Context argContext) {
+    protected ParameterList getMatch(ConstructionList args, Context argContext) {
         return getParameters();
     }
 
@@ -52,7 +52,7 @@ public class DefinitionFlavor extends ComplexDefinition {
     /** Calls the delegate.  Throws a ClassCastException if the delegate definition
      *  is not a ComplexDefinition.
      */
-    protected Definition getExplicitDefinition(NameNode name, ArgumentList args, Context argContext) {
+    protected Definition getExplicitDefinition(NameNode name, ConstructionList args, Context argContext) {
         return ((ComplexDefinition) def).getExplicitDefinition(name, args, argContext);
     }
 
@@ -171,7 +171,7 @@ public class DefinitionFlavor extends ComplexDefinition {
         return def.getOwner();
     }
 
-    public Object getChild(NameNode name, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         return def.getChild(name, args, indexes, parentArgs, argContext, generate, trySuper, parentObj, resolver);
     }
 
@@ -185,7 +185,7 @@ public class DefinitionFlavor extends ComplexDefinition {
     /** Instantiates a child definition of the specified name in the specified context and
      *   returns the result.
      */
-    public Object getChildData(NameNode childName, Type type, Context context, ArgumentList args) throws Redirection {
+    public Object getChildData(NameNode childName, Type type, Context context, ConstructionList args) throws Redirection {
         return def.getChildData(childName, type, context, args);
     }
 

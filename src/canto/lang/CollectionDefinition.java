@@ -62,7 +62,7 @@ public class CollectionDefinition extends ComplexDefinition {
         return (!isAlias() && !isParamAlias() && !(getContents() instanceof CantoBlock)); 
     }
 
-    public CollectionDefinition getCollectionDefinition(Context context, ArgumentList args) {
+    public CollectionDefinition getCollectionDefinition(Context context, ConstructionList args) {
         return this;
     }
     
@@ -75,7 +75,7 @@ public class CollectionDefinition extends ComplexDefinition {
         return getSize();
     }
 
-    public CantoArray getArray(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public CantoArray getArray(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         if (isArray()) {
             ResolvedArray array = (ResolvedArray) getCollectionInstance(context, args, indexes);
             return array.getArray();
@@ -84,7 +84,7 @@ public class CollectionDefinition extends ComplexDefinition {
         }
     }
 
-    public Map<String, Object> getTable(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public Map<String, Object> getTable(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         if (isTable()) {
             ResolvedTable table = (ResolvedTable) getCollectionInstance(context, args, indexes);
             return table.getTable();
@@ -141,7 +141,7 @@ public class CollectionDefinition extends ComplexDefinition {
 
     public void resolveDims() {}
     
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (Name.COUNT.equals(node.getName())) {
             if (generate) {
                 if (parentObj != null) {
@@ -191,7 +191,7 @@ public class CollectionDefinition extends ComplexDefinition {
     }
 
 
-    public int getSize(Context context, ArgumentList args, IndexList indexes) {
+    public int getSize(Context context, ConstructionList args, IndexList indexes) {
         if (majorDimType == Dim.TYPE.DEFINITE) {
             return ((Dim) dims.get(0)).getSize();
         } else try {
@@ -243,7 +243,7 @@ public class CollectionDefinition extends ComplexDefinition {
     }
     
     protected Type createType() {
-        ArgumentList args = null;
+        ConstructionList args = null;
         NameNode nameNode = this.getNameNode();
         if (nameNode instanceof NameWithArgs) {
             args = ((NameWithArgs) nameNode).getArguments();
@@ -254,14 +254,14 @@ public class CollectionDefinition extends ComplexDefinition {
         return type;
     }
 
-//    public CollectionDefinition initCollection(Context context, ArgumentList args) throws Redirection {
+//    public CollectionDefinition initCollection(Context context, ConstructionList args) throws Redirection {
 //        return (CollectionDefinition) initForContext(context, args);
 //    }
 //
-//    abstract public Object initForContext(Context context, ArgumentList args) throws Redirection;
+//    abstract public Object initForContext(Context context, ConstructionList args) throws Redirection;
 
     /** Construct this definition with the specified arguments in the specified context. */
-    protected Object construct(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    protected Object construct(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         CollectionInstance instance = getCollectionInstance(context, args, null);
 //        return instance;
         
@@ -296,7 +296,7 @@ public class CollectionDefinition extends ComplexDefinition {
     /** Creates a resolved instance of this collection in the specified context with the specified
      *  arguments.
      */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         if (builder == null) {
             Type type = getType();
             Class<?> c = type.getTypeClass(context);
@@ -312,7 +312,7 @@ public class CollectionDefinition extends ComplexDefinition {
     /** Wraps the passed data in a collection instance in the specified context with the specified
      *  arguments.
      */
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes, Object collectionData) throws Redirection {
         if (builder == null) {
             Type type = getType();
             Class<?> c = type.getTypeClass(context);
@@ -330,8 +330,8 @@ public class CollectionDefinition extends ComplexDefinition {
             Object contents = getContents();
 
             // array defined with an ArrayInitExpression
-            if (contents instanceof ArgumentList) {
-                ArgumentList elements = (ArgumentList) contents;
+            if (contents instanceof ConstructionList) {
+                ConstructionList elements = (ConstructionList) contents;
                 if (elements != null) {
                     Iterator<Construction> it = elements.iterator();
                     while (it.hasNext()) {
@@ -339,7 +339,7 @@ public class CollectionDefinition extends ComplexDefinition {
                         try {
                             element = it.next();
                         } catch (Exception e) {
-                            System.err.println("!!! Found non-construction in ArgumentList, ArrayDefinition 123");
+                            System.err.println("!!! Found non-construction in ConstructionList, ArrayDefinition 123");
                             e.printStackTrace();
                             continue;
                         }
@@ -371,7 +371,7 @@ public class CollectionDefinition extends ComplexDefinition {
         }
     }
 
-    public ElementReference getElementReference(Context context, ArgumentList args, IndexList indexes) {
+    public ElementReference getElementReference(Context context, ConstructionList args, IndexList indexes) {
         CollectionInstance instance = getCollectionInstance(context, args, null);
         return new ElementReference(instance, indexes);
     }

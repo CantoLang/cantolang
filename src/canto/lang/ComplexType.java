@@ -2,7 +2,7 @@
  * 
  * ComplexType.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -22,7 +22,7 @@ public class ComplexType extends AbstractType implements Initializable {
     private static final Log LOG = Log.getLogger(ComplexType.class);
 
     private List<Dim> dims = null;
-    private ArgumentList args = null;
+    private ConstructionList args = null;
 
 
     public ComplexType() {
@@ -35,22 +35,22 @@ public class ComplexType extends AbstractType implements Initializable {
         setName(typename);
         setDefinition(def);
         dims = new EmptyList<Dim>();
-        args = new ArgumentList(new EmptyList<Construction>());
+        args = new ConstructionList(new EmptyList<Construction>());
     }
 
-    public ComplexType(Definition def, String typename, List<Dim> dims, ArgumentList args) {
+    public ComplexType(Definition def, String typename, List<Dim> dims, ConstructionList args) {
         super();
         this.dims = (dims == null ? new EmptyList<Dim>() : dims);
-        this.args = (args == null ? new ArgumentList(new EmptyList<Construction>()) : args);
+        this.args = (args == null ? new ConstructionList(new EmptyList<Construction>()) : args);
 
         setChild(0, new NameNode(typename));
         setName(typename);
         setDefinition(def);
     }
 
-    public ComplexType(Type baseType, List<Dim> additionalDims, ArgumentList args) {
+    public ComplexType(Type baseType, List<Dim> additionalDims, ConstructionList args) {
         setName(baseType.getName());
-        this.args = (args == null ? new ArgumentList(new EmptyList<Construction>()) : args);
+        this.args = (args == null ? new ConstructionList(new EmptyList<Construction>()) : args);
         dims = baseType.getDims();
         if (dims == null) {
             dims = additionalDims;
@@ -166,7 +166,7 @@ public class ComplexType extends AbstractType implements Initializable {
         List<Construction> args = Context.newArrayList(1, Construction.class);
         args.add((Construction) val);
         Definition def = getDefinition();
-        Instantiation instance = new Instantiation(def, new ArgumentList(args), null);
+        Instantiation instance = new Instantiation(def, new ConstructionList(args), null);
         instance.setOwner(getOwner());
         Value result = val;
         result = instance.getValue(null);    // new Context(def.getSite()));
@@ -202,20 +202,20 @@ public class ComplexType extends AbstractType implements Initializable {
     }
 
 
-    public ArgumentList getArguments(Context context) {
+    public ConstructionList getArguments(Context context) {
         boolean isAny = false;
         if (args == null) {
             int len = getNumChildren();
             if (len > 0) {
                 CantoNode node = getChild(len - 1);
-                if (node instanceof ArgumentList) {
-                    args = (ArgumentList) node;
+                if (node instanceof ConstructionList) {
+                    args = (ConstructionList) node;
                 } else if (node instanceof Any) {
                     isAny = true;
                 }
             }
             if (args == null) {
-                args = new ArgumentList(new EmptyList<Construction>());
+                args = new ConstructionList(new EmptyList<Construction>());
             }
         }
         if (isAny) {
@@ -236,7 +236,7 @@ public class ComplexType extends AbstractType implements Initializable {
            
             ParameterList params = context.peek().params;
             int len = (params == null ? 0 : params.size());
-            ArgumentList argsFromParams = new ArgumentList(len);
+            ConstructionList argsFromParams = new ConstructionList(len);
             Definition owner = getOwner();
             for (DefParameter param: params) {
                 Instantiation instance = new Instantiation(param.getNameNode(), owner);
@@ -319,7 +319,7 @@ public class ComplexType extends AbstractType implements Initializable {
                     int numPushes = 0;
                     try {
                         Definition aliasDef = def;
-                        ArgumentList aliasArgs = args;
+                        ConstructionList aliasArgs = args;
                         ParameterList aliasParams = def.getParamsForArgs(args, context);
                         while (aliasDef.isAlias()) {
                             context.push(aliasDef, aliasParams, aliasArgs, false);

@@ -11,7 +11,7 @@ package canto.runtime;
 import java.util.List;
 import java.util.Map;
 
-import canto.lang.ArgumentList;
+import canto.lang.ConstructionList;
 import canto.lang.ComplexName;
 import canto.lang.Construction;
 import canto.lang.Context;
@@ -119,7 +119,7 @@ public class CantoContext implements canto_context {
         NameNode nameNode = (name.indexOf('.') > 0 ? new ComplexName(name) : new NameNode(name));
         Instantiation instance;
         if (args != null) {
-            ArgumentList argList = (args instanceof ArgumentList ? (ArgumentList) args : new ArgumentList(args));
+            ConstructionList argList = (args instanceof ConstructionList ? (ConstructionList) args : new ConstructionList(args));
             instance = new Instantiation(nameNode, argList, null, context.peek().def);
         } else {
             instance = new Instantiation(nameNode, context.peek().def);
@@ -146,7 +146,7 @@ public class CantoContext implements canto_context {
 //        return def.get(getContext());
 //    }
 //
-//    public Object get(Definition def, ArgumentList args) throws Redirection {
+//    public Object get(Definition def, ConstructionList args) throws Redirection {
 //        return def.get(getContext(), args);
 //    }
 //

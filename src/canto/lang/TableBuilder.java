@@ -2,7 +2,7 @@
  * 
  * TableBuilder.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -60,11 +60,11 @@ public class TableBuilder extends CollectionBuilder {
         this.tableDef = tableDef;
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes) throws Redirection {
         return new ResolvedTable(tableDef, context, args, indexes);
     }
 
-    public CollectionInstance createCollectionInstance(Context context, ArgumentList args, IndexList indexes, Object collectionData) throws Redirection {
+    public CollectionInstance createCollectionInstance(Context context, ConstructionList args, IndexList indexes, Object collectionData) throws Redirection {
         return new ResolvedTable(tableDef, context, args, indexes, collectionData);
     }
 
@@ -88,7 +88,7 @@ public class TableBuilder extends CollectionBuilder {
                 Construction construction = Construction.getConstructionForElement(element, context);
                 if (def != null && def.hasChildDefinition("decorate_element", true)) {
                     List<Construction> list = new SingleItemList<Construction>(construction);
-                    ArgumentList args = new ArgumentList(list);
+                    ConstructionList args = new ConstructionList(list);
                     Object data = def.getChild(new NameNode("decorate_element"), args, null, null, context, true, true, null, null);
                     sb.append(data.toString());
                
@@ -122,7 +122,7 @@ class TableInstance implements Map<String, Object> {
         //initContext = (Context) context.clone();
         Object obj = null;
         boolean pushed = false;
-        ArgumentList args = null;
+        ConstructionList args = null;
         IndexList indexes = null;
         try {
           /***  if (valueGen instanceof Instantiation) {

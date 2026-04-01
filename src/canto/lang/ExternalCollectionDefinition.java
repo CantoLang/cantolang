@@ -2,7 +2,7 @@
  * 
  * ExternalCollectionDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -22,9 +22,9 @@ public class ExternalCollectionDefinition extends CollectionDefinition {
     private ExternalDefinition externalDef = null;
     private Class<?> c = null;
     private Object object = null;
-    protected ArgumentList args = null;
+    protected ConstructionList args = null;
 
-    public ExternalCollectionDefinition(ExternalDefinition externalDef, Context context, ArgumentList args, Class<?> c) throws Redirection {
+    public ExternalCollectionDefinition(ExternalDefinition externalDef, Context context, ConstructionList args, Class<?> c) throws Redirection {
          super(externalDef.getNameNode());
          
          // this logic could be enhanced to handle multidimensional tables, arrays of tables,
@@ -76,7 +76,7 @@ public class ExternalCollectionDefinition extends CollectionDefinition {
         return true;
     }
 
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         if (externalDef != null) {
             return externalDef.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, null);
         } else {
@@ -120,11 +120,11 @@ public class ExternalCollectionDefinition extends CollectionDefinition {
         this.object = object;
     }
 
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         return args;
     }
 
-    protected void setArguments(ArgumentList args) {
+    protected void setArguments(ConstructionList args) {
         this.args = args;
     }
 

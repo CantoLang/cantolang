@@ -2,7 +2,7 @@
  * 
  * BinaryOperator.java
  *
- * Copyright (c) 2024-2025 by cantolang.org
+ * Copyright (c) 2024-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -126,7 +126,7 @@ abstract public class BinaryOperator extends AbstractOperator {
             
             if (determiningType.getDims().size() > 0) {
                 Type resultBaseType = getResultType(firstType.getBaseType(), secondType.getBaseType(), context);
-                ArgumentList resultArgs;
+                ConstructionList resultArgs;
                 List<Dim> resultDims;
                 if (determiningType == firstType) {
                     resultArgs = firstType.getArguments(context);

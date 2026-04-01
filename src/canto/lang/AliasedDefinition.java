@@ -2,7 +2,7 @@
  * 
  * AliasedDefinition.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -54,12 +54,12 @@ public class AliasedDefinition extends ExternalDefinition {
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
-    public Object instantiate(ArgumentList args, IndexList indexes, Context context) throws Redirection {
+    public Object instantiate(ConstructionList args, IndexList indexes, Context context) throws Redirection {
         return def.instantiate(args, indexes, context);
     }
 
         
-    public Object getChild(NameNode node, ArgumentList args, IndexList indexes, ArgumentList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         
         Object data = def.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
         if (data == null || data == UNDEFINED) {
@@ -68,7 +68,7 @@ public class AliasedDefinition extends ExternalDefinition {
         return data; 
     }
     
-    public Definition getDefForContext(Context context, ArgumentList args) {
+    public Definition getDefForContext(Context context, ConstructionList args) {
 //        if (def instanceof ExternalDefinition) {
 //            return ((ExternalDefinition) def).getDefForContext(context, args);
 //        } else {

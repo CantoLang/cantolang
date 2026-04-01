@@ -2,7 +2,7 @@
  * 
  * ResolvedTable.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -21,7 +21,7 @@ public class ResolvedTable extends ResolvedCollection {
     private CollectionDefinition collectionDef = null;
 
     @SuppressWarnings("unchecked")
-    public ResolvedTable(Definition def, Context context, ArgumentList args, IndexList indexes) throws Redirection {
+    public ResolvedTable(Definition def, Context context, ConstructionList args, IndexList indexes) throws Redirection {
         super(def, context, args, indexes);
 
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -52,7 +52,7 @@ public class ResolvedTable extends ResolvedCollection {
     }
 
     @SuppressWarnings("unchecked")
-    public ResolvedTable(Definition def, Context context, ArgumentList args, IndexList indexes, Object tableData) {
+    public ResolvedTable(Definition def, Context context, ConstructionList args, IndexList indexes, Object tableData) {
         super(def, context, args, indexes);
 
         this.collectionDef = def.getCollectionDefinition(context, args);
@@ -86,7 +86,7 @@ public class ResolvedTable extends ResolvedCollection {
      *  of an unexpected type, a ClassCastException is thrown.
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> createTable(CollectionDefinition def, Context context, ArgumentList args) throws Redirection {
+    private Map<String, Object> createTable(CollectionDefinition def, Context context, ConstructionList args) throws Redirection {
         
         ParameterList params = def.getParamsForArgs(args, context);
         context.push(def, params, args, false);

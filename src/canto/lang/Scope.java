@@ -2,7 +2,7 @@
  * 
  * Scope.java
  *
- * Copyright (c) 2024-2025 by cantolang.org
+ * Copyright (c) 2024-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -34,7 +34,7 @@ public class Scope {
     public Definition def;
     public Definition superdef;
     public ParameterList params;
-    public ArgumentList args;
+    public ConstructionList args;
     public Scope superscope = null;
     public Scope root = null;
     public Scope previous = null;
@@ -55,7 +55,7 @@ public class Scope {
     int origArgsSize;
 
     
-    public Scope(Definition def, ParameterList params, ArgumentList args) {
+    public Scope(Definition def, ParameterList params, ConstructionList args) {
         scopesCreated++;
 
         this.def = def;
@@ -68,19 +68,19 @@ public class Scope {
     }
     
 
-    public Scope(Definition def, Definition superdef, ParameterList params, ArgumentList args, Map<String, Object> cache, Map<String, Object> globalKeep) {
+    public Scope(Definition def, Definition superdef, ParameterList params, ConstructionList args, Map<String, Object> cache, Map<String, Object> globalKeep) {
         scopesCreated++;
 
         this.def = def;
         this.superdef = superdef;
         this.params = (params != null ? (ParameterList) params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
-        this.args = (args != null ? (ArgumentList) args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
+        this.args = (args != null ? (ConstructionList) args.clone() : new ConstructionList(Context.newArrayList(0, Construction.class)));
         origParamsSize = this.params.size();
         origArgsSize = this.args.size();
 
         // fill out the argument list with nulls if it's shorter than the parameter list
         while (origArgsSize < origParamsSize) {
-            this.args.add(ArgumentList.MISSING_ARG);
+            this.args.add(ConstructionList.MISSING_ARG);
             origArgsSize++;
         }
         loopIndexFactory = new StateFactory();
@@ -95,7 +95,7 @@ public class Scope {
 
         def = scope.def;
         params = (scope.params != null ? (ParameterList) scope.params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
-        args = (scope.args != null ? (ArgumentList) scope.args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
+        args = (scope.args != null ? (ConstructionList) scope.args.clone() : new ConstructionList(Context.newArrayList(0, Construction.class)));
 
         // don't clone the previous to avoid duplicating references.  If the
         // clone needs to point somewhere, it has to be done explicitly.
@@ -117,18 +117,18 @@ public class Scope {
         }
     }
 
-    void init(Definition def, Definition superdef, ParameterList params, ArgumentList args, Map<String, Object> cache, Map<String, Object> globalKeep) {
+    void init(Definition def, Definition superdef, ParameterList params, ConstructionList args, Map<String, Object> cache, Map<String, Object> globalKeep) {
         this.def = def;
         this.superdef = superdef;
         this.params = (params != null ? (ParameterList) params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
-        this.args = (args != null ? (ArgumentList) args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
+        this.args = (args != null ? (ConstructionList) args.clone() : new ConstructionList(Context.newArrayList(0, Construction.class)));
 
         origParamsSize = this.params.size();
         origArgsSize = this.args.size();
 
         // fill out the argument list with nulls if it's shorter than the parameter list
         while (origArgsSize < origParamsSize) {
-            this.args.add(ArgumentList.MISSING_ARG);
+            this.args.add(ConstructionList.MISSING_ARG);
             origArgsSize++;
         }
 
@@ -173,7 +173,7 @@ public class Scope {
                 args.addAll(scope.args);
             }
         } else {
-            args = (scope.args != null ? (ArgumentList) scope.args.clone() : new ArgumentList(Context.newArrayList(0, Construction.class)));
+            args = (scope.args != null ? (ConstructionList) scope.args.clone() : new ConstructionList(Context.newArrayList(0, Construction.class)));
         }
 
         contextState = scope.contextState;
@@ -327,7 +327,7 @@ public class Scope {
         int numParams = params.size();
         for (int i = 0; i < numParams; i++) {
             DefParameter param = params.get(i);
-            if (name.equals(param.getName()) && (!checkForArg || args.get(i) != ArgumentList.MISSING_ARG)) {
+            if (name.equals(param.getName()) && (!checkForArg || args.get(i) != ConstructionList.MISSING_ARG)) {
                 isPresent = true;
                 break;
             }
@@ -344,7 +344,7 @@ public class Scope {
         int numParams = params.size();
         for (int i = 0; i < numParams; i++) {
             DefParameter param = params.get(i);
-            if (name.equals(param.getName()) && args.get(i) != ArgumentList.MISSING_ARG) {
+            if (name.equals(param.getName()) && args.get(i) != ConstructionList.MISSING_ARG) {
                 return param;
             }
         }
@@ -352,11 +352,11 @@ public class Scope {
     }
 
 
-    public Object get(String key, String globalKey, ArgumentList args, boolean local) {
+    public Object get(String key, String globalKey, ConstructionList args, boolean local) {
         return get(key, globalKey, args, false, local, true);
     }
 
-    public Definition getDefinition(String key, String globalKey, ArgumentList args) {
+    public Definition getDefinition(String key, String globalKey, ConstructionList args) {
         Holder holder = (Holder) get(key, globalKey, args, true, false, true);
         if (holder != null) {
             return holder.def;
@@ -365,11 +365,11 @@ public class Scope {
         }
     }
 
-    public Holder getDefHolder(String key, String globalKey, ArgumentList args, boolean local) {
+    public Holder getDefHolder(String key, String globalKey, ConstructionList args, boolean local) {
         return (Holder) get(key, globalKey, args, true, local, true);
     }
 
-    private Object get(String key, String globalKey, ArgumentList args, boolean getDefHolder, boolean local, boolean localAllowed) {
+    private Object get(String key, String globalKey, ConstructionList args, boolean getDefHolder, boolean local, boolean localAllowed) {
         Holder holder = null;
         Map<String, Object> c = cache;
         Map<String, Object> globalKeep = getGlobalKeep();
@@ -535,7 +535,7 @@ public class Scope {
                 }
                 if (def != null) {
                     Definition nominalDef = def;
-                    ArgumentList nominalArgs = args;
+                    ConstructionList nominalArgs = args;
                     holder = new Holder(nominalDef, nominalArgs, def, args, null, data, ri);
                 } else if (data != null) {
                     holder = new Holder(null, null, null, null, null, data, null);
@@ -695,7 +695,7 @@ public class Scope {
                             } else {
                                 newDef = p.riAs.getDefinition();
                             }
-                            ArgumentList newArgs = (newDef == holder.def ? holder.args : null);
+                            ConstructionList newArgs = (newDef == holder.def ? holder.args : null);
                             Holder newHolder = new Holder(holder.nominalDef, holder.nominalArgs, newDef, newArgs, null, holder.data, holder.resolvedInstance);
                             keepTable.put(p.getKey(), newHolder);
                             newData = p;
@@ -721,7 +721,7 @@ public class Scope {
                     // cached identities either from the definition's identity flag or because 
                     // the def and nominalDef in the holder are different.
                     Definition newDef = (!holder.def.equals(holder.nominalDef) || holder.def.isIdentity() ? holder.def : p.riAs.getDefinition()); 
-                    ArgumentList newArgs = (newDef == holder.def ? holder.args : null);
+                    ConstructionList newArgs = (newDef == holder.def ? holder.args : null);
                     holder = new Holder(holder.nominalDef, holder.nominalArgs, newDef, newArgs, null, holder.data, holder.resolvedInstance);
                     kept = true;
                 }

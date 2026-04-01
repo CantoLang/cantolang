@@ -2,7 +2,7 @@
  * 
  * ResolvedCollection.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -25,7 +25,7 @@ abstract public class ResolvedCollection extends ResolvedInstance implements Col
         super(instance, context, false);
     }
 
-    public ResolvedCollection(Definition def, Context context, ArgumentList args, IndexList indexes) {
+    public ResolvedCollection(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(def, context, args, indexes);
     }
 
@@ -74,7 +74,7 @@ abstract public class ResolvedCollection extends ResolvedInstance implements Col
         if (elementContext == null) {
             elementContext = (Context) getResolutionContext().clone();
             Definition def = getCollectionDefinition();
-            ArgumentList args = getArguments();
+            ConstructionList args = getArguments();
             ParameterList params = def.getParamsForArgs(args, elementContext);
             elementContext.push(def, params, args, false);
         }

@@ -2,7 +2,7 @@
  * 
  * NameWithArgs.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -21,7 +21,7 @@ public class NameWithArgs extends NameNode {
         super();
     }
 
-    public NameWithArgs(String name, ArgumentList args) {
+    public NameWithArgs(String name, ConstructionList args) {
         super(name);
         children = new CantoNode[1];
         children[0] = args;
@@ -33,7 +33,7 @@ public class NameWithArgs extends NameNode {
         children[0] = indexes;
     }
 
-    public NameWithArgs(String name, ArgumentList args, IndexList indexes) {
+    public NameWithArgs(String name, ConstructionList args, IndexList indexes) {
         super(name);
         children = new CantoNode[2];
         children[0] = args;
@@ -46,11 +46,11 @@ public class NameWithArgs extends NameNode {
     }
 
     /** Returns the list of arguments associated with this name. */
-    public ArgumentList getArguments() {
+    public ConstructionList getArguments() {
         if (children.length > 0) {
             CantoNode node = getChild(0);
-            if (node instanceof ArgumentList) {
-                return (ArgumentList) node;
+            if (node instanceof ConstructionList) {
+                return (ConstructionList) node;
             }
         }
         return null;
@@ -78,7 +78,7 @@ public class NameWithArgs extends NameNode {
 
     public String toString(String prefix) {
         StringBuffer sb = new StringBuffer(super.getName());
-        ArgumentList args = getArguments();
+        ConstructionList args = getArguments();
         if (args != null) {
             sb.append('(');
             if (args.isDynamic()) {

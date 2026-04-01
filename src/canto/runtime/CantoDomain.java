@@ -604,16 +604,16 @@ public class CantoDomain implements canto_domain {
         return context;
     }
 
-    public Instantiation getInstance(String typeName, String name, ArgumentList[] argLists, Context argContext) {
+    public Instantiation getInstance(String typeName, String name, ConstructionList[] argLists, Context argContext) {
         return getInstance(site, typeName, name, argLists, argContext);
     }
 
-    public Instantiation getInstance(Site site, String typeName, String name, ArgumentList[] argLists, Context argContext) {
+    public Instantiation getInstance(Site site, String typeName, String name, ConstructionList[] argLists, Context argContext) {
         Definition def = getDefinition(name);
         if (def != null && (typeName.length() == 0 || name.equals(typeName) || def.isSuperType(typeName))) {
             @SuppressWarnings("rawtypes")
             ListNode[] paramsAndArgs = def.getMatch(argLists, argContext);
-            ArgumentList args = (paramsAndArgs == null ? null : (ArgumentList) paramsAndArgs[1]);
+            ConstructionList args = (paramsAndArgs == null ? null : (ConstructionList) paramsAndArgs[1]);
             return new Instantiation(def, args, null);
         } else {
             return null;
