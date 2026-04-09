@@ -178,7 +178,7 @@ arrayElementList
     ;
 
 arrayElement
-    : expression | arrayDynamicInitExpression | collectionInitBlock
+    : expression | arrayDynamicInitExpression | collectionInitBlock | textBlock | literalBlock
     ;
 
 arrayDynamicInitExpression
@@ -304,13 +304,19 @@ multiParams
     ;
 
 collectionDefName
-    : collectionType identifier params?
+    : collectionType identifier params? collectionSuffix?
+    | typeWithArgs identifier params? collectionSuffix
     | simpleType? identifier params? collectionSuffix
     ;
     
 blockDefName
-    : multiType identifier (params | multiParams)?
-    | simpleType? identifier (params | multiParams)?
+    : multiType identifier (multiParams | params)?
+    | typeWithArgs identifier (multiParams | params)?
+    | simpleType? identifier (multiParams | params)?
+    ;
+
+typeWithArgs
+    : (qualifiedName | identifier) args
     ;
 
 simpleType
@@ -379,7 +385,7 @@ specialName
     | SUB
     | SUPER
     | THIS
-    | TYPE args?
+    | TYPE
     ;
 
 identifier
@@ -387,7 +393,7 @@ identifier
    ;
 
 qualifiedName
-    : identifier (DOT identifier)*
+    : identifier (DOT identifier)+
     ;
 
 any

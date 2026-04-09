@@ -2,7 +2,7 @@
  *
  * CantoBuilderTest.java
  *
- * Copyright (c) 2025 by cantolang.org
+ * Copyright (c) 2025-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -15,8 +15,6 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.assertj.core.api.Assertions;
-import org.assertj.core.api.WithAssertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -95,11 +93,6 @@ public class CantoVisitorTest {
 
     }
 
-    @Test
-    public void testVisitCollectionDefinition() {
-
-    }
-
     @ParameterizedTest
     @DisplayName("Visitor should build various named element definitions")
     @ValueSource(strings = {
@@ -118,6 +111,46 @@ public class CantoVisitorTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Visitor should build various array definitions")
+    @ValueSource(strings = {
+            "u[] = [ 42, 43, 44 ]",
+            "v[] = [ z + 1, x * 2, f(z) ]",
+            "w[] = [ for x in a { x, x + 1 } ] ",
+            "x[] = [ for i from 0 to 2 { pq[(2 * i + 1)] } ]",
+            "y[] = [ if (flag)  { 'A' }, if (flag)  { 'B' } else  { 'C' } ]",
+            "z[] = [ [| x |], [| y |], [``z``] ]",
+            "p q[] = [ p(1), p(2), p(3) ]"
+    })
+    public void testVisitArrayCollectionDefinition(String input) {
+        TypedParser<CantoParser.CollectionDefinitionContext> parser = new TypedParser<CantoParser.CollectionDefinitionContext>("collectionDefinition");
+        CantoParser.CollectionDefinitionContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitCollectionDefinition(ctx);
+            
+        Assertions.assertThat(node).isInstanceOf(CollectionDefinition.class);
+        Assertions.assertThat(((CollectionDefinition) node).isArray()).isTrue();
+    }
+
+    @ParameterizedTest
+    @DisplayName("Visitor should build various table definitions")
+    @ValueSource(strings = {
+            "a{} = { \"n\": n }",
+            "b(n){} = { \"n\": n }",
+            "item d{} = { \"item_hi\": item(\"H\", \"I\") }",
+            "f{} = { \"\": \"D\", \"item_a\": \"A\", \"item_b\": item_b, \"item_c\": \"C\" }",
+            "J{} = { for int i from 0 to 2 {= key_array[i]: value_array[i] =} }",
+            "k{} = { for k in nested_table.keys {= k: nested_table[k] =} }",
+            "l{} = { if (t) {= 'e': 'E' =} }"
+    })
+    public void testVisitTableCollectionDefinition(String input) {
+        TypedParser<CantoParser.CollectionDefinitionContext> parser = new TypedParser<CantoParser.CollectionDefinitionContext>("collectionDefinition");
+        CantoParser.CollectionDefinitionContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitCollectionDefinition(ctx);
+            
+        Assertions.assertThat(node).isInstanceOf(CollectionDefinition.class);
+        Assertions.assertThat(((CollectionDefinition) node).isTable()).isTrue();
+    }
+
+    @ParameterizedTest
     @DisplayName("Visitor should build various block definitions")
     @ValueSource(strings = {
             "d1 { int x = 5  x; }",
@@ -126,7 +159,9 @@ public class CantoVisitorTest {
             "d4(x) { x; }",
             "int d5(int x) { x; }",
             "d6 [`` literal block } { |] \\ [| ``]",
-            "d7(z) [| text {= z; =} block 2 |]"
+            "d7(z) [| text {= z; =} block 2 |]",
+            "d8(x),(y) { with (x) { x; } with (y) { y; } }",
+            "d5(z) d9(int z) { z; }"
     })
     public void testVisitBlockDefinition(String input) {
         TypedParser<CantoParser.BlockDefinitionContext> parser = new TypedParser<CantoParser.BlockDefinitionContext>("blockDefinition");
@@ -221,8 +256,21 @@ public class CantoVisitorTest {
 
     }
 
-    @Test
-    public void testVisitBlockDefName() {
+    @ParameterizedTest
+    @DisplayName("Visitor should handle various definition names")
+    @ValueSource(strings = {
+        "a",
+        "a b",
+        "c d(int e)",
+        "f, g, h i(j, k)",
+        "sub_1,sub_2(i),sub_3(c),sub_4 test_sub(),(int i),(c)"
+    })
+    public void testVisitBlockDefName(String input) {
+        TypedParser<CantoParser.BlockDefNameContext> parser = new TypedParser<CantoParser.BlockDefNameContext>("blockDefName");
+        CantoParser.BlockDefNameContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitBlockDefName(ctx);
+            
+        Assertions.assertThat(node).isInstanceOf(NameNode.class);
 
     }
 

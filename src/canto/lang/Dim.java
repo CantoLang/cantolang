@@ -88,6 +88,7 @@ public class Dim extends CantoNode {
     private TYPE type = TYPE.INDEFINITE;
     private boolean is_table = false;
     private int size = 0;
+    private Construction sizeConstruction = null;
 
     public Dim() {
         super();
@@ -98,6 +99,18 @@ public class Dim extends CantoNode {
         setType(type);
         setSize(size);
     }
+    
+    public Dim(TYPE type, Construction size) {
+        super();
+        setType(type);
+        if (size instanceof Value) {
+            setSize(((Value) size).getInt());
+        } else {
+            sizeConstruction = size;
+        }
+    }
+    
+    
 
     protected void setType(TYPE type) {
         this.type = type;

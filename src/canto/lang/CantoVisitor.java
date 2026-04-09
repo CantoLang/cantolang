@@ -19,6 +19,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
+import canto.parser.CantoParser.DimContext;
 import canto.parser.CantoParser.ExpressionContext;
 import canto.parser.CantoParser.NameComponentContext;
 import canto.runtime.Log;
@@ -236,11 +237,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     public CantoNode visitCollectionDefinition(CantoParser.CollectionDefinitionContext ctx) {
         CantoParser.CollectionDefNameContext nameCtx = ctx.collectionDefName();
         NameNode name = (NameNode) nameCtx.accept(this);
-        ParseTree typeCtx = nameCtx.collectionType();
-        if (typeCtx == null) {
-            typeCtx = nameCtx.simpleType();
-        }
-        Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+        Type superType = name.getType();
         CantoNode contents = ctx.collectionInitBlock().accept(this);
         return new CollectionDefinition(superType, name, contents);
     }
@@ -368,18 +365,71 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitCollectionDefName(CantoParser.CollectionDefNameContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
-        ParseTree paramsCtx = ctx.params();
+        Type type = null;
+        List<Dim> dims = null;
+        List<Dim> typeDims = null;
+        List<ParameterList> paramsList = null;
 
+        CantoParser.SimpleTypeContext simpleTypeCtx = ctx.simpleType();
+        CantoParser.CollectionTypeContext collectionTypeCtx = ctx.collectionType();
+        CantoParser.TypeWithArgsContext typeWithArgsCtx = ctx.typeWithArgs();
+        CantoParser.ParamsContext paramsCtx = ctx.params();
+        CantoParser.CollectionSuffixContext collectionSuffixCtx = ctx.collectionSuffix();
+
+        if (collectionTypeCtx != null) {
+            type = (Type) collectionTypeCtx.simpleType().accept(this);
+            typeDims = new ArrayList<Dim>();
+            for (CantoParser.DimContext dimCtx : collectionTypeCtx.dim()) {
+                Dim dim = dimCtx.arrayDim() != null ? (Dim) dimCtx.arrayDim().accept(this) : (Dim) dimCtx.tableDim().accept(this);
+                typeDims.add(dim);
+            }
+        } else if (typeWithArgsCtx != null) {
+            type = (Type) typeWithArgsCtx.accept(this);
+        } else if (simpleTypeCtx != null) {
+            type = (Type) simpleTypeCtx.accept(this);
+        }
+        
+        if (collectionSuffixCtx != null) {
+            dims = dimsHelper(collectionSuffixCtx.dim());
+        }
+        
         if (paramsCtx != null) {
             ParameterList params = paramsHelper((CantoParser.ParamsContext) paramsCtx);
-            List<ParameterList> paramsList = new ArrayList<>(1);
+            paramsList = new ArrayList<>(1);
             paramsList.add(params);
-            return new NameWithParams(name.getName(), paramsList);
         }
-
+        
+        if (type != null) {
+            if (typeDims != null && typeDims.size() > 0) {
+                type = new ComplexType(type, typeDims, null);
+            }
+            name = new TypedName(type, name.getName(), paramsList, dims);
+        } else if (dims != null && dims.size() > 0) {
+            name = new NameWithDims(name.getName(), paramsList, dims);
+        } else {
+            name = new NameWithParams(name.getName(), paramsList);
+        }
+        
         return name;
     }
 
+    /**
+     * Helper method to construct a list of Dims from a list of DimContexts.
+     */
+    private List<Dim> dimsHelper(List<DimContext> dimCtxs) {
+        List<Dim> dims = new ArrayList<>(dimCtxs.size());
+
+        for (CantoParser.DimContext dimCtx : dimCtxs) {
+            if (dimCtx.arrayDim() != null) {
+                dims.add((Dim) dimCtx.arrayDim().accept(this));
+            } else if (dimCtx.tableDim() != null) {
+                dims.add((Dim) dimCtx.tableDim().accept(this));
+            }
+        }
+
+        return dims;
+    }
+    
     @Override
     public CantoNode visitBlockDefName(CantoParser.BlockDefNameContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
@@ -426,11 +476,22 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitTypeWithArgs(CantoParser.TypeWithArgsContext ctx) {
+        if (ctx.identifier() != null) {
+            return new ComplexType((NameNode) ctx.identifier().accept(this));
+        } else {
+            return new ComplexType((NameNode) ctx.qualifiedName().accept(this));
+        }
+    }
+    
+    
+    
+    @Override
     public CantoNode visitSimpleType(CantoParser.SimpleTypeContext ctx) {
         if (ctx.identifier() != null) {
-            return ctx.identifier().accept(this);
+            return new ComplexType((NameNode) ctx.identifier().accept(this));
         } else if (ctx.qualifiedName() != null) {
-            return ctx.qualifiedName().accept(this);
+            return new ComplexType((NameNode) ctx.qualifiedName().accept(this));
         } else if (ctx.BOOLEAN() != null) {
             return (NameNode) PrimitiveType.BOOLEAN;
         } else if (ctx.INT() != null) {
@@ -481,6 +542,28 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitArrayDim(CantoParser.ArrayDimContext ctx) {
+        Dim dim;
+        
+        if (ctx.expression() != null) {
+            dim = new Dim(Dim.TYPE.DEFINITE, (Construction) ctx.expression().accept(this));
+        } else {
+            dim = new Dim();
+        }
+        
+        return dim;
+    }
+    
+    @Override
+    public CantoNode visitTableDim(CantoParser.TableDimContext ctx) {
+        Dim dim = new Dim();
+        dim.setTable(true);
+        
+        return dim;
+    }
+    
+    
+    @Override
     public CantoNode visitArrayInitBlock(CantoParser.ArrayInitBlockContext ctx) {
         if (ctx.EMPTY_ARRAY() != null) {
             return null;
@@ -506,6 +589,10 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             return ctx.expression().accept(this);
         } else if (ctx.arrayDynamicInitExpression() != null) {
             return ctx.arrayDynamicInitExpression().accept(this);
+        } else if (ctx.textBlock() != null) {
+            return ctx.textBlock().accept(this);
+        } else if (ctx.literalBlock() != null) {
+            return ctx.literalBlock().accept(this);
         } else {
             // nested collectionInitBlock — wrap in anonymous CollectionDefinition
             CantoNode contents = ctx.collectionInitBlock().accept(this);
@@ -824,6 +911,12 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitSpecialName(CantoParser.SpecialNameContext ctx) {
+        String name = ctx.getText();
+        return new NameNode(name);
+    }
+
+    @Override
     public CantoNode visitAny(CantoParser.AnyContext ctx) {
         return new Any();
     }
@@ -835,32 +928,22 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitNameComponent(CantoParser.NameComponentContext ctx) {
-        int numNodes = ctx.getChildCount();
-        if (numNodes > 1) {
-            String name = ctx.getChild(0).getText();
-            ConstructionList args = null;
-            IndexList indexes = null;
-            
-            CantoNode node = ctx.getChild(1).accept(this);
-            if (node instanceof ConstructionList) {
-                args = (ConstructionList) node;
-                if (numNodes == 2) {
-                    return new NameWithArgs(name, args);
-                } else {
-                    indexes = new IndexList(numNodes - 2);
-                }  
-            } else {
-                indexes = new IndexList(numNodes - 1);
-                indexes.add((Index) node);
-            }
-            
-            for (int i = 2; i < numNodes; i++) {
-                indexes.add((Index) ctx.getChild(i).accept(this));
-            }
-            return (args == null ? new NameWithArgs(name, indexes) : new NameWithArgs(name, args, indexes));
-        } else {
-            return ctx.getChild(0).accept(this);
+        String name = ctx.getChild(0).getText();
+        ConstructionList args = null;
+        IndexList indexes = null;
+        
+        if (ctx.args() != null) {
+            args = (ConstructionList) ctx.args().accept(this);
         }
+        
+        List<CantoParser.IndexContext> indexCtxs = ctx.index();
+        if (indexCtxs != null && !indexCtxs.isEmpty()) {
+            indexes = new IndexList(indexCtxs.size());
+            for (CantoParser.IndexContext indexCtx : indexCtxs) {
+                indexes.add((Index) indexCtx.accept(this));
+            }
+        }
+        return new NameWithArgs(name, args, indexes);
     }
 
     @Override

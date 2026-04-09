@@ -42,6 +42,7 @@ public class CollectionDefinition extends ComplexDefinition {
 
     public CollectionDefinition(Type superType, NameNode name, CantoNode contents) {
         super(superType, name, contents);
+        setDims(name.getDims());
     }
 
     public CollectionDefinition(CollectionDefinition def, Context context) {
@@ -208,9 +209,9 @@ public class CollectionDefinition extends ComplexDefinition {
         int numDims = dims.size();
         Dim majorDim = (Dim) dims.get(numDims - 1);
         majorDimType = majorDim.getType();
-        //if (builder == null) {
-        //    setTable(majorDim.isTable());
-        //}
+        if (builder == null) {
+            setTable(majorDim.isTable());
+        }
     }
         
     protected void setTable(boolean isTable) {

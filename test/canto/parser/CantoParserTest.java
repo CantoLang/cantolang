@@ -12,7 +12,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import canto.lang.CollectionDefinition;
+import canto.parser.CantoParser.*;
 
 /**
  * Tests for the ANTLR4 Canto parser.
@@ -216,6 +220,48 @@ class CantoParserTest {
         
         Assertions.assertThat(tree).isNotNull();
         Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
+    @DisplayName("Parser should handle various collection definition names")
+    @CsvSource({
+            "'q[]', false, false, false, true",
+            "'x[5]', false, false, false, true",
+            "'y(z)[]', false, false, true, true",
+            "'int r[10]', false, true, false, true",
+            "'int[] s', true, false, false, false",
+            "'w{}', false, false, false, true",
+            "'t{} u', true, false, false, false",
+            "'v(s, t){}', false, false, true, true"
+    })
+    void testCollectionDefName(String input, boolean hasCollectionType, boolean hasSimpleType, boolean hasParams, boolean hasDims) {
+        ParseTree tree = parseInput(input, "collectionDefName");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+
+        Assertions.assertThat(tree).isInstanceOf(CollectionDefNameContext.class);
+        CollectionDefNameContext ctx = (CollectionDefNameContext) tree;
+        if (hasSimpleType) {
+            Assertions.assertThat(ctx.simpleType()).isNotNull();
+        } else {
+            Assertions.assertThat(ctx.simpleType()).isNull();
+        }
+        if (hasCollectionType) {
+            Assertions.assertThat(ctx.collectionType()).isNotNull();
+        } else {
+            Assertions.assertThat(ctx.collectionType()).isNull();
+        }
+        if (hasParams) {
+            Assertions.assertThat(ctx.params()).isNotNull();
+        } else {
+            Assertions.assertThat(ctx.params()).isNull();
+        }
+        if (hasDims) {
+            Assertions.assertThat(ctx.collectionSuffix()).isNotNull();
+        } else {
+            Assertions.assertThat(ctx.collectionSuffix()).isNull();
+        }
     }
 
     @Test

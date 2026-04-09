@@ -192,9 +192,14 @@ public class NameNode extends CantoNode implements Name {
         return null;
     }
 
+    public Type getType() {
+        return null;
+    }
+
     public String toString(String prefix) {
         return name;
     }
+
     @Override
     public String toString() {
         return name;

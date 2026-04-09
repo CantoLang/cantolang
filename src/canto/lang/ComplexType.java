@@ -29,6 +29,14 @@ public class ComplexType extends AbstractType implements Initializable {
         super();
     }
 
+    public ComplexType(NameNode typename) {
+        super();
+        setChild(0, typename);
+        setName(typename.getName());
+        dims =  typename.getDims();
+        args = typename.getArguments();
+    }
+
     public ComplexType(Definition def, String typename) {
         super();
         setChild(0, new NameNode(typename));
@@ -201,6 +209,11 @@ public class ComplexType extends AbstractType implements Initializable {
         return dims;
     }
 
+    /** Returns the list of arguments associated with this name.
+     */
+    public ConstructionList getArguments() {
+        return args;
+    }
 
     public ConstructionList getArguments(Context context) {
         boolean isAny = false;
