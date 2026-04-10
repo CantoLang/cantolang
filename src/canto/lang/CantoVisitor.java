@@ -162,7 +162,33 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         Definition def = handleDefinition(ctx.doc, ctx.keep, ctx.access, ctx.dur, ctx);
         return def;
     }
-    
+
+    @Override
+    public CantoNode visitTopKeepPrefix(CantoParser.TopKeepPrefixContext ctx) {
+        KeepNode keepNode = new KeepNode();
+        if (ctx.keepAs() != null) {
+            NameNode asName = (NameNode) ctx.keepAs().identifier().accept(this);
+            keepNode.setAsName(asName);
+        }
+        Instantiation tableInstance = (Instantiation) ctx.keepIn().instantiation().accept(this);
+        keepNode.setTableInstance(tableInstance);
+        return keepNode;
+    }
+
+    @Override
+    public CantoNode visitKeepPrefix(CantoParser.KeepPrefixContext ctx) {
+        KeepNode keepNode = new KeepNode();
+        if (ctx.keepAs() != null) {
+            NameNode asName = (NameNode) ctx.keepAs().identifier().accept(this);
+            keepNode.setAsName(asName);
+        }
+        if (ctx.keepIn() != null) {
+            Instantiation tableInstance = (Instantiation) ctx.keepIn().instantiation().accept(this);
+            keepNode.setTableInstance(tableInstance);
+        }
+        return keepNode;
+    }
+
     private Definition.Access getAccess(Token access) {
         if (access == null) {
             return Definition.Access.SITE;
@@ -199,20 +225,19 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         Definition def = null;
         KeepNode keepNode = null;
         int numNodes = ctx.getChildCount();
-        for (int i = 0; i < numNodes; i++) {
-            ParseTree child = ctx.getChild(i);
-            if (child == keep) {
-                keepNode = (KeepNode) keep.accept(this);
-            } else {
-                def = (Definition) child.accept(this);
-            }
-        }
+        ParseTree child = ctx.getChild(numNodes - 1);
+        def = (Definition) child.accept(this);
+
         if (def != null) {
             if (doc != null) {
                 def.setDocComment(doc.getText());
             }
-            if (keepNode != null) {
-                ((NamedDefinition) def).addKeep(keepNode);
+            if (keep != null) {
+                keepNode = (KeepNode) keep.accept(this);
+                if (keepNode != null) {
+                    keepNode.setDefName(def.getNameNode());
+                    ((NamedDefinition) def).addKeep(keepNode);
+                }
             }
             def.setAccess(getAccess(access));
             def.setDurability(getDurability(dur));

@@ -18,6 +18,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import canto.parser.CantoLexer;
@@ -83,9 +84,44 @@ public class CantoVisitorTest {
 
     }
 
-    @Test
-    public void testVisitDefinition() {
+    @ParameterizedTest
+    @DisplayName("Visitor should handle definitions with various combinations of optional doc comment, keep prefix, access, and durability")
+    @CsvSource({
+        // input,                                          hasDoc, access, durability,  hasKeep
+        "'x = 42',                                         false,  SITE,  IN_CONTEXT,  false",
+        "'/* doc comment */ x = 42',                       true,   SITE,  IN_CONTEXT,  false",
+        "'local x = 42',                                   false,  LOCAL, IN_CONTEXT,  false",
+        "'static x = 42',                                  false,  SITE,  STATIC,      false",
+        "'dynamic x = 42',                                 false,  SITE,  DYNAMIC,     false",
+        "'local static x = 42',                            false,  LOCAL, STATIC,      false",
+        "'local dynamic x = 42',                           false,  LOCAL, DYNAMIC,     false",
+        "'keep; x = 42',                                   false,  SITE,  IN_CONTEXT,  true",
+        "'/* doc */ keep; x = 42',                         true,   SITE,  IN_CONTEXT,  true",
+        "'/* doc */ keep; local x = 42',                   true,   LOCAL, IN_CONTEXT,  true",
+        "'/* doc */ keep; local static x = 42',            true,   LOCAL, STATIC,      true",
+        "'/* doc */ keep; local dynamic x = 42',           true,   LOCAL, DYNAMIC,     true"
+    })
+    public void testVisitDefinition(String input, boolean hasDoc, String accessStr, String durStr, boolean hasKeep) {
+        TypedParser<CantoParser.DefinitionContext> parser = new TypedParser<CantoParser.DefinitionContext>("definition");
+        CantoParser.DefinitionContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitDefinition(ctx);
 
+        Assertions.assertThat(node).isInstanceOf(Definition.class);
+        Definition def = (Definition) node;
+
+        if (hasDoc) {
+            Assertions.assertThat(def.getDocComment()).isNotNull();
+        } else {
+            Assertions.assertThat(def.getDocComment()).isNull();
+        }
+
+        Assertions.assertThat(def.getAccess()).isEqualTo(Definition.Access.valueOf(accessStr));
+        Assertions.assertThat(def.getDurability()).isEqualTo(Definition.Durability.valueOf(durStr));
+
+        if (hasKeep) {
+            Assertions.assertThat(def).isInstanceOf(NamedDefinition.class);
+            Assertions.assertThat(((NamedDefinition) def).hasKeeps()).isTrue();
+        }
     }
 
     @Test
