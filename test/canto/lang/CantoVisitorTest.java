@@ -79,9 +79,44 @@ public class CantoVisitorTest {
 
     }
 
-    @Test
-    public void testVisitTopDefinition() {
+    @ParameterizedTest
+    @DisplayName("Visitor should handle top definitions with various combinations of optional doc comment, keep prefix, access, and durability")
+    @CsvSource({
+        // input,                                                  hasDoc, access, durability,  hasKeep
+        "'x = 42',                                                 false,  SITE,   IN_CONTEXT,  false",
+        "'/* doc comment */ x = 42',                               true,   SITE,   IN_CONTEXT,  false",
+        "'public x = 42',                                          false,  PUBLIC, IN_CONTEXT,  false",
+        "'static x = 42',                                          false,  SITE,   STATIC,      false",
+        "'dynamic x = 42',                                         false,  SITE,   DYNAMIC,     false",
+        "'global x = 42',                                          false,  SITE,   GLOBAL,      false",
+        "'cosmic x = 42',                                          false,  SITE,   COSMIC,      false",
+        "'public static x = 42',                                   false,  PUBLIC, STATIC,      false",
+        "'public cosmic x = 42',                                   false,  PUBLIC, COSMIC,      false",
+        "'keep in cache; x = 42',                                  false,  SITE,   IN_CONTEXT,  true",
+        "'/* doc */ keep in cache; x = 42',                        true,   SITE,   IN_CONTEXT,  true",
+        "'/* doc */ keep in cache; public global x = 42',          true,   PUBLIC, GLOBAL,      true"
+    })
+    public void testVisitTopDefinition(String input, boolean hasDoc, String accessStr, String durStr, boolean hasKeep) {
+        TypedParser<CantoParser.TopDefinitionContext> parser = new TypedParser<CantoParser.TopDefinitionContext>("topDefinition");
+        CantoParser.TopDefinitionContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitTopDefinition(ctx);
 
+        Assertions.assertThat(node).isInstanceOf(Definition.class);
+        Definition def = (Definition) node;
+
+        if (hasDoc) {
+            Assertions.assertThat(def.getDocComment()).isNotNull();
+        } else {
+            Assertions.assertThat(def.getDocComment()).isNull();
+        }
+
+        Assertions.assertThat(def.getAccess()).isEqualTo(Definition.Access.valueOf(accessStr));
+        Assertions.assertThat(def.getDurability()).isEqualTo(Definition.Durability.valueOf(durStr));
+
+        if (hasKeep) {
+            Assertions.assertThat(def).isInstanceOf(NamedDefinition.class);
+            Assertions.assertThat(((NamedDefinition) def).hasKeeps()).isTrue();
+        }
     }
 
     @ParameterizedTest
