@@ -54,9 +54,27 @@ public class CantoVisitorTest {
         }
     }
 
-    @Test
-    public void testVisitCompilationUnit() {
+    @ParameterizedTest
+    @DisplayName("Visitor should build a compilation unit with the correct site domain and name for each subrule")
+    @CsvSource({
+        // input,                      expectedDomain, expectedName
+        "'cosmos {}',                   cosmos,         cosmos",
+        "'globe {}',                    globe,          globe",
+        "'site mysite {}',              site,           mysite",
+        "'core {}',                     site,           core",
+        "'mydomain mysite {}',          mydomain,       mysite",
+        "'{}',                          site,           default"
+    })
+    public void testVisitCompilationUnit(String input, String expectedDomain, String expectedName) {
+        TypedParser<CantoParser.CompilationUnitContext> parser = new TypedParser<CantoParser.CompilationUnitContext>("compilationUnit");
+        CantoParser.CompilationUnitContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitCompilationUnit(ctx);
 
+        Assertions.assertThat(node).isInstanceOf(CompilationUnit.class);
+        Site site = ((CompilationUnit) node).getSite();
+        Assertions.assertThat(site).isNotNull();
+        Assertions.assertThat(site.getDomainName()).isEqualTo(expectedDomain);
+        Assertions.assertThat(site.getName()).isEqualTo(expectedName);
     }
 
     @Test
@@ -64,20 +82,45 @@ public class CantoVisitorTest {
 
     }
 
-    @Test
-    public void testVisitSiteBlock() {
+    @ParameterizedTest
+    @DisplayName("Visitor should build site blocks with the correct number of directives and definitions")
+    @CsvSource({
+        // input,                                                                                                       numDirectives, numDefs
+        "'{ x = 1 }',                                                                                                   0, 1",
+        "'{ x = 1  y = 2 }',                                                                                           0, 2",
+        "'{ x = 1  y = 2  z = 3 }',                                                                                    0, 3",
+        "'{ x = 1  y = 2  z = 3  w = 4 }',                                                                            0, 4",
+        "'{ adopt foo.*  x = 1 }',                                                                                     1, 1",
+        "'{ adopt foo.*  x = 1  y = 2 }',                                                                              1, 2",
+        "'{ adopt foo.*  x = 1  y = 2  z = 3 }',                                                                      1, 3",
+        "'{ adopt foo.*  x = 1  y = 2  z = 3  w = 4 }',                                                               1, 4",
+        "'{ adopt foo.*  adopt bar.*  x = 1 }',                                                                        2, 1",
+        "'{ adopt foo.*  adopt bar.*  x = 1  y = 2 }',                                                                2, 2",
+        "'{ adopt foo.*  adopt bar.*  x = 1  y = 2  z = 3 }',                                                         2, 3",
+        "'{ adopt foo.*  adopt bar.*  x = 1  y = 2  z = 3  w = 4 }',                                                  2, 4",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  x = 1 }',                                                      3, 1",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  x = 1  y = 2 }',                                               3, 2",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  x = 1  y = 2  z = 3 }',                                        3, 3",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  x = 1  y = 2  z = 3  w = 4 }',                                3, 4",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  extern qux qux.*  x = 1 }',                                    4, 1",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  extern qux qux.*  x = 1  y = 2 }',                            4, 2",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  extern qux qux.*  x = 1  y = 2  z = 3 }',                     4, 3",
+        "'{ adopt foo.*  adopt bar.*  extern baz baz.*  extern qux qux.*  x = 1  y = 2  z = 3  w = 4 }',              4, 4"
+    })
+    public void testVisitSiteBlock(String input, int numDirectives, int numDefs) {
+        TypedParser<CantoParser.SiteBlockContext> parser = new TypedParser<CantoParser.SiteBlockContext>("siteBlock");
+        CantoParser.SiteBlockContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitSiteBlock(ctx);
 
+        Assertions.assertThat(node).isInstanceOf(SiteBlock.class);
+        Assertions.assertThat(node.getNumChildren()).isEqualTo(numDirectives + numDefs);
     }
 
     @Test
-    public void testVisitExternDirective() {
+    public void testVisitDirective() {
 
     }
 
-    @Test
-    public void testVisitAdoptDirective() {
-
-    }
 
     @ParameterizedTest
     @DisplayName("Visitor should handle top definitions with various combinations of optional doc comment, keep prefix, access, and durability")

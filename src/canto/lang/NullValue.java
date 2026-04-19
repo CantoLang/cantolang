@@ -2,7 +2,7 @@
  * 
  * NullValue.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -12,20 +12,19 @@ import canto.util.EmptyList;
 
 /**
  * Null value.  There are four kinds of null values in Canto: null primitive,
- * which is similar to null in Java, null static block, null dynamic block and
- * null abstract block.  The difference is primarily syntactical (how the value
- * is expressed and where it may appear), but if necessary nulls of various
- * types may be distinguished via the getType method.
+ * which is similar to null in Java, empty block, abstract block, and external
+ * block.  The difference is primarily syntactical (how the value is expressed
+ * and where it may appear), but if necessary nulls of various types may be
+ * distinguished via the getType method.
  */
 
 public class NullValue extends Block implements Value {
 
     public final static int PRIMITIVE = 0;
     public final static int LITERAL_STRING = 1;
-    public final static int STATIC_BLOCK = 2;
-    public final static int DYNAMIC_BLOCK = 3;
-    public final static int ABSTRACT_BLOCK = 4;
-    public final static int EXTERNAL_BLOCK = 5;
+    public final static int EMPTY_BLOCK = 2;
+    public final static int ABSTRACT_BLOCK = 3;
+    public final static int EXTERNAL_BLOCK = 4;
     
     public final static NullValue NULL_VALUE = new NullValue();
 
@@ -50,14 +49,14 @@ public class NullValue extends Block implements Value {
      *  <code>false</code> otherwise.
      */
     public boolean isStatic() {
-        return (type <= STATIC_BLOCK);
+        return (type <= EMPTY_BLOCK);
     }
 
     /** Returns <code>true</code> if this is a null dynamic block,
      *  <code>false</code> otherwise.
      */
     public boolean isDynamic() {
-        return (type >= DYNAMIC_BLOCK);
+        return (type >= ABSTRACT_BLOCK);
     }
 
     /** Returns <code>true</code> if this is an abstract block,
@@ -92,10 +91,8 @@ public class NullValue extends Block implements Value {
         switch (type) {
             case LITERAL_STRING:
                 return String.class;
-            case STATIC_BLOCK:
+            case EMPTY_BLOCK:
                 return StaticBlock.class;
-            case DYNAMIC_BLOCK:
-                return CantoBlock.class;
             default:
                 return null;
         }
@@ -156,10 +153,8 @@ public class NullValue extends Block implements Value {
         switch (type) {
             case LITERAL_STRING:
                 return "\"\"";  // ""
-            case STATIC_BLOCK:
+            case EMPTY_BLOCK:
                 return "[/]";
-            case DYNAMIC_BLOCK:
-                return "[\\]";
             case ABSTRACT_BLOCK:
                 return "[?]";
             case EXTERNAL_BLOCK:

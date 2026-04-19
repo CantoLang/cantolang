@@ -2,7 +2,7 @@
  * 
  * TableElement.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -15,7 +15,7 @@ package canto.lang;
 public class TableElement extends ElementDefinition {
 
     public final static Value DEFAULT_KEY = new NullValue(NullValue.LITERAL_STRING);
-    public final static Value UNINITIALIZED_KEY = new NullValue(NullValue.DYNAMIC_BLOCK);
+    public final static Value UNINITIALIZED_KEY = new NullValue(NullValue.EMPTY_BLOCK);
 
     private Value key = UNINITIALIZED_KEY;
     private ValueGenerator dynamicKey = null;

@@ -63,7 +63,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         int numChildren = ctx.getChildCount();
         for (int i = 0; i < numChildren; i++) {
             Site site = (Site) ctx.getChild(i).accept(this);
-            unit.addSite(site);
+            if (site != null) {
+                unit.addSite(site);
+            }
         }
         return unit;
     }
@@ -136,6 +138,20 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         return block;
     }
     
+    @Override
+    public CantoNode visitDirective(CantoParser.DirectiveContext ctx) {
+        CantoNode node;
+        if (ctx.externDirective() != null) {
+            node = ctx.externDirective().accept(this);
+        } else {
+            node = ctx.adoptDirective().accept(this);
+        }
+        if (ctx.doc != null && node != null) {
+            node.setDocComment(ctx.doc.getText());
+        }
+        return node;
+    }
+
     @Override
     public CantoNode visitExternDirective(CantoParser.ExternDirectiveContext ctx) {
         NameNode binding = (NameNode) ctx.identifier().accept(this);
@@ -272,9 +288,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         NameNode name = (NameNode) ctx.identifier().accept(this);
         ParseTree typeCtx = ctx.simpleType();
         Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
-        ParseTree paramsCtx = ctx.params();
+        CantoParser.ParamsContext paramsCtx = ctx.params();
         if (paramsCtx != null) {
-            ParameterList params = (ParameterList) paramsCtx.accept(this);
+            ParameterList params = paramsHelper(paramsCtx);
             List<ParameterList> paramsList = new ArrayList<ParameterList>(1);
             paramsList.add(params);
             name = new NameWithParams(name.getName(), paramsList);
@@ -388,6 +404,21 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitEmptyBlock(CantoParser.EmptyBlockContext ctx) {
+        return new NullValue(NullValue.EMPTY_BLOCK);
+    }
+
+    @Override
+    public CantoNode visitAbstractBlock(CantoParser.AbstractBlockContext ctx) {
+        return new NullValue(NullValue.ABSTRACT_BLOCK);
+    }
+
+    @Override
+    public CantoNode visitExternalBlock(CantoParser.ExternalBlockContext ctx) {
+        return new NullValue(NullValue.EXTERNAL_BLOCK);
+    }
+
+    @Override
     public CantoNode visitCollectionDefName(CantoParser.CollectionDefNameContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
         Type type = null;
@@ -498,6 +529,15 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         }
 
         return paramList;
+    }
+
+    @Override
+    public CantoNode visitMultiType(CantoParser.MultiTypeContext ctx) {
+        List<Type> types = new ArrayList<>();
+        for (CantoParser.SimpleTypeContext simpleTypeCtx : ctx.simpleType()) {
+            types.add((Type) simpleTypeCtx.accept(this));
+        }
+        return new TypeList(types);
     }
 
     @Override
@@ -949,6 +989,25 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitAnyany(CantoParser.AnyanyContext ctx) {
         return new AnyAny();
+    }
+
+    @Override
+    public CantoNode visitArgs(CantoParser.ArgsContext ctx) {
+        ConstructionList args = new ConstructionList(ctx.expression().size());
+        for (CantoParser.ExpressionContext exprCtx : ctx.expression()) {
+            args.add((Construction) exprCtx.accept(this));
+        }
+        return args;
+    }
+
+    @Override
+    public CantoNode visitIndex(CantoParser.IndexContext ctx) {
+        if (ctx.STREAM_ARRAY() != null) {
+            return new Index();
+        }
+        Index index = new Index();
+        index.setChild(0, ctx.expression().accept(this));
+        return index;
     }
 
     @Override

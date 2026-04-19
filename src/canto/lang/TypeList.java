@@ -62,6 +62,10 @@ public class TypeList extends ListNode<Type> implements Type {
         super();
     }
 
+    public TypeList(List<Type> list) {
+        super(list);
+    }
+
     public TypeList(List<Type> list, Definition owner) {
         super(list);
         setOwner(owner);

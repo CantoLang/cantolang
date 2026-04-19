@@ -2,7 +2,7 @@
  * 
  * Core.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -29,7 +29,7 @@ public class Core extends Site {
     }
     
     public Core(boolean fromScratch) {
-        super("core");
+        super(Name.CORE);
         
         // unless fromScratch is true, only allow one Core to be constructed from
         // scratch; every further Core is a copy of the first 
