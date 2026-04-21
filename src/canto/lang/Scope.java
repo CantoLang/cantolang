@@ -55,19 +55,6 @@ public class Scope {
     int origArgsSize;
 
     
-    public Scope(Definition def, ParameterList params, ConstructionList args) {
-        scopesCreated++;
-
-        this.def = def;
-        this.superdef = null;
-        this.params = params;
-        this.args = args;
-        origParamsSize = params.size();
-        origArgsSize = args.size();
-        loopIndexFactory = new StateFactory();
-    }
-    
-
     public Scope(Definition def, Definition superdef, ParameterList params, ConstructionList args, Map<String, Object> cache, Map<String, Object> globalKeep) {
         scopesCreated++;
 

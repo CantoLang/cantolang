@@ -145,6 +145,7 @@ abstract public class CantoNode {
             children = newChildren;
         }
         children[n] = child;
+        child.setParent(this);
     }
     
     protected void setChildren(List<CantoNode> childList) {
@@ -168,7 +169,7 @@ abstract public class CantoNode {
             }
             for (int i = 0; i < childList.size(); i++) {
                 c[currentLen + i] = childList.get(i);
-                c[currentLen + i].parent = this;
+                c[currentLen + i].setParent(this);
             }
             children = c;
         }
@@ -184,7 +185,7 @@ abstract public class CantoNode {
         CantoNode c[] = new CantoNode[newLen];
         for (int i = start; i < start + newLen; i++) {
             c[i - start] = (CantoNode) node.getChild(i).clone();
-            c[i - start].parent = this;
+            c[i - start].setParent(this);
         }
         children = c;
     }

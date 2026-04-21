@@ -18,7 +18,7 @@ import canto.util.SingleItemList;
 * Base class for types.
 */
 
-public class ComplexType extends AbstractType implements Initializable {
+public class ComplexType extends AbstractType {
     private static final Log LOG = Log.getLogger(ComplexType.class);
 
     private List<Dim> dims = null;
@@ -27,6 +27,7 @@ public class ComplexType extends AbstractType implements Initializable {
 
     public ComplexType() {
         super();
+        setName(DefaultType.TYPE.getName());
     }
 
     public ComplexType(NameNode typename) {
@@ -66,22 +67,6 @@ public class ComplexType extends AbstractType implements Initializable {
         } else if (additionalDims != null) {
             dims = Context.newArrayList(dims);
             dims.addAll(additionalDims);
-        }
-    }
-
-    public void init() {
-        if (children != null && children.length > 0) {
-            String name = ((Name) children[0]).getName();
-            for (int i = 1; i < children.length; i++) {
-                if (!(children[i] instanceof Name)) {
-                    break;
-                }
-                name = name + '.' + ((Name) children[i]).getName();
-            }
-            setName(name);
-
-        } else {
-            setName(DefaultType.TYPE.getName());
         }
     }
 
@@ -292,9 +277,7 @@ public class ComplexType extends AbstractType implements Initializable {
                 return this;
 
             } else {
-                ComplexType baseType = new ComplexType();
-                baseType.copyChildren(this, 0, 1);
-                baseType.init();
+                ComplexType baseType = new ComplexType(new NameNode(getName()));
                 baseType.setOwner(getOwner());
                 baseType.resolve();
                 return baseType;

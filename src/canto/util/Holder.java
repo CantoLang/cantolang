@@ -2,13 +2,11 @@
  * 
  * Holder.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
 package canto.util;
-
-import java.util.Map;
 
 import canto.lang.ConstructionList;
 import canto.lang.Context;
@@ -36,11 +34,6 @@ public class Holder {
     }
     
 
-    /** Convenience constructor for cloning and caching caches **/
-    public Holder(Map<String, Object> cache) {
-        this(null, null, null, null, null, cache, null);
-    }
-    
     public Holder(Definition nominalDef, ConstructionList nominalArgs, Definition def, ConstructionList args, Context context, Object data, ResolvedInstance resolvedInstance) {
         this.nominalDef = nominalDef;
         this.nominalArgs = nominalArgs;

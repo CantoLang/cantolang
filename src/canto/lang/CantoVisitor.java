@@ -125,16 +125,17 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     
     @Override
     public CantoNode visitSiteBlock(CantoParser.SiteBlockContext ctx) {
+        List<CantoNode> directives = new ArrayList<>();
         List<CantoNode> elements = new ArrayList<>();
         for (CantoParser.DirectiveContext directive : ctx.directive()) {
-            elements.add(directive.accept(this));
+            directives.add(directive.accept(this));
         }
         
         for (CantoParser.TopDefinitionContext def : ctx.topDefinition()) {
             elements.add(def.accept(this));
         }
         
-        Block block = new SiteBlock(elements);
+        Block block = new SiteBlock(directives, elements);
         return block;
     }
     

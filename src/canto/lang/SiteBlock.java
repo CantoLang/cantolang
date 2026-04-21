@@ -18,20 +18,16 @@ import canto.util.EmptyList;
  */
 public class SiteBlock extends CodeBlock {
 
-    private List<Directive> directives;
+    private List<CantoNode> directives;
     
     protected SiteBlock() {
         super();
-        this.directives = new EmptyList<Directive>();
+        this.directives = new EmptyList<CantoNode>();
     }
     
-    public SiteBlock(List<CantoNode> children) {
-        super(children);
-        this.directives = ExtractDirectives(children);
+    public SiteBlock(List<CantoNode> directives, List<CantoNode> defs) {
+        super(defs);
+        this.directives = directives;
     }
 
-    private static List<Directive> ExtractDirectives(List<CantoNode> children) {
-        List<Directive> directives = children.stream().filter(c -> c instanceof Directive).map(c -> (Directive) c).collect(Collectors.toList());        
-        return directives;
-    }
 }

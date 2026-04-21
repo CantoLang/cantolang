@@ -21,11 +21,6 @@ public class NameWithDims extends NameWithParams {
         super();
     }
 
-    public NameWithDims(String name, List<Dim> dims) {
-        super(name, null);
-        this.dims = dims;
-    }
-
     public NameWithDims(String name, List<ParameterList> paramLists, List<Dim> dims) {
         super(name, paramLists);
         this.dims = dims;
