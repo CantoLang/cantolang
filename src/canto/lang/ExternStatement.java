@@ -2,7 +2,7 @@
  * 
  * ExternStatement.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -14,11 +14,11 @@ package canto.lang;
  * implemented in).
  */
 
-public class ExternStatement extends ComplexName {
+public class ExternStatement extends Directive {
 
     private NameNode binding;
 
-    public ExternStatement(NameNode binding, NameRange nameRange) {
+    public ExternStatement(NameNode binding, ComplexName nameRange) {
         super(nameRange);
         this.binding = binding;
     }

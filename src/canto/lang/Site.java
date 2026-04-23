@@ -141,6 +141,30 @@ public class Site extends ComplexDefinition {
     }
 
 
+    @Override
+    public void setContents(CantoNode contents) {
+        super.setContents(contents);
+        if (contents instanceof SiteBlock) {
+            SiteBlock siteBlock = (SiteBlock) contents;
+            List<? extends Name> adoptedSiteList = siteBlock.getAdopts();
+            if (adoptedSiteList != null) {
+                if (adopts == null) {
+                    adopts = new ArrayList<Name>(adoptedSiteList);
+                } else {
+                    adopts.addAll(adoptedSiteList);
+                }
+            }
+            List<ExternStatement> externList = siteBlock.getExterns();
+            if (externList != null) {
+                if (externs == null) {
+                    externs = new ArrayList<ExternStatement>(externList);
+                } else {
+                    externs.addAll(externList);
+                }
+            }
+        }
+    }
+
     /** If the contents have not been initialized, getContents returns a block containing
      *  the definitions which are immediate children of the site.
      */

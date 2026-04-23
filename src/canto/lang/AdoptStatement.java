@@ -2,7 +2,7 @@
  * 
  * AdoptStatement.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -15,10 +15,10 @@ package canto.lang;
  * @version $Revision: 1.3 $
  */
 
-public class AdoptStatement extends ComplexName {
+public class AdoptStatement extends Directive {
 
-    public AdoptStatement(NameRange name) {
-        super(name);
+    public AdoptStatement(ComplexName nameRange) {
+        super(nameRange);
     }
 
     public String toString(String prefix) {

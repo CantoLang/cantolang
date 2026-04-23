@@ -20,8 +20,7 @@ public class ComplexName extends NameNode implements Name, Initializable {
     private static final Log LOG = Log.getLogger(ComplexName.class);
 
     public ComplexName(ComplexName name) {
-        super();
-        copyChildren(name);
+        this(name, 0, name.getNumChildren());
     }
 
     public ComplexName(NameNode node, int start, int end) {

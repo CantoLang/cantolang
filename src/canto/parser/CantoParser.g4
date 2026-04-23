@@ -54,6 +54,7 @@ defaultSiteDefinition
 siteBlock
     : LCURLY directive* topDefinition* RCURLY
     | CODE_OPEN directive* topDefinition* CODE_CLOSE
+    | EMPTY_TABLE
     ;
 
 directive
@@ -93,6 +94,7 @@ externalBlock
 codeBlock
     : LCURLY (definition | construction)* RCURLY
     | (CODE_OPEN | CODE_REOPEN) (definition | construction)* CODE_CLOSE
+    | EMPTY_TABLE
     ;
 
 textBlock

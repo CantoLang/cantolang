@@ -70,7 +70,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         return unit;
     }
 
-    private Site handleSiteDefinition(String domain, NameNode name, Block block) {
+    private Site handleSiteDefinition(String domain, NameNode name, SiteBlock block) {
         Site site = new Site(domain, name);
         site.setType(site.createType());
         site.setContents(block);
@@ -80,14 +80,14 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitSiteDefinition(CantoParser.SiteDefinitionContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
-        Block block = (Block) ctx.siteBlock().accept(this);
+        SiteBlock block = (SiteBlock) ctx.siteBlock().accept(this);
         Site site = handleSiteDefinition(Name.SITE, name, block);
         return site;
     }
     
     @Override
     public CantoNode visitCoreDefinition(CantoParser.CoreDefinitionContext ctx) {
-        Block block = (Block) ctx.siteBlock().accept(this);
+        SiteBlock block = (SiteBlock) ctx.siteBlock().accept(this);
         Core core = new Core();
         core.setContents(block);
         return core;
@@ -95,28 +95,28 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     
     @Override
     public CantoNode visitCosmosDefinition(CantoParser.CosmosDefinitionContext ctx) {
-        Block block = (Block) ctx.siteBlock().accept(this);
+        SiteBlock block = (SiteBlock) ctx.siteBlock().accept(this);
         Site site = handleSiteDefinition(Name.COSMOS, new NameNode(Name.COSMOS), block);
         return site;
     }
     
     @Override
     public CantoNode visitGlobeDefinition(CantoParser.GlobeDefinitionContext ctx) {
-        Block block = (Block) ctx.siteBlock().accept(this);
+        SiteBlock block = (SiteBlock) ctx.siteBlock().accept(this);
         Site site = handleSiteDefinition(Name.GLOBE, new NameNode(Name.GLOBE), block);
         return site;
     }
     
     @Override
     public CantoNode visitDefaultSiteDefinition(CantoParser.DefaultSiteDefinitionContext ctx) {
-        Block block = (Block) ctx.siteBlock().accept(this);
+        SiteBlock block = (SiteBlock) ctx.siteBlock().accept(this);
         Site site = handleSiteDefinition(Name.SITE, new NameNode(Name.DEFAULT), block);
         return site;
     }
     
     @Override
     public CantoNode visitDomainDefinition(CantoParser.DomainDefinitionContext ctx) {
-        Block block = (Block) ctx.siteBlock().accept(this);
+        SiteBlock block = (SiteBlock) ctx.siteBlock().accept(this);
         NameNode domain = (NameNode) ctx.identifier(0).accept(this);
         NameNode name = (NameNode) ctx.identifier(1).accept(this);
         Site site = handleSiteDefinition(domain.getName(), name, block);
@@ -125,18 +125,14 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     
     @Override
     public CantoNode visitSiteBlock(CantoParser.SiteBlockContext ctx) {
-        List<CantoNode> directives = new ArrayList<>();
-        List<CantoNode> elements = new ArrayList<>();
-        for (CantoParser.DirectiveContext directive : ctx.directive()) {
-            directives.add(directive.accept(this));
+        ListNode<CantoNode> nodes = new ListNode<CantoNode>();
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            CantoNode node = ctx.getChild(i).accept(this);
+            if (node != null) {
+                nodes.add(node);
+            }
         }
-        
-        for (CantoParser.TopDefinitionContext def : ctx.topDefinition()) {
-            elements.add(def.accept(this));
-        }
-        
-        Block block = new SiteBlock(directives, elements);
-        return block;
+        return new SiteBlock(nodes);
     }
     
     @Override
@@ -156,14 +152,14 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitExternDirective(CantoParser.ExternDirectiveContext ctx) {
         NameNode binding = (NameNode) ctx.identifier().accept(this);
-        NameRange nameRange = (NameRange) ctx.nameRange().accept(this);
+        ComplexName nameRange = (ComplexName) ctx.nameRange().accept(this);
         ExternStatement externDirective = new ExternStatement(binding, nameRange);
         return externDirective;
     }
 
     @Override
     public CantoNode visitAdoptDirective(CantoParser.AdoptDirectiveContext ctx) {
-        NameRange nameRange = (NameRange) ctx.nameRange().accept(this);
+        ComplexName nameRange = (ComplexName) ctx.nameRange().accept(this);
         AdoptStatement adoptDirective = new AdoptStatement(nameRange);
         return adoptDirective;
     }
@@ -1036,7 +1032,10 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         int numNodes = ctx.getChildCount();
         List<CantoNode> nodeList = new ArrayList<CantoNode>(numNodes);
         for (int i = 0; i < numNodes; i++) {
-            nodeList.add(ctx.getChild(i).accept(this));
+            ParseTree child = ctx.getChild(i);
+            if (child instanceof ParserRuleContext) {
+                nodeList.add(ctx.getChild(i).accept(this));
+            }
         }
         return new ComplexName(nodeList);
     }
