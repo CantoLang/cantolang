@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -61,15 +63,45 @@ public class CantoBuilder {
         return exception;
     }
 
-    public Site buildSite() {
-        CompilationUnit unit = null;
+    public Site buildSite(Core core) {
+        Site site = null;
         try {
-            unit = (CompilationUnit) parser.compilationUnit().accept(new CantoVisitor());
+            site = (Site) parser.compilationUnit().accept(new CantoVisitor());
+            if (!site.validate(null, site)) {
+                LOG.error("Site validation failed for site " + site.getName());
+                site = null;
+            }
+            
         } catch (Exception e) {
             exception = e;
             LOG.error("Error building site", e);
         }
-        return unit.getSite();
+        if (site == null) {
+            return null;
+        }
+        
+        if (site instanceof Core) {
+            core.mergeSite(site);
+        } else {
+            String name = site.getName();
+            Map<String, DefinitionTable> defTableTable = core.getDefTableTable();
+            DefinitionTable defTable = (DefinitionTable) defTableTable.get(name);
+            if (defTable != null) {
+                site.setDefinitionTable(defTable);
+            } else {
+                defTable = site.setNewDefinitionTable();
+                defTableTable.put(name, defTable);
+            }
+            Map<String, Map<String, Object>> globalKeepTable = core.getGlobalKeepTable();
+            Map<String, Object> globalKeep = globalKeepTable.get(name);
+            if (globalKeep == null) {
+                globalKeep = new HashMap<String, Object>();
+                globalKeepTable.put(name,  globalKeep);
+            }
+            site.setGlobalKeep(globalKeep);
+            core.addSite(site);
+        }
+        return site;
     }
 
     public ComplexName buildComplexName() {

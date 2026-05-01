@@ -16,7 +16,7 @@ site site_org_test {
            <li><a href="{= bad_test.type; =}">Bad test</a></li>
            </ul>
         |] 
-    =]
+    }
 
     page good_test {
 

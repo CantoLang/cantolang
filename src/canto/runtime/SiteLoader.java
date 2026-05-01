@@ -2,7 +2,7 @@
  * 
  * SiteLoader.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -748,10 +748,9 @@ public class SiteLoader {
         public void run() {
             try {
                 CantoBuilder cantoBuilder = new CantoBuilder(source);
-                Site parseResult = cantoBuilder.buildSite();
-                core.addSite(parseResult);
+                Site site = cantoBuilder.buildSite(core);
                 exception = cantoBuilder.getException();
-                this.parseResult = parseResult;
+                this.parseResult = site;
 
             } catch (RecognitionException re) {
                 LOG.error("...syntax error in " + getSourceName() + ": " + re.getMessage());

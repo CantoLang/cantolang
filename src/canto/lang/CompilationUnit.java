@@ -18,8 +18,9 @@ public class CompilationUnit extends CantoNode {
     
     private Site site = null;
     
-    public CompilationUnit() {
+    public CompilationUnit(Site site) {
         super();
+        this.site = site;
     }
     
     public void addSite(Site site) {

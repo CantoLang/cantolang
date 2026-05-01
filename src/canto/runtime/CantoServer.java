@@ -2,7 +2,7 @@
  * 
  * CantoServer.java
  *
- * Copyright (c) 2024-2025 by cantolang.org
+ * Copyright (c) 2024-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -378,7 +378,12 @@ public class CantoServer implements canto_server {
         }
 
         address = initParams.get("address");
-        port = Integer.parseInt(initParams.get("port"));
+        String portStr = initParams.get("port");
+        if (portStr != null) {
+            port = Integer.parseInt(portStr);
+        } else {
+            port = DEFAULT_PORT;
+        }
         String timeout = initParams.get("timeout");
         if (timeout != null) {
             asyncTimeout = Long.parseLong(timeout);

@@ -42,6 +42,8 @@ public class CantoVisitorTest {
         
         @SuppressWarnings("unchecked")
         private T parseInput(String input) {
+            //System.out.println("parse input: " + input);
+            
             CantoLexer lexer = new CantoLexer(CharStreams.fromString(input));
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             CantoParser parser = new CantoParser(tokens);
@@ -70,8 +72,8 @@ public class CantoVisitorTest {
         CantoParser.CompilationUnitContext ctx = parser.parseInput(input);
         CantoNode node = visitor.visitCompilationUnit(ctx);
 
-        Assertions.assertThat(node).isInstanceOf(CompilationUnit.class);
-        Site site = ((CompilationUnit) node).getSite();
+        Assertions.assertThat(node).isInstanceOf(Site.class);
+        Site site = (Site) node;
         Assertions.assertThat(site).isNotNull();
         Assertions.assertThat(site.getDomainName()).isEqualTo(expectedDomain);
         Assertions.assertThat(site.getName()).isEqualTo(expectedName);
@@ -267,6 +269,7 @@ public class CantoVisitorTest {
     @ParameterizedTest
     @DisplayName("Visitor should build various block definitions")
     @ValueSource(strings = {
+            "d(aa[]) { aa[0]; }",
             "d1 { int x = 5  x; }",
             "d2 {= float x = 5.0  x;  =}",
             "d3 [| text block 1 |]",
@@ -275,7 +278,8 @@ public class CantoVisitorTest {
             "d6 [`` literal block } { |] \\ [| ``]",
             "d7(z) [| text {= z; =} block 2 |]",
             "d8(x),(y) { with (x) { x; } with (y) { y; } }",
-            "d5(z) d9(int z) { z; }"
+            "d5(z) d9(int z) { z; }",
+            "m(args[]) { int num_args = args.count if (num_args) { args; } exit(0); }"
     })
     public void testVisitBlockDefinition(String input) {
         TypedParser<CantoParser.BlockDefinitionContext> parser = new TypedParser<CantoParser.BlockDefinitionContext>("blockDefinition");
@@ -289,6 +293,7 @@ public class CantoVisitorTest {
     @DisplayName("Visitor should build various conditionals")
     @ValueSource(strings = {
             "if (x) { x; }",
+            "with (y) { y; }",
             "if x { x; } else { z; }",
             "if y > 0 { y; } else [| zero |]",
             "if (y == 'hello') [| x |] else if (y == 'goodbye') [| bye |]",
@@ -377,7 +382,11 @@ public class CantoVisitorTest {
         "a b",
         "c d(int e)",
         "f, g, h i(j, k)",
-        "sub_1,sub_2(i),sub_3(c),sub_4 test_sub(),(int i),(c)"
+        "f(j) i(j, k)",
+        "sub_1,sub_2,sub_3 test_sub(),(int i)",
+        "sub_1,sub_2(i) test_sub()",
+        "sub_1,sub_2(i),sub_3(c),sub_4 test_sub(),(int i),(c)",
+        "m(a[])"
     })
     public void testVisitBlockDefName(String input) {
         TypedParser<CantoParser.BlockDefNameContext> parser = new TypedParser<CantoParser.BlockDefNameContext>("blockDefName");

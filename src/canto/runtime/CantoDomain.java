@@ -2,13 +2,12 @@
  * 
  * CantoDomain.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
 package canto.runtime;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import canto.lang.*;
-import canto.parser.CantoParser;
 
 /**
  * This interface extends the canto_domain interface, which corresponds to the canto_domain

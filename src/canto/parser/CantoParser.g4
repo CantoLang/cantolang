@@ -26,13 +26,14 @@ globeDefinition
 
 compilationUnit
     :
+    ( doc = DOC_COMMENT?
     ( cosmosDefinition
     | globeDefinition
     | siteDefinition
     | coreDefinition
     | domainDefinition
     | defaultSiteDefinition
-    )* EOF
+    ))* EOF
     ;
 
 siteDefinition
@@ -237,11 +238,11 @@ construction
     ;
     
 conditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) block (elseIfPart)* (elsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) block (elseIfPart)* (elsePart)?
     ;
 
 elseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) block
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) block
     ;
 
 elsePart
@@ -249,11 +250,11 @@ elsePart
     ; 
 
 arrayConditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayBlock (arrayElseIfPart)* (arrayElsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) arrayBlock (arrayElseIfPart)* (arrayElsePart)?
     ;
 
 arrayElseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) arrayBlock
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) arrayBlock
     ;
 
 arrayElsePart
@@ -261,11 +262,11 @@ arrayElsePart
     ; 
 
 tableConditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) tableBlock (tableElseIfPart)* (tableElsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) tableBlock (tableElseIfPart)* (tableElsePart)?
     ;
 
 tableElseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) identifier)) tableBlock
+    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) tableBlock
     ;
 
 tableElsePart
@@ -336,7 +337,7 @@ simpleType
     ;
 
 multiType
-    : simpleType (COMMA simpleType)+
+    : (typeWithArgs | simpleType) (COMMA (typeWithArgs | simpleType))+
     ;
 
 collectionType
@@ -344,7 +345,7 @@ collectionType
     ;
 
 param
-    : simpleType? identifier 
+    : (collectionType | simpleType)? identifier dim*
     ;
 
 params
@@ -417,6 +418,10 @@ args
     : LPAREN (expression (COMMA expression)*)? RPAREN
     ;    
     
+dynamicArgs
+    : LDYNAMICPAREN (expression (COMMA expression)*)? RDYNAMICPAREN
+    ;    
+    
 literal
     : integerLiteral
     | floatLiteral
@@ -442,7 +447,7 @@ instantiation
     ;
 
 nameComponent
-    : (specialName | identifier) args? (index)*
+    : (specialName | identifier) (args | dynamicArgs)? (index)*
     ;
 
 expression

@@ -57,17 +57,28 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             Map.entry(Integer.valueOf(CantoParser.TILDE), new BitflipOperator())
             );
     
+
+    
     @Override
     public CantoNode visitCompilationUnit(CantoParser.CompilationUnitContext ctx) {
-        CompilationUnit unit = new CompilationUnit();
         int numChildren = ctx.getChildCount();
+        Site mainSite = null;
         for (int i = 0; i < numChildren; i++) {
             Site site = (Site) ctx.getChild(i).accept(this);
             if (site != null) {
-                unit.addSite(site);
+                if (ctx.doc != null) {
+                    site.setDocComment(ctx.doc.getText());
+                }
+                if (mainSite == null) {
+                    mainSite = site;
+                } else if (site.getName().equals(mainSite.getName())) {
+                    mainSite.mergeSite(site);
+                } else {
+                    throw new NameMismatchException("Site name mismatch in compilation unit: " + mainSite.getName() + " and " + site.getName());
+                }
             }
         }
-        return unit;
+        return mainSite;
     }
 
     private Site handleSiteDefinition(String domain, NameNode name, SiteBlock block) {
@@ -299,7 +310,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitBlockDefinition(CantoParser.BlockDefinitionContext ctx) {
         CantoParser.BlockDefNameContext nameCtx = ctx.blockDefName();
-        NameNode name = (NameNode) nameCtx.identifier().accept(this);
+        NameNode name = (NameNode) nameCtx.accept(this);
         ParseTree typeCtx = nameCtx.simpleType();
         if (typeCtx == null) {
             typeCtx = nameCtx.multiType();
@@ -486,27 +497,43 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitBlockDefName(CantoParser.BlockDefNameContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
+
+        CantoParser.SimpleTypeContext simpleTypeCtx = ctx.simpleType();
+        CantoParser.MultiTypeContext multiTypeCtx = ctx.multiType();
+        CantoParser.TypeWithArgsContext typeWithArgsCtx = ctx.typeWithArgs();
+
+        Type type = simpleTypeCtx != null ? (Type) simpleTypeCtx.accept(this)
+                                          : (multiTypeCtx != null ? (Type) multiTypeCtx.accept(this)
+                                                                  : (typeWithArgsCtx != null ? (Type) typeWithArgsCtx.accept(this) : null));
+        
         ParseTree paramsCtx = ctx.params();
         ParseTree multiParamsCtx = ctx.multiParams();
 
+        List<ParameterList> paramsList = null;
+        
         if (multiParamsCtx != null) {
             // multiParams is: params (COMMA params)+
-            List<ParameterList> paramsList = new ArrayList<>();
+            paramsList = new ArrayList<>();
             CantoParser.MultiParamsContext multiCtx = (CantoParser.MultiParamsContext) multiParamsCtx;
 
             for (CantoParser.ParamsContext pCtx : multiCtx.params()) {
                 ParameterList params = paramsHelper(pCtx);
                 paramsList.add(params);
             }
-            return new NameWithParams(name.getName(), paramsList);
 
         } else if (paramsCtx != null) {
             ParameterList params = paramsHelper((CantoParser.ParamsContext) paramsCtx);
-            List<ParameterList> paramsList = new ArrayList<>(1);
+            paramsList = new ArrayList<>(1);
             paramsList.add(params);
             return new NameWithParams(name.getName(), paramsList);
         }
 
+        if (type != null) {
+            name = new TypedName(type, name.getName(), paramsList, null);
+        } else if (paramsList != null) {
+            name = new NameWithParams(name.getName(), paramsList);
+        }
+        
         return name;
     }
 
@@ -519,8 +546,21 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
         for (CantoParser.ParamContext paramCtx : ctx.param()) {
             ParseTree typeCtx = paramCtx.simpleType();
+            if (typeCtx == null) {
+                typeCtx = paramCtx.collectionType();
+            }
             Type paramType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
-            NameNode paramName = (NameNode) paramCtx.identifier().accept(this);
+            NameNode paramName;
+            List<CantoParser.DimContext> dimCtx = paramCtx.dim();
+            if (dimCtx != null && dimCtx.size() > 0) {
+                List<Dim> dims = dimsHelper(dimCtx);
+                if (paramType != null) {
+                    paramType = new ComplexType(paramType, dims, null);
+                }
+                paramName = new NameWithDims(paramCtx.identifier().getText(), null, dims);
+            } else {
+                paramName = (NameNode) paramCtx.identifier().accept(this);
+            }
             DefParameter param = new DefParameter(paramType, paramName);
             paramList.add(param);
         }
@@ -998,6 +1038,16 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitDynamicArgs(CantoParser.DynamicArgsContext ctx) {
+        ConstructionList args = new ConstructionList(ctx.expression().size());
+        args.setDynamic(true);
+        for (CantoParser.ExpressionContext exprCtx : ctx.expression()) {
+            args.add((Construction) exprCtx.accept(this));
+        }
+        return args;
+    }
+
+    @Override
     public CantoNode visitIndex(CantoParser.IndexContext ctx) {
         if (ctx.STREAM_ARRAY() != null) {
             return new Index();
@@ -1015,6 +1065,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         
         if (ctx.args() != null) {
             args = (ConstructionList) ctx.args().accept(this);
+        } else if (ctx.dynamicArgs() != null) {
+            args = (ConstructionList) ctx.dynamicArgs().accept(this);
         }
         
         List<CantoParser.IndexContext> indexCtxs = ctx.index();

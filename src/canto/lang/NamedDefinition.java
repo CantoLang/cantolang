@@ -144,6 +144,7 @@ public class NamedDefinition extends Definition {
     public void setContents(CantoNode contents) {
         super.setContents(contents);
         children[children.length - 1] = contents;  // contents is always the last child
+        contents.setParent(this);
     }
 
 
@@ -244,6 +245,7 @@ public class NamedDefinition extends Definition {
     protected void setName(NameNode name) {
         this.name = name;
         children[children.length - 2] = name;  // name is always the second-to-last child]
+        name.setParent(this);
     }
 
     protected void setType(Type type) {
@@ -480,7 +482,10 @@ public class NamedDefinition extends Definition {
     /** Sets the supertype. */
     protected void setSuper(Type supertype) {
         this.supertype = supertype;
-        children[0] = (CantoNode) supertype;   // super is always the first child
+        if (supertype != null) {
+            children[0] = (CantoNode) supertype;   // super is always the first child
+            ((CantoNode) supertype).setParent(this);
+        }
     }
 
     /** Returns true if this definition contains a <code>next</code> statement.

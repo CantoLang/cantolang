@@ -33,20 +33,24 @@ public class Site extends ComplexDefinition {
 
     public Site(String name) {
         super(new NameNode(name));
+        setOwner(this);
     }
 
     public Site(NameNode name) {
         super(name);
+        setOwner(this);
     }
 
     public Site(String domain, String name) {
         super(new NameNode(name));
         setDomainName(domain);
+        setOwner(this);
     }
 
     public Site(String domain, NameNode name) {
         super(name);
         setDomainName(domain);
+        setOwner(this);
     }
 
     public DefinitionTable setNewDefinitionTable() {
@@ -103,10 +107,7 @@ public class Site extends ComplexDefinition {
     }
     
     /** Add a site's content to this site */
-
-
-
-    synchronized void mergeSite(Site site) {
+    public synchronized void mergeSite(Site site) {
         CantoNode newContents = site.getContents();
         CantoNode oldContents = getContents();
 
@@ -326,6 +327,9 @@ public class Site extends ComplexDefinition {
     public Core getCore() {
         if (core == null) {
             Site siteOwner = (Site) getOwner();
+            if (siteOwner == null || siteOwner.equals(this)) {
+                return null;
+            }
             while (siteOwner != null && !(siteOwner instanceof Core)) {
                 siteOwner = (Site) siteOwner.getOwner();
             }
@@ -485,80 +489,11 @@ public class Site extends ComplexDefinition {
  
             Definition entry = (replace ? null : (Definition) get(key));
             if (entry != null) {
- 
-                if (entry instanceof SubcollectionDefinition) {
-                    SubcollectionDefinition subdef = (SubcollectionDefinition) entry;
-                    String what;
-                    if (def instanceof CollectionDefinition) {
-                        what = ((CollectionDefinition) def).isArray() ? "array" : "table";
-                        subdef.setSupercollection((CollectionDefinition) def);
-                    } else {
-                        what = def.getClass().getName();
-                        subdef.add(def);
-                    }
-                    LOG.debug("Adding " + what + " " + fullName + " owned by " + ownerName);
- 
-                } else if (entry instanceof CollectionDefinition) {
-                    if (def instanceof CollectionDefinition) {
-                        throw new DuplicateDefinitionException("Collection " + key + " already defined");
-                    }
-                    String what;
-                    what = def.getClass().getName();
-                    CollectionDefinition colldef = (CollectionDefinition) entry;
-                    SubcollectionDefinition subcoll = new SubcollectionDefinition(colldef);
-                    subcoll.add(def);
-                    put(key, subcoll);
-                    LOG.debug("Adding " + what + " " + fullName + " owned by " + ownerName + " to collection " + subcoll.getFullName());
-
-                } else if (!entry.isExternal()) {
-                    throw new DuplicateDefinitionException(key + " already defined");
-                }
+                throw new DuplicateDefinitionException(key + " already defined");
 
             } else {
-
                 LOG.debug("Adding definition " + fullName + " owned by " + ownerName);
-                // filter out Site objects because getContents can be expensive for them
-                if (!(def instanceof Site) && def.getContents() instanceof ElementDefinition) {
-                    NameNode nameNode = null;
-                    if (def instanceof NamedDefinition) {
-                        nameNode = ((NamedDefinition) def).getNameNode();
-                    } else if (def instanceof ElementReference) {
-                        nameNode = ((ElementReference) def).getNameNode();
-                    } else {
-                        throw new IllegalArgumentException("Incorrect definition type for ElementDefinition owner");
-                    }
-                    CollectionDefinition supercollection = null;
-                    // find array definition
-                    for (NamedDefinition nd = getSuperDefinition(); nd != null; nd = nd.getSuperDefinition()) {
-                        if (nd instanceof ComplexDefinition) {
-                            Definition superDef = ((ComplexDefinition) nd).getExplicitDefinition(nameNode, null, null);
-                            if (superDef != null && superDef instanceof CollectionDefinition) {
-                                supercollection = (CollectionDefinition) superDef;
-                                break;
-                            }
-                        }
-                    }
-                    if (supercollection == null) {
-                        while (owner != null) {
-                            Definition superDef = owner.getChildDefinition(nameNode, null);
-                            if (superDef != null && superDef instanceof CollectionDefinition) {
-                                supercollection = (CollectionDefinition) superDef;
-                                break;
-                            }
-                            owner = owner.getOwner();
-                        }
-                        if (supercollection == null) {
-                            throw new IllegalArgumentException("Reference to unknown array or table");
-                            }
-                        }
- 
-                        SubcollectionDefinition collection = new SubcollectionDefinition(supercollection);
-                        collection.setOwner(def.getOwner());
-                        collection.add(def);
-                        put(key, collection);
-                } else {
-                    put(key, def);
-                }
+                put(key, def);
             }
         }
 

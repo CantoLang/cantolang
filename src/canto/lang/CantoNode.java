@@ -49,6 +49,31 @@ abstract public class CantoNode {
     /** Constructs a node. */
     protected CantoNode() {}
 
+    /** Initialize this node.  Called right after a node tree has been constructed, to handle initialization
+     *  that cannot be handled in the constructor or by the visitor. The default implementation sets the owner
+     *  field and then calls initNode() on the children.  Subclasses that override this should either call 
+     *  super.initNode() or implement the same functionality.
+     */
+    
+    protected void initNode() {
+        if (parent == null) {
+            if (Definition.class.isInstance(this)) {
+                owner = (Definition) this;
+            } else {
+                owner = null;
+            }
+        } else if (parent instanceof Definition) {
+            owner = (Definition) parent;
+        } else {
+            owner = parent.getOwner();
+        }
+        if (children != null) {
+            for (CantoNode child : children) {
+                child.initNode();
+            }
+        }
+    }
+    
     /** Gets the name of this node.  The default name is just the class name, but nodes types that have
      *  meaningful names should override this to return the name.
      */
@@ -66,6 +91,13 @@ abstract public class CantoNode {
     
     public void setOwner(Definition owner) {
         this.owner = owner;
+        if (!isDefinition() && children != null) {
+            for (CantoNode child : children) {
+                if (child != null) {
+                    child.setOwner(owner);
+                }
+            }
+        }
     }
 
     public Definition getOwner() {
@@ -78,6 +110,8 @@ abstract public class CantoNode {
         if (owner == null) {
             return null;
         } else if (owner == this) {
+            // by default a Site sets its owner to itself, but it overrides this method so the
+            // Exception should not be thrown for a Site
             throw new IllegalStateException("Circular definition: " + getName() + " owns itself");
         
         } else {
@@ -87,6 +121,11 @@ abstract public class CantoNode {
     
     public void setParent(CantoNode parent) {
         this.parent = parent;
+        if (parent instanceof Definition) {
+            setOwner((Definition) parent);
+        } else if (parent != null) {
+            setOwner(parent.getOwner());
+        }
     }
 
     public CantoNode getParent() {
@@ -99,6 +138,27 @@ abstract public class CantoNode {
         if (node instanceof Type) {
             ((Type) node).resolve();
         }
+    }
+    
+    protected boolean validate(CantoNode parent, Definition owner) {
+        if (parent != this.parent || owner != this.owner) {
+            return false;
+        }
+        
+        if (isDefinition()) {
+            owner = (Definition) this;
+        }
+        
+        if (children != null) {
+            for (CantoNode child : children) {
+                if (child != null) {
+                    if (!child.validate(this, owner)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     /** If true, this node cannot have children. */
@@ -148,6 +208,19 @@ abstract public class CantoNode {
         child.setParent(this);
     }
     
+    void addChild(CantoNode child) {
+        int currentLen = (children == null ? 0 : children.length);
+        int newLen = currentLen + 1;
+        CantoNode c[] = new CantoNode[newLen];
+        if (children != null) {
+            System.arraycopy(children, 0, c, 0, currentLen);
+        }
+        c[currentLen] = child;
+        child.setParent(this);
+        children = c;
+    }
+
+
     protected void setChildren(List<CantoNode> childList) {
         if (childList != null) {
             children = childList.toArray(new CantoNode[childList.size()]);

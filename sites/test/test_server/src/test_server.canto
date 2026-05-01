@@ -5,24 +5,24 @@
  *
  **/
 
-site test_server [=
+site test_server {=
 
-    server_response a [=
+    server_response a {=
         "A";
-    =]
+    =}
 
     bc_array[] = [ "B", "C" ]
     
-    server_response bc [=
+    server_response bc {=
         bc_array;
-    =]
+    =}
 
     de_table{} = { d: "D", e: "E" }
     
-    server_response de [=
+    server_response de {=
         de_table;
-    =]
+    =}
 
-=]
+=}
 
 
