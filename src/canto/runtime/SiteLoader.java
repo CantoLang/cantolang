@@ -108,7 +108,8 @@ public class SiteLoader {
             }
         }
 
-    	String configPath = "/config.canto";
+    	String config = "config.canto";
+    	Path configPath = Paths.get(config);
         Class<?> c = getClass();
         URL url = null;
         if (externalURI != null) {
@@ -120,9 +121,9 @@ public class SiteLoader {
                 return;
             }
         } else {
-            url = c.getResource(configPath);
+            url = c.getResource("/" + config);
             if (url != null) {
-                LOG.info(configPath + " found in classpath");
+                LOG.info(config + " found in classpath");
             }
         }
         if (url != null) {
@@ -131,6 +132,9 @@ public class SiteLoader {
         } else if (sourceString != null) {            
             loadString(sourceString, loaders, true);
             LOG.info(siteName + " loaded from source code");
+        } else if (Files.exists(configPath)) {
+            loadFile(configPath.toFile(), filter, loaders, true);
+            LOG.info(siteName + " loaded from " + configPath.toString());
         } else if (externalPath != null) {
             String[] paths = parsePath(externalPath);
             for (int i = 0; i < paths.length; i++) {

@@ -67,7 +67,7 @@ public class CantoBuilder {
         Site site = null;
         try {
             site = (Site) parser.compilationUnit().accept(new CantoVisitor());
-            if (!site.validate(null, site)) {
+            if (!site.validate(site.getParent(), site.getOwner())) {
                 LOG.error("Site validation failed for site " + site.getName());
                 site = null;
             }
@@ -107,7 +107,7 @@ public class CantoBuilder {
     public ComplexName buildComplexName() {
         ComplexName name = null;
         try {
-            name = (ComplexName) parser.compilationUnit().accept(new CantoVisitor());
+            name = (ComplexName) parser.complexName().accept(new CantoVisitor());
         } catch (Exception e) {
             exception = e;
             LOG.error("Error building site", e);

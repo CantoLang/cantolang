@@ -33,24 +33,20 @@ public class Site extends ComplexDefinition {
 
     public Site(String name) {
         super(new NameNode(name));
-        setOwner(this);
     }
 
     public Site(NameNode name) {
         super(name);
-        setOwner(this);
     }
 
     public Site(String domain, String name) {
         super(new NameNode(name));
         setDomainName(domain);
-        setOwner(this);
     }
 
     public Site(String domain, NameNode name) {
         super(name);
         setDomainName(domain);
-        setOwner(this);
     }
 
     public DefinitionTable setNewDefinitionTable() {
@@ -389,13 +385,12 @@ public class Site extends ComplexDefinition {
     /** Returns the external definition for the indicated name. */
     public Definition getExternalDefinition(NamedDefinition owner, NameNode node, Type superType, Context context) {
         
-        ComplexName name = (node instanceof ComplexName ? (ComplexName) node : new ComplexName(node.getName()));
         Definition def = null;
 
         // if the owner is an external definition and has a child definition with the 
         // specified name, return it
         if (owner != null && owner instanceof ExternalDefinition) {
-            def = ((ExternalDefinition) owner).getExternalChildDefinition(name, context);
+            def = ((ExternalDefinition) owner).getExternalChildDefinition(node, context);
             if (def != null) {
                 return def;
             }
@@ -410,7 +405,7 @@ public class Site extends ComplexDefinition {
             while (it.hasNext()) {
                 ExternStatement extern = it.next();
                 if (extern.equals(node)) {
-                    def = ExternalDefinition.createForName(nodeOwner, name, superType, defaultExternalAccess, defaultExternalDurability, context);
+                    def = ExternalDefinition.createForName(nodeOwner, node, superType, defaultExternalAccess, defaultExternalDurability, context);
                     break;
                 }
             }

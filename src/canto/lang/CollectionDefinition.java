@@ -42,7 +42,14 @@ public class CollectionDefinition extends ComplexDefinition {
 
     public CollectionDefinition(Type superType, NameNode name, CantoNode contents) {
         super(superType, name, contents);
-        setDims(name.getDims());
+        List<Dim> dims = new ArrayList<Dim>();
+        if (superType != null && superType.getDims() != null) {
+            dims.addAll(superType.getDims());
+        }
+        if (name.getDims() != null) {
+            dims.addAll(name.getDims());
+        }
+        setDims(dims);
     }
 
     public CollectionDefinition(CollectionDefinition def, Context context) {

@@ -1102,6 +1102,16 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         return new ComplexName(nodeList);
     }
 
+    @Override
+    public CantoNode visitComplexName(CantoParser.ComplexNameContext ctx) {
+        int numNodes = ctx.getChildCount();
+        List<CantoNode> nodeList = new ArrayList<CantoNode>(numNodes);
+        for (CantoParser.IdentifierContext identifier : ctx.identifier()) {
+            nodeList.add(identifier.accept(this));
+        }
+        return new ComplexName(nodeList);
+    }
+
     // --- Shared helpers for conditional and loop building ---
 
     private ValueSource buildCondition(Token condToken,

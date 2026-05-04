@@ -39,8 +39,23 @@ public class CantoBuilderTest {
         assert site != null;
     }
 
-    @Test
-    public void testBuildComplexName() {
+    @ParameterizedTest
+    @DisplayName("Builder should be able to parse a string and return a ComplexName")
+    @ValueSource(strings = {
+        "a",
+        "x.y.z"
+    })
+    public void testBuildComplexName(String nameStr) {
+        CantoBuilder builder;
+        ComplexName complexName = null;
+        try {
+            builder = new CantoBuilder(nameStr);
+            complexName = builder.buildComplexName();
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail("IOException should not occur when building ComplexName from string");
+        }
+        assert complexName != null;
 
     }
 

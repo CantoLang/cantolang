@@ -1,0 +1,42 @@
+/--
+ --   config.canto
+ --/
+
+{
+    /** The primary site; requests are directed here by default. **/
+    site_config main_site = test_config
+
+    /** All the sites that the server should make available by name. 
+     **/ 
+    site_config[] all_sites = [] 
+    
+    /** Verbosity level for console output, can range from 0 (terse) to 2 (verbose) **/
+    int verbosity = 1;
+
+    /** Do not handle requests for files with the following extensions; let the server's
+     *  default file handling logic handle them.
+     **/ 
+    ignore_extensions[] = [ "png", "jpg", "gif", "ico" ]
+
+    /** Handle requests with the following extensions if they are defined, even if they
+     *  are not declared as responses or pages (i.e., handle as if a '$' were prepended).
+     **/ 
+    always_handle_extensions[] = [ "css", "js" ]
+
+    /--- configuration variables queried by the server ---/
+    file_base = main_site.filepath
+    cantopath = main_site.cantopath
+    sitename = main_site.name
+    sitepath = main_site.sitepath
+    
+    file_separator = "/"
+
+    /--- config objects for available sites ---/
+
+    site_config test_config {
+        name = "test"
+        cantopath = "./sites/test"
+        listen_to[] = [ "127.0.0.1:8080" ]
+    }    
+
+}

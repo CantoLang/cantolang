@@ -410,7 +410,7 @@ nameRange
     : identifier (DOT (identifier | any))* (DOT anyany)?
     ;
 
-typeName
+complexName
     : identifier (DOT identifier)*
     ;
 

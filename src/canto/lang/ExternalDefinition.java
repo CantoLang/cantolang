@@ -44,7 +44,7 @@ public class ExternalDefinition extends ComplexDefinition {
     /**
      * Creates a definition corresponding to the passed complex name.
      */
-    public static Definition createForName(Definition owner, ComplexName nameNode, Type superType, Access access, Durability dur, Context context) {
+    public static Definition createForName(Definition owner, NameNode nameNode, Type superType, Access access, Durability dur, Context context) {
         // find the left-most class named by the passed complex name.
         Class<?> externalClass = null;
         String name = "";
