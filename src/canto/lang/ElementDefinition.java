@@ -28,10 +28,12 @@ public class ElementDefinition extends Definition {
 
     public ElementDefinition() {
         super();
+        children = new CantoNode[1];  // room for contents
     }
 
     public ElementDefinition(Definition owner, Object element) {
         super();
+        children = new CantoNode[1];  // room for contents
         setOwner(owner);
         setElement(element);
     }

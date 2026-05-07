@@ -142,6 +142,8 @@ abstract public class Definition extends CantoNode implements Name, Construction
         this.contents = contents;
         List<Definition> defs = extractDefinitions(contents);
         this.childDefs = defs.toArray(new Definition[0]);
+        children[children.length - 1] = contents;  // contents is always the last child
+        contents.setParent(this);
     }
 
     public CantoNode getContents() {
@@ -919,7 +921,11 @@ abstract public class Definition extends CantoNode implements Name, Construction
     }
 
     void setDefinitionTable(DefinitionTable table) {
-        ;
+        if (childDefs != null) {
+            for (Definition def : childDefs) {
+                def.setDefinitionTable(table);
+            }
+        }
     }
 
     public static Access minAccess(Access access2, Access access3) {

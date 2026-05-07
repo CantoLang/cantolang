@@ -140,14 +140,6 @@ public class NamedDefinition extends Definition {
         return name;
     } 
 
-    @Override
-    public void setContents(CantoNode contents) {
-        super.setContents(contents);
-        children[children.length - 1] = contents;  // contents is always the last child
-        contents.setParent(this);
-    }
-
-
     /** Called in the validation pass to check aliases and remove any that point to
      *  parameters, since the logic for aliases fails with parameters.  This can't be
      *  done during initialization because the instances haven't been resolved yet.

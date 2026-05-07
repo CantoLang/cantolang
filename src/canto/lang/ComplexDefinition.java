@@ -80,6 +80,7 @@ public class ComplexDefinition extends NamedDefinition {
 
     void setDefinitionTable(DefinitionTable table) {
         definitions = table;
+        super.setDefinitionTable(table);
     } 
 
     DefinitionTable getDefinitionTable() {
