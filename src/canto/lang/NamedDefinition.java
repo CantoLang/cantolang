@@ -508,6 +508,7 @@ public class NamedDefinition extends Definition {
      *  or is empty and <code>hasSub</code> called on its superdefinition (if any)
      *  returns true.
      */
+    @Override
     public boolean hasSub(Context context) {
         if (getConstructions(context).size() > 0) {
             return ownerOfSub;
@@ -521,6 +522,7 @@ public class NamedDefinition extends Definition {
         }
     }
 
+    @Override
     void setHasSub(boolean hasSub) {
         ownerOfSub = hasSub;
     }

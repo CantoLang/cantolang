@@ -214,6 +214,10 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return false;
     }
     
+    void setHasSub(boolean hasSub) {
+        throw new IllegalStateException("Cannot set hasSub on an anonymous definition");
+    }
+
     /** A <code>next</code> statement in an anonymous definition would
      *  be meaningless.
      */
@@ -309,6 +313,9 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return (name.equals(""));
     }
 
+    /**
+     * Returns the constructions comprising this definition in this context.
+     */
     @SuppressWarnings("unchecked")
     public List<Construction> getConstructions(Context context) {
         CantoNode contents = getContents();
@@ -342,11 +349,25 @@ abstract public class Definition extends CantoNode implements Name, Construction
             } else {
                 if (contents != null) LOG.error(" ******** unexpected contents: " + contents.getClass().getName() + " ******");
                 constructions = new EmptyList<Construction>();
+            } 
+            for (Construction c : constructions) {
+                if (c.hasSub()) {
+                    setHasSub(true);
+                }
             }
         }
         return constructions;
     }
 
+    /** Variation of getConstructions that doesn't require a context. Most definitions don't require
+     *  a context, but some, such as collection definitions, do. Calling this method on such definitions
+     *  will result in a null pointer exception.
+     */
+    public List<Construction> getConstructions() {
+       return getConstructions(null);
+    }
+    
+    /** Returns the catch block for this definition, if any, else null. */
     public Block getCatchBlock() {
         CantoNode contents = getContents();
         if (contents instanceof Block) {

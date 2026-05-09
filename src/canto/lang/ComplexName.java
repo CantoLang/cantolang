@@ -64,12 +64,14 @@ public class ComplexName extends NameNode implements Name, Initializable {
     public ComplexName(List<CantoNode> nameList) {
         super();
         setChildren(nameList);
+        super.setName(computeName());
     }
 
 
     public ComplexName(String name) {
         super(name);
         parseName(name);
+        super.setName(computeName());
     }
 
     public void init() {

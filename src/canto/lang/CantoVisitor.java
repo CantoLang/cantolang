@@ -401,13 +401,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     
     @Override
     public CantoNode visitLiteralBlock(CantoParser.LiteralBlockContext ctx) {
-        ListNode<CantoNode> nodes = new ListNode<CantoNode>();
-        for (int i = 0; i < ctx.getChildCount(); i++) {
-            CantoNode node = ctx.getChild(i).accept(this);
-            if (node != null) {
-                nodes.add(node);
-            }
-        }
+        ListNode<CantoNode> nodes = new ListNode<CantoNode>(1);
+        String text = ctx.body != null ? ctx.body.getText() : "";
+        nodes.add(new StaticText(text));
         return new StaticBlock(nodes);
     }
 

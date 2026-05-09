@@ -109,7 +109,7 @@ textChunk
     ;
 
 literalBlock
-    : (LITERAL_OPEN | LITERAL_REOPEN) LITERAL_BODY? LITERAL_CLOSE
+    : (LITERAL_OPEN | LITERAL_REOPEN) body = LITERAL_BODY? LITERAL_CLOSE
     ;
 
 topDefinition

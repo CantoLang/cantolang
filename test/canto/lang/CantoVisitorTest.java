@@ -279,7 +279,8 @@ public class CantoVisitorTest {
             "d7(z) [| text {= z; =} block 2 |]",
             "d8(x),(y) { with (x) { x; } with (y) { y; } }",
             "d5(z) d9(int z) { z; }",
-            "m(args[]) { int num_args = args.count if (num_args) { args; } exit(0); }"
+            "m(args[]) { int num_args = args.count if (num_args) { args; } exit(0); }",
+            "d10(int a) { int x = a  x; sub; }"
     })
     public void testVisitBlockDefinition(String input) {
         TypedParser<CantoParser.BlockDefinitionContext> parser = new TypedParser<CantoParser.BlockDefinitionContext>("blockDefinition");
@@ -287,6 +288,7 @@ public class CantoVisitorTest {
         CantoNode node = visitor.visitBlockDefinition(ctx);
             
         Assertions.assertThat(node).isInstanceOf(ComplexDefinition.class);
+        Assertions.assertThat(((ComplexDefinition) node).getConstructions().size()).isGreaterThan(0);
     }
 
     @ParameterizedTest

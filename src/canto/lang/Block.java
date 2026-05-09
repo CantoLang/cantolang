@@ -40,6 +40,12 @@ public class Block extends Construction {
         return constructions;
     }
 
+    /** Returns the list of constructions owned by this container. */
+    @Override
+    public List<Construction> getConstructions(Context context) {
+        return constructions;
+    }
+
     public Object generateData(Context context, Definition def) throws Redirection {
         return context.construct(constructions);
     }
