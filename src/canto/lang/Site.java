@@ -383,7 +383,7 @@ public class Site extends ComplexDefinition {
     } 
 
     /** Returns the external definition for the indicated name. */
-    public Definition getExternalDefinition(NamedDefinition owner, NameNode node, Type superType, Context context) {
+    public Definition getExternalDefinition(Definition owner, NameNode node, Type superType, Context context) {
         
         Definition def = null;
 
@@ -396,7 +396,7 @@ public class Site extends ComplexDefinition {
             }
         }
        
-        NamedDefinition nodeOwner = (owner != null ? owner : this);
+        Definition nodeOwner = (owner != null ? owner : this);
 
         // find the matching extern statement
         List<ExternStatement> externs = getExternList();
@@ -504,7 +504,7 @@ public class Site extends ComplexDefinition {
          *  <code>ownerName<code> or <code>node</code> must start with the site name.
          */
         @SuppressWarnings("unchecked")
-        public Definition getDefinition(NamedDefinition owner, NameNode node) {
+        public Definition getDefinition(Definition owner, NameNode node) {
             String ownerName = (owner == null ? "" : owner.getFullName());
             String name = node.getName();
             boolean nameHasPrefix = false;
@@ -652,11 +652,11 @@ public class Site extends ComplexDefinition {
         public Collection<Definition> values() {
             Collection<Definition> vals = super.values();
             ArrayList<Definition> defs = new ArrayList<Definition>(vals.size());
-            Iterator it = vals.iterator();
+            Iterator<Definition> it = vals.iterator();
             while (it.hasNext()) {
-                Object entry = it.next();
-                if (entry instanceof List) {
-                    defs.addAll((List) entry);
+                Definition entry = it.next();
+                if (entry instanceof List<?>) {
+                    defs.addAll((List<Definition>) entry);
                 } else {
                     defs.add((Definition) entry);
                 }

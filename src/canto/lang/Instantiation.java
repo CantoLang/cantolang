@@ -517,8 +517,8 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         }
         if (kind == UNRESOLVED) {
             kind = DYNAMICALLY_RESOLVED;
-            DefinitionTable defTable = ((NamedDefinition) owner).getDefinitionTable();
-            def = defTable.getDefinition((NamedDefinition) owner, getReferenceName());
+            DefinitionTable defTable = owner.getDefinitionTable();
+            def = defTable.getDefinition(owner, getReferenceName());
             if (def != null) {
                 kind = EXPLICITLY_RESOLVED;
                 LOG.debug("   ..." + checkName + " is an explicit reference");

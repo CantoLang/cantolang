@@ -67,22 +67,6 @@ public class CantoBuilder {
         Site site = null;
         try {
             site = (Site) parser.compilationUnit().accept(new CantoVisitor());
-            if (!site.validate(site.getParent(), site.getOwner())) {
-                LOG.error("Site validation failed for site " + site.getName());
-                site = null;
-            }
-            
-        } catch (Exception e) {
-            exception = e;
-            LOG.error("Error building site", e);
-        }
-        if (site == null) {
-            return null;
-        }
-        
-        if (site instanceof Core) {
-            core.mergeSite(site);
-        } else {
             String name = site.getName();
             Map<String, DefinitionTable> defTableTable = core.getDefTableTable();
             DefinitionTable defTable = (DefinitionTable) defTableTable.get(name);
@@ -92,6 +76,10 @@ public class CantoBuilder {
                 defTable = site.setNewDefinitionTable();
                 defTableTable.put(name, defTable);
             }
+            
+            // recursively adds all the defitions to the definition table
+            site.addDefinitions();
+            
             Map<String, Map<String, Object>> globalKeepTable = core.getGlobalKeepTable();
             Map<String, Object> globalKeep = globalKeepTable.get(name);
             if (globalKeep == null) {
@@ -99,8 +87,23 @@ public class CantoBuilder {
                 globalKeepTable.put(name,  globalKeep);
             }
             site.setGlobalKeep(globalKeep);
-            core.addSite(site);
+
+            if (site instanceof Core) {
+                core.mergeSite(site);
+            } else {
+                core.addSite(site);
+            }
+            
+            if (!site.validate(site.getParent(), site.getOwner())) {
+                LOG.error("Site validation failed for site " + site.getName());
+                site = null;
+            }
+            
+        } catch (Exception e) {
+            exception = e;
+            LOG.error("Error building site", e);
         }
+        
         return site;
     }
 

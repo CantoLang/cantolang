@@ -138,10 +138,42 @@ abstract public class Definition extends CantoNode implements Name, Construction
         }
     }
 
+    @Override
+    protected boolean validate(CantoNode parent, Definition owner) {
+        if (super.validate(parent, owner)) {
+            if (name == null) {
+                LOG.error("Definition " + this + " has null name");
+                return false;
+            }
+            DefinitionTable defTable = getDefinitionTable();
+            if (defTable == null) {
+                LOG.error("Definition " + this + " has null definition table");
+                return false;
+            }
+            
+            
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
+
+    @Override
+    public void setOwner(Definition owner) {
+        this.owner = owner;
+        if (owner != null) {
+            setDefinitionTable(owner.getDefinitionTable());
+            if (owner.isGlobal() && getDurability() == Durability.IN_CONTEXT) {
+                setDurability(Durability.GLOBAL);
+            }
+        }
+    }
+
     public void setContents(CantoNode contents) {
         this.contents = contents;
         List<Definition> defs = extractDefinitions(contents);
-        this.childDefs = defs.toArray(new Definition[0]);
+        childDefs = defs.toArray(new Definition[0]);
         children[children.length - 1] = contents;  // contents is always the last child
         contents.setParent(this);
     }
@@ -150,6 +182,10 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return contents;
     }
     
+    public void addDefinition(Definition def, boolean replace) throws DuplicateDefinitionException {
+        throw new UnsupportedOperationException("Cannot add definition " + def.getFullName() + " to a " + getClass().getName());
+    }
+
     protected void setAccess(Access access) {
         this.access = access;
     }
@@ -216,6 +252,10 @@ abstract public class Definition extends CantoNode implements Name, Construction
     
     void setHasSub(boolean hasSub) {
         throw new IllegalStateException("Cannot set hasSub on an anonymous definition");
+    }
+
+    void setHasNext(boolean hasNext) {
+        throw new IllegalStateException("Cannot set hasNext on an anonymous definition");
     }
 
     /** A <code>next</code> statement in an anonymous definition would
@@ -353,6 +393,9 @@ abstract public class Definition extends CantoNode implements Name, Construction
             for (Construction c : constructions) {
                 if (c.hasSub()) {
                     setHasSub(true);
+                }
+                if (c.hasNext()) {
+                    setHasNext(true);
                 }
             }
         }
@@ -945,6 +988,15 @@ abstract public class Definition extends CantoNode implements Name, Construction
         if (childDefs != null) {
             for (Definition def : childDefs) {
                 def.setDefinitionTable(table);
+           }
+        }
+    }
+
+    void addDefinitions() {
+        if (childDefs != null) {
+            for (Definition def : childDefs) {
+                addDefinition(def, false);
+                def.addDefinitions();
             }
         }
     }

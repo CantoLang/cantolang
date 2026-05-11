@@ -21,7 +21,7 @@ public interface DefinitionTable {
     *  definition is local, either <code>owner.getFullName()<code> or <code>name</code>
     *  must start with the site name as a prefix.
     */
-   public Definition getDefinition(NamedDefinition owner, NameNode name);
+   public Definition getDefinition(Definition owner, NameNode name);
 
    /** Returns the internal definition (i.e., external definitions are
     *  ignored) for the indicated name in the context of the indicated owner,

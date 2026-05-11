@@ -91,6 +91,7 @@ public class ComplexDefinition extends NamedDefinition {
         }
     }
 
+    @Override
     public void addDefinition(Definition def, boolean replace) throws DuplicateDefinitionException {
         // don't add definitions without a proper name
         NameNode name = def.getNameNode();
@@ -98,7 +99,7 @@ public class ComplexDefinition extends NamedDefinition {
             return;
         }
 
-        Definition currentDef = definitions.getDefinition((NamedDefinition) def.getOwner(), name);
+        Definition currentDef = definitions.getDefinition(def.getOwner(), name);
 
         // Parameters can appear in multiple parameter lists, as long
         // as the type is the same.

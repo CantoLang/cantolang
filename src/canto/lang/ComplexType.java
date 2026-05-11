@@ -121,8 +121,8 @@ public class ComplexType extends AbstractType {
 
         // if not found yet, look for explicit or external definition
         if (def == null) {
-            DefinitionTable defTable = ((NamedDefinition) owner).getDefinitionTable();
-            def = defTable.getDefinition((NamedDefinition) owner, this);
+            DefinitionTable defTable = owner.getDefinitionTable();
+            def = defTable.getDefinition(owner, this);
             // avoid circular type definitions
             if (def != null && !allowCircular && owner.equals(def)) {
                 def = null;

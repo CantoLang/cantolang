@@ -91,7 +91,7 @@ abstract public class CantoNode {
     
     public void setOwner(Definition owner) {
         this.owner = owner;
-        if (!isDefinition() && children != null) {
+        if (children != null) {
             for (CantoNode child : children) {
                 if (child != null) {
                     child.setOwner(owner);
@@ -121,10 +121,9 @@ abstract public class CantoNode {
     
     public void setParent(CantoNode parent) {
         this.parent = parent;
-        if (parent instanceof Definition) {
-            setOwner((Definition) parent);
-        } else if (parent != null) {
-            setOwner(parent.getOwner());
+        Definition def = parent instanceof Definition ? (Definition) parent : parent.getOwner();
+        if (def != null) {
+            setOwner(def);
         }
     }
 
