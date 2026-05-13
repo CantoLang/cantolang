@@ -72,6 +72,7 @@ public class ComplexType extends AbstractType {
 
     /** Find the definition associated with this type.
      */
+    @Override
     public void resolve() {
         if (getDefinition() != null) {
             return;

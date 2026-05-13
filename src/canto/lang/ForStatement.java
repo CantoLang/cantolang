@@ -64,6 +64,18 @@ public class ForStatement extends Construction implements ConstructionContainer,
         return false;
     }
 
+    protected void resolve(ParameterList outerParams) {
+        ParameterList params = getParameters();
+        if (outerParams == null) {
+            body.resolve(params);
+        } else {
+            ArrayList<DefParameter> newList = new ArrayList<DefParameter>(outerParams.size() + params.size());
+            newList.addAll(outerParams);
+            newList.addAll(params);
+            body.resolve(new ParameterList(newList));
+        }
+    }
+    
     public ParameterList getParameters() {
         ArrayList<DefParameter> params = CollectionFactory.newArrayList(1 + (vals.getNext() == null ? 0 : 1), DefParameter.class);
         for (IteratorValues iv = vals; iv != null; iv = iv.getNext()) {

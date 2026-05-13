@@ -2078,23 +2078,23 @@ public class Context {
         return numPushes;
     }
 
-    public int getParameterKind(String name) {
-        int kind = Instantiation.UNRESOLVED;
+    public Instantiation.Kind getParameterKind(String name) {
+        Instantiation.Kind kind = Instantiation.Kind.UNRESOLVED;
         boolean isChild = (name.indexOf('.') > 0);
         DefParameter param = topScope.getParam(name);
 
         if (param != null) {
             if (param.isInFor()) {
-                return (isChild ? Instantiation.FOR_PARAMETER_CHILD : Instantiation.FOR_PARAMETER);
+                return (isChild ? Instantiation.Kind.FOR_PARAMETER_CHILD : Instantiation.Kind.FOR_PARAMETER);
             } else {
-                return (isChild ? Instantiation.PARAMETER_CHILD : Instantiation.PARAMETER);
+                return (isChild ? Instantiation.Kind.PARAMETER_CHILD : Instantiation.Kind.PARAMETER);
             }
         }
 
         for (Scope entry = topScope.getPrevious(); entry != null; entry = entry.getPrevious()) {
             param = entry.getParam(name);
             if (param != null) {
-                return (isChild ? Instantiation.CONTAINER_PARAMETER_CHILD : Instantiation.CONTAINER_PARAMETER);
+                return (isChild ? Instantiation.Kind.CONTAINER_PARAMETER_CHILD : Instantiation.Kind.CONTAINER_PARAMETER);
             }
         }
         return kind;

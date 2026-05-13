@@ -142,13 +142,6 @@ public class CollectionDefinition extends ComplexDefinition {
     }
 
     
-    /** Overrides the definition of resolveKeeps in NamedDefinition to do nothing, because
-     *  arrays aren't in the scope of their superdefinitions.
-     */
-    public void resolveKeeps() {}
-
-    public void resolveDims() {}
-    
     public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) {
         if (Name.COUNT.equals(node.getName())) {
             if (generate) {

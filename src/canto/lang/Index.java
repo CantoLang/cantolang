@@ -96,8 +96,8 @@ public class Index extends CantoNode {
         // find loop parameters
         CantoNode node = (CantoNode) getChild(0);
         if (node instanceof Instantiation) {
-            int kind = ((Instantiation) node).getKind();
-            if (kind == Instantiation.FOR_PARAMETER || kind == Instantiation.FOR_PARAMETER_CHILD) {
+            Instantiation.Kind kind = ((Instantiation) node).getKind();
+            if (kind == Instantiation.Kind.FOR_PARAMETER || kind == Instantiation.Kind.FOR_PARAMETER_CHILD) {
                 Context resolutionContext = ((node instanceof ResolvedInstance) ? ((ResolvedInstance)node).getResolutionContext() : context);
                 str = str + "#" + resolutionContext.getLoopIndex();                  
             }

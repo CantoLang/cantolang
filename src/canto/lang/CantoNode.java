@@ -139,6 +139,16 @@ abstract public class CantoNode {
         }
     }
     
+    protected void resolve(ParameterList forParams) {
+        if (children != null) {
+            for (CantoNode child : children) {
+                if (child != null) {
+                    child.resolve(forParams);
+                }
+            }
+        }
+    }
+
     protected boolean validate(CantoNode parent, Definition owner) {
         if (parent != this.parent || owner != this.owner) {
             return false;

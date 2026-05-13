@@ -93,6 +93,8 @@ public class CantoBuilder {
             } else {
                 core.addSite(site);
             }
+
+            site.resolve(null);
             
             if (!site.validate(site.getParent(), site.getOwner())) {
                 LOG.error("Site validation failed for site " + site.getName());

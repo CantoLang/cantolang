@@ -150,8 +150,6 @@ abstract public class Definition extends CantoNode implements Name, Construction
                 LOG.error("Definition " + this + " has null definition table");
                 return false;
             }
-            
-            
             return true;
         } else {
             return false;

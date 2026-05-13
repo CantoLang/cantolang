@@ -479,6 +479,7 @@ public class TypeList extends ListNode<Type> implements Type {
     private boolean resolved = false;
 
     /** Recursively resolves member types. **/
+    @Override
     public void resolve() {
         if (!resolved) {
             List<Definition> definitions = new ArrayList<Definition>(size());

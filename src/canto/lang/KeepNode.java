@@ -8,6 +8,8 @@
 
 package canto.lang;
 
+import java.util.ArrayList;
+
 import canto.runtime.Log;
 
 /**
@@ -140,17 +142,18 @@ public class KeepNode extends CantoNode {
         return tableInstance;
     }
 
-    public void createInstances() {
+    @Override
+    protected void resolve(ParameterList forParams) {
         Definition owner = getOwner();
         if (defName != null) {
             defInstance = new Instantiation(defName);
             defInstance.setOwner(owner);
-            defInstance.resolve(null);
+            defInstance.resolve(forParams);
         }
         if (asName != null && asName.getName() != Name.THIS) {
             asInstance = new Instantiation(asName);
             asInstance.setOwner(owner);
-            asInstance.resolve(null);
+            asInstance.resolve(forParams);
         }
     }
 

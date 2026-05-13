@@ -1802,9 +1802,12 @@ public class NamedDefinition extends Definition {
         return defMap.values().toArray(defs);
     }
 
-    /** This method is called during the link pass so that cross site subclassing
-     *  can be supported.nitialized.  See the Linker class in canto.lang.SiteLoader.
-     */
+    @Override
+    public void resolve(ParameterList forParams) {
+        super.resolve(forParams);
+        resolveKeeps();
+    }
+
     public void resolveKeeps() {
         // resolve keeps in superdefinitions
         if (keeps != null) {
@@ -1821,7 +1824,6 @@ public class NamedDefinition extends Definition {
                 }
             }
         }
-        
     }
 
    

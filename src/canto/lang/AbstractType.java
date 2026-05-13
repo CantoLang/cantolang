@@ -237,8 +237,13 @@ abstract public class AbstractType extends NameNode implements Type {
         return childTypes;
     }
 
-    
+    @Override
+    public void resolve(ParameterList forParams) {
+        resolve();
+    }
+
     /** Most types don't need to be resolved, so do nothing by default. **/
+    @Override
     public void resolve() {}
 
     public int levelsBelow(Type type, Context context) {
