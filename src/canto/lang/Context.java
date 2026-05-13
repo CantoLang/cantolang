@@ -79,19 +79,28 @@ public class Context {
 
     private Stack<Scope> unpushedScopes = new Stack<Scope>();
 
-    
-    public Context() {
-        instanceCount++;
-        rootContext = this;
-        stateFactory = new StateFactory();
-        stateCount = stateFactory.lastState();
-    }
-
     public Context(Site site) {
         instanceCount++;
         rootContext = this;
         stateFactory = new StateFactory();
         stateCount = stateFactory.lastState();
+        cache = newHashMap(Object.class);
+        keepMap = newHashMap(Pointer.class);
+        siteKeeps = newHashMapOfMaps(Object.class);
+        globalKeep = site.getGlobalKeep();
+        if (globalKeep == null) {
+            throw new IllegalStateException("Can't create context; site does not have a global cache");
+        }
+        unpushedScopes = new Stack<Scope>();
+        if (site != null) {
+            try {
+                push(site, null, null, true);
+        
+            } catch (Redirection r) {
+                LOG.error("Error creating context: " + r.getMessage());
+                throw r;
+            }
+        }
     }
    
     public Context(Context context) {

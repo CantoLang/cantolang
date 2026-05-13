@@ -48,6 +48,29 @@ public class Site extends ComplexDefinition {
         super(name);
         setDomainName(domain);
     }
+    
+    void initializeTables(Core core) {
+        String name = getName();
+        Map<String, DefinitionTable> defTableTable = core.getDefTableTable();
+        DefinitionTable defTable = (DefinitionTable) defTableTable.get(name);
+        if (defTable != null) {
+            setDefinitionTable(defTable);
+        } else {
+            defTable = setNewDefinitionTable();
+            defTableTable.put(name, defTable);
+        }
+        
+        // recursively adds all the defitions to the definition table
+        addDefinitions();
+        
+        Map<String, Map<String, Object>> globalKeepTable = core.getGlobalKeepTable();
+        Map<String, Object> globalKeep = globalKeepTable.get(name);
+        if (globalKeep == null) {
+            globalKeep = new HashMap<String, Object>();
+            globalKeepTable.put(name,  globalKeep);
+        }
+        setGlobalKeep(globalKeep);
+    }
 
     public DefinitionTable setNewDefinitionTable() {
     	DefinitionTable defTable = new DefinitionHash(); 

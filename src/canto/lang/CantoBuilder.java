@@ -67,33 +67,13 @@ public class CantoBuilder {
         Site site = null;
         try {
             site = (Site) parser.compilationUnit().accept(new CantoVisitor());
-            String name = site.getName();
-            Map<String, DefinitionTable> defTableTable = core.getDefTableTable();
-            DefinitionTable defTable = (DefinitionTable) defTableTable.get(name);
-            if (defTable != null) {
-                site.setDefinitionTable(defTable);
-            } else {
-                defTable = site.setNewDefinitionTable();
-                defTableTable.put(name, defTable);
-            }
-            
-            // recursively adds all the defitions to the definition table
-            site.addDefinitions();
-            
-            Map<String, Map<String, Object>> globalKeepTable = core.getGlobalKeepTable();
-            Map<String, Object> globalKeep = globalKeepTable.get(name);
-            if (globalKeep == null) {
-                globalKeep = new HashMap<String, Object>();
-                globalKeepTable.put(name,  globalKeep);
-            }
-            site.setGlobalKeep(globalKeep);
-
+            site.initializeTables(core);
             if (site instanceof Core) {
                 core.mergeSite(site);
             } else {
                 core.addSite(site);
             }
-
+            
             site.resolve(null);
             
             if (!site.validate(site.getParent(), site.getOwner())) {

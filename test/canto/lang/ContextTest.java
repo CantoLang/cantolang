@@ -1,4 +1,4 @@
-package canto.runtime;
+package canto.lang;
 
 import org.assertj.core.api.Assertions;
 
@@ -6,9 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
-import canto.lang.Context;
-import canto.lang.Definition;
-import canto.lang.Name;
 
 /**
  * Tests for the Context class.
@@ -16,11 +13,16 @@ import canto.lang.Name;
  */
 class ContextTest {
 
+    private Core core;
+    private Site site;
     private Context context;
 
     @BeforeEach
     void setUp() {
-        context = new Context();
+        core = new Core();
+        site = new Site("test");
+        site.initializeTables(core);
+        context = new Context(site);
     }
 
     @Test
@@ -58,7 +60,7 @@ class ContextTest {
     @Test
     @DisplayName("Context clone should work correctly")
     void testContextClone() {
-        Context original = new Context();
+        Context original = new Context(site);
         Context sharedClone = original.clone(true);
         Context privateClone = original.clone(false);
         
