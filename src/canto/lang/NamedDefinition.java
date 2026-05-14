@@ -122,8 +122,6 @@ public class NamedDefinition extends Definition {
                     setAlias((NameNode) reference);
                 }
             }
-            contents.setParent(this);
-            contents.setOwner(this);
             setContents(contents);
         }
     }

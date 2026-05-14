@@ -24,6 +24,10 @@ public class ExternalCollectionDefinition extends CollectionDefinition {
     private Object object = null;
     protected ConstructionList args = null;
 
+    public ExternalCollectionDefinition(Type superType, NameNode name, CantoNode contents) {
+        super(superType, name, contents);
+    }
+    
     public ExternalCollectionDefinition(ExternalDefinition externalDef, Context context, ConstructionList args, Class<?> c) throws Redirection {
          super(externalDef.getNameNode());
          

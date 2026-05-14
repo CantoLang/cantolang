@@ -322,18 +322,21 @@ public class SiteLoader {
         instance = new Instantiation(reference, site);
         try {
             collectionObj = instance.getData(context);
-            if (collectionObj instanceof CantoArray) {
-                collectionObj = ((CantoArray) collectionObj).instantiateArray(context);
-            } 
-                
-            if (collectionObj instanceof ResolvedCollection) {
-                collectionObj = ((ResolvedCollection) collectionObj).getCollectionObject();
-            }
+            
+            if (collectionObj != null) {
+                if (collectionObj instanceof CantoArray) {
+                    collectionObj = ((CantoArray) collectionObj).instantiateArray(context);
+                } 
+                    
+                if (collectionObj instanceof ResolvedCollection) {
+                    collectionObj = ((ResolvedCollection) collectionObj).getCollectionObject();
+                }
 
-            if (collectionObj instanceof List || collectionObj.getClass().isArray()) {
-                collectionObj = ArrayBuilder.instantiateElements(collectionObj, context);
-            } else if (collectionObj instanceof Map) {
-                collectionObj = TableBuilder.instantiateElements(collectionObj, context);
+                if (collectionObj instanceof List || collectionObj.getClass().isArray()) {
+                    collectionObj = ArrayBuilder.instantiateElements(collectionObj, context);
+                } else if (collectionObj instanceof Map) {
+                    collectionObj = TableBuilder.instantiateElements(collectionObj, context);
+                }
             }
       
         } catch (Redirection r) {

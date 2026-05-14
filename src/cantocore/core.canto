@@ -377,7 +377,7 @@ core {
     dynamic eval(x) {
         /--  if an implementation optimizes away empty conditionals then another
              mechanism to force evaluation will be needed here. --/
-        if (x) [/]
+        if (x) {}
     }
 
     /** Returns the maximum of two values. **/

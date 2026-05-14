@@ -133,11 +133,20 @@ abstract public class Definition extends CantoNode implements Name, Construction
         paramLists = def.paramLists;
         name = def.name;
         staticData = def.staticData;
+        contents = def.contents;
+        constructions = def.constructions;
+        childDefs = def.childDefs;
+
         if (context != null) {
             initContext = (Context) context.clone();
         }
     }
 
+    @Override
+    public boolean isEmpty() {
+        return (childDefs == null || childDefs.length == 0) && (constructions == null || constructions.size() == 0);
+    }
+    
     @Override
     protected boolean validate(CantoNode parent, Definition owner) {
         if (super.validate(parent, owner)) {
@@ -161,7 +170,10 @@ abstract public class Definition extends CantoNode implements Name, Construction
     public void setOwner(Definition owner) {
         this.owner = owner;
         if (owner != null) {
-            setDefinitionTable(owner.getDefinitionTable());
+            DefinitionTable defTable = owner.getDefinitionTable();
+            if (defTable != null) {
+                setDefinitionTable(defTable);
+            }
             if (owner.isGlobal() && getDurability() == Durability.IN_CONTEXT) {
                 setDurability(Durability.GLOBAL);
             }
@@ -976,7 +988,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
 
     DefinitionTable getDefinitionTable() {
         if (owner == null) {
-            LOG.error("Definition " + name.getName() + " has no owner!");
+            //LOG.error("Definition " + name.getName() + " has no owner!");
             return null;
         }
         return owner.getDefinitionTable();

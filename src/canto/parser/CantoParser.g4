@@ -78,6 +78,7 @@ block
     : codeBlock
     | textBlock
     | literalBlock
+    | emptyBlock
     ;
 
 emptyBlock
@@ -125,6 +126,7 @@ definition
     : doc = DOC_COMMENT? keep = keepPrefix? access = LOCAL? dur = durability?
     ( collectionElementDefinition
     | collectionDefinition
+    | externalCollectionDefinition
     | namedElementDefinition
     | blockDefinition
     )
@@ -162,6 +164,10 @@ collectionElementDefinition
     : collectionDefName ASSIGN expression SEMICOLON?
     ;
     
+externalCollectionDefinition
+    : collectionDefName ASSIGN? externalBlock
+    ;
+
 collectionDefinition
     : collectionDefName ASSIGN collectionInitBlock
     ;
@@ -221,11 +227,11 @@ tableBlock
     ;
     
 namedElementDefinition
-    : simpleType? identifier params? ASSIGN expression SEMICOLON?
+    : defName ASSIGN expression SEMICOLON?
     ;
 
 blockDefinition
-    : blockDefName (block (CATCH block)? | emptyBlock | abstractBlock | externalBlock)
+    : defName (block (CATCH block)? | abstractBlock | externalBlock)
     ;
 
 construction
@@ -307,12 +313,12 @@ multiParams
     ;
 
 collectionDefName
-    : collectionType identifier params? collectionSuffix?
-    | typeWithArgs identifier params? collectionSuffix
-    | simpleType? identifier params? collectionSuffix
+    : collectionType identifier (multiParams | params)? collectionSuffix?
+    | typeWithArgs identifier (multiParams | params)? collectionSuffix
+    | simpleType? identifier (multiParams | params)? collectionSuffix
     ;
     
-blockDefName
+defName
     : multiType identifier (multiParams | params)?
     | typeWithArgs identifier (multiParams | params)?
     | simpleType? identifier (multiParams | params)?

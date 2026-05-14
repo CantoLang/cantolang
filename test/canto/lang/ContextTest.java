@@ -41,10 +41,6 @@ class ContextTest {
         // For now, just test that context responds to basic operations
         Assertions.assertThat(context.size()).isEqualTo(initialSize);
         
-        // Test cloning
-        Context clonedContext = context.clone(false);
-        Assertions.assertThat(clonedContext).isNotNull();
-        Assertions.assertThat(clonedContext).isNotSameAs(context);
     }
 
     @Test

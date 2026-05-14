@@ -20,7 +20,7 @@ import canto.util.*;
  * Base class for canto nodes. Every statement in a canto program is a node.
  *
  */
-abstract public class CantoNode {
+abstract public class CantoNode implements Cloneable {
 
     /** Standard indent when displaying source */
     public final static String indent = "    ";

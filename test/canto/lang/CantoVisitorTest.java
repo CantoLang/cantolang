@@ -390,10 +390,10 @@ public class CantoVisitorTest {
         "sub_1,sub_2(i),sub_3(c),sub_4 test_sub(),(int i),(c)",
         "m(a[])"
     })
-    public void testVisitBlockDefName(String input) {
-        TypedParser<CantoParser.BlockDefNameContext> parser = new TypedParser<CantoParser.BlockDefNameContext>("blockDefName");
-        CantoParser.BlockDefNameContext ctx = parser.parseInput(input);
-        CantoNode node = visitor.visitBlockDefName(ctx);
+    public void testVisitDefName(String input) {
+        TypedParser<CantoParser.DefNameContext> parser = new TypedParser<CantoParser.DefNameContext>("defName");
+        CantoParser.DefNameContext ctx = parser.parseInput(input);
+        CantoNode node = visitor.visitDefName(ctx);
             
         Assertions.assertThat(node).isInstanceOf(NameNode.class);
 

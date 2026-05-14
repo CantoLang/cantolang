@@ -40,7 +40,7 @@ class CantoParserTest {
         lexer = new CantoLexer(CharStreams.fromString(input));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         parser = new CantoParser(tokens);
-        parser.setTrace(true);
+        //parser.setTrace(true);
         Method method;
         try {
             method = CantoParser.class.getMethod(rule);
@@ -134,7 +134,6 @@ class CantoParserTest {
     @ParameterizedTest
     @DisplayName("Parser should handle various block types")
     @ValueSource(strings = {
-
             "{ x = 5 [| nested block |] x; }",
             "{ x = 5;\n \"code block 1\"; }",
             "{= x = 5;\n \"code block 2\"; =}",
@@ -163,7 +162,9 @@ class CantoParserTest {
             "d4(x) { x; }",
             "int d5(int x) { x; }",
             "d6 [`` literal block } { |] \\ [| ``]",
-            "d7(z) [| text {= z; =} block 2 |]"
+            "d7(z) [| text {= z; =} block 2 |]",
+            "d8 { int put(name, data) [&] }",
+            "d9 { string{} cache [&] }"
     })
     void testBlockDefinition(String input) {
         ParseTree tree = parseInput(input, "blockDefinition");
@@ -213,7 +214,8 @@ class CantoParserTest {
             "x = 42",
             "y(z) = z",
             "w = f(5)",
-            "v = \"string\""
+            "v = \"string\"",
+            "deserialize(str),(field_names[], field_values[]) = deser_impl(owner.def, str, field_names, field_values)"
     })
     void testNamedElementDefinition(String input) {
         ParseTree tree = parseInput(input, "namedElementDefinition");
@@ -228,11 +230,14 @@ class CantoParserTest {
             "'q[]', false, false, false, true",
             "'x[5]', false, false, false, true",
             "'y(z)[]', false, false, true, true",
+            "'b(n){}', false, false, true, true",
             "'int r[10]', false, true, false, true",
             "'int[] s', true, false, false, false",
             "'w{}', false, false, false, true",
             "'t{} u', true, false, false, false",
-            "'v(s, t){}', false, false, true, true"
+            "'string{} uu', true, false, false, false",
+            "'v(s, t){}', false, false, true, true",
+            "'db_row[] query(sql)', true, false, true, false"
     })
     void testCollectionDefName(String input, boolean hasCollectionType, boolean hasSimpleType, boolean hasParams, boolean hasDims) {
         ParseTree tree = parseInput(input, "collectionDefName");
