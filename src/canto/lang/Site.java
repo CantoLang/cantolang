@@ -50,19 +50,17 @@ public class Site extends ComplexDefinition {
     }
     
     void initializeTables(Core core) {
-        String name = getName();
-        Map<String, DefinitionTable> defTableTable = core.getDefTableTable();
-        DefinitionTable defTable = (DefinitionTable) defTableTable.get(name);
+        DefinitionTable defTable = core.getDefinitionTable();
         if (defTable != null) {
             setDefinitionTable(defTable);
         } else {
-            defTable = setNewDefinitionTable();
-            defTableTable.put(name, defTable);
+            throw new IllegalStateException("Core definition table not initialized");
         }
         
         // recursively adds all the defitions to the definition table
         addDefinitions();
         
+        String name = getName();
         Map<String, Map<String, Object>> globalKeepTable = core.getGlobalKeepTable();
         Map<String, Object> globalKeep = globalKeepTable.get(name);
         if (globalKeep == null) {
@@ -201,7 +199,7 @@ public class Site extends ComplexDefinition {
                     list.add(defs[i]);
                 }
             }
-            contents = new CantoBlock(list);
+            contents = new SiteBlock(list);
             setContents(contents);
         }
         return contents;

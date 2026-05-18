@@ -33,6 +33,7 @@ public class PrimitiveType extends AbstractType {
     public final static Type LONG = new PrimitiveType(Long.TYPE);
     public final static Type SHORT = new PrimitiveType(Short.TYPE);
     public final static Type STRING = new PrimitiveType(String.class);
+    public final static Type NUMBER = new PrimitiveType(Number.class);
     public final static Type VOID = new PrimitiveType(Void.TYPE);
 
     public Class<?> type;

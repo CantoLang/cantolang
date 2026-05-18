@@ -414,10 +414,10 @@ public class NamedDefinition extends Definition {
             return null;
 
         } else if (st instanceof TypeList) {
-               Iterator<Type> it = ((TypeList) st).iterator();
-               // first check if one of these types is the one
+            Iterator<CantoNode> it = ((TypeList) st).iterator();
+            // first check if one of these types is the one
             while (it.hasNext()) {
-                   Type nextType = it.next();
+                Type nextType = (Type) it.next();
                 NamedDefinition sd = (NamedDefinition) nextType.getDefinition();
                 if (sd == null) {
                     LOG.error("Definition not found for " + nextType.getName());

@@ -94,14 +94,20 @@ externalBlock
     ;
 
 codeBlock
-    : LCURLY (definition | construction)* RCURLY
-    | (CODE_OPEN | CODE_REOPEN) (definition | construction)* CODE_CLOSE
+    : LCURLY (definition | construction)* DOC_COMMENT? RCURLY
+    | (CODE_OPEN | CODE_REOPEN) (definition | construction)* DOC_COMMENT? CODE_CLOSE
     | EMPTY_TABLE
     ;
 
 textBlock
     : openDelim = (TEXT_OPEN | WTEXT_OPEN | TEXT_REOPEN | WTEXT_REOPEN)
     (textChunk | block)*
+    (closeDelim = TEXT_CLOSE | closeDelim = WTEXT_CLOSE | '|' closeDelim = TEXT_CLOSE | '/' closeDelim = TEXT_CLOSE | '|' closeDelim = WTEXT_CLOSE | '/' closeDelim = WTEXT_CLOSE) 
+    ;
+
+unnestableTextBlock
+    : openDelim = (TEXT_OPEN | WTEXT_OPEN | TEXT_REOPEN | WTEXT_REOPEN)
+    textChunk
     (closeDelim = TEXT_CLOSE | closeDelim = WTEXT_CLOSE | '|' closeDelim = TEXT_CLOSE | '/' closeDelim = TEXT_CLOSE | '|' closeDelim = WTEXT_CLOSE | '/' closeDelim = WTEXT_CLOSE) 
     ;
 
@@ -117,8 +123,10 @@ topDefinition
     : doc = DOC_COMMENT? keep = topKeepPrefix? access = PUBLIC? dur = topDurability?
     ( collectionElementDefinition
     | collectionDefinition
+    | externalCollectionDefinition
     | namedElementDefinition
     | blockDefinition
+    | externalDefinition
     )
     ;
 
@@ -129,15 +137,16 @@ definition
     | externalCollectionDefinition
     | namedElementDefinition
     | blockDefinition
+    | externalDefinition
     )
     ;
 
 topKeepPrefix
-    : KEEP keepAs? keepIn SEMICOLON
+    : KEEP keepAs? keepIn COLON
     ;
 
 keepPrefix
-    : KEEP keepAs? keepIn? SEMICOLON
+    : KEEP keepAs? keepIn? COLON
     ;
 
 keepAs
@@ -231,7 +240,11 @@ namedElementDefinition
     ;
 
 blockDefinition
-    : defName (block (CATCH block)? | abstractBlock | externalBlock)
+    : defName (block (CATCH block)? | abstractBlock)
+    ;
+
+externalDefinition
+    : defName externalBlock
     ;
 
 construction
@@ -240,6 +253,7 @@ construction
     | block SEMICOLON?
     | conditional
     | loop
+    | redirect
     )
     ;
     
@@ -301,7 +315,11 @@ collectionIterator
     ;
 
 stepIterator
-    : simpleType? identifier FROM expression ((to = TO | through = THROUGH) expression)? (BY expression)?
+    : simpleType? identifier FROM expression ((to = TO | through = THROUGH) expression)? (BY expression)? (where = WHERE expression)? (until = UNTIL expression)?
+    ;
+
+redirect
+    : REDIRECT instantiation
     ;
 
 collectionSuffix
@@ -325,7 +343,7 @@ defName
     ;
 
 typeWithArgs
-    : (qualifiedName | identifier) args
+    : (qualifiedName | identifier) typeArgs
     ;
 
 simpleType
@@ -408,6 +426,7 @@ qualifiedName
 any
     : STAR
     ;
+
 anyany
     : STARSTAR
     ;
@@ -424,6 +443,10 @@ args
     : LPAREN (expression (COMMA expression)*)? RPAREN
     ;    
     
+typeArgs
+    : LPAREN (any | (expression (COMMA expression)*))? RPAREN
+    ;    
+    
 dynamicArgs
     : LDYNAMICPAREN (expression (COMMA expression)*)? RDYNAMICPAREN
     ;    
@@ -434,6 +457,8 @@ literal
     | BOOL_LITERAL
     | STRING_LITERAL
     | NULL_LITERAL
+    | unnestableTextBlock
+    | literalBlock
     ;
     
 integerLiteral

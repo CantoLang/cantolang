@@ -2,26 +2,37 @@
  * 
  * CantoBlock.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
 package canto.lang;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import canto.util.EmptyList;
 
 /**
- * A CantoBlock is a container whose children are Canto statements.
+ * 
  */
-
 public class CantoBlock extends Block {
 
-    public CantoBlock() {
+    private List<Definition> defs;
+    
+    protected CantoBlock() {
         super();
+        this.defs = new EmptyList<Definition>();
     }
-
+    
     public CantoBlock(List<CantoNode> children) {
         super(children);
+        this.defs = ExtractDefinitions(children);
+    }
+
+    private static List<Definition> ExtractDefinitions(List<CantoNode> children) {
+        List<Definition> defs = children.stream().filter(c -> c instanceof Definition).map(c -> (Definition) c).collect(Collectors.toList());        
+        return defs;
     }
 
     public boolean isDynamic() {
@@ -36,17 +47,6 @@ public class CantoBlock extends Block {
         return false;
     }
 
-    //    public String toString() {
-//        String str = "[=\n";
-//        Iterator it = getChildren();
-//        while (it.hasNext()) {
-//            CantoNode node = (CantoNode) it.next();
-//            str = str + "\n    " + node.toString();
-//        }
-//        str = str + "\n=]\n";
-//        return str;
-//    }
-
     public String toString(String prefix) {
         String str = "{=\n" + super.toString(prefix) + prefix + "=}";
         return str;
@@ -56,4 +56,3 @@ public class CantoBlock extends Block {
         return firstPrefix + toString(prefix);
     }
 }
-

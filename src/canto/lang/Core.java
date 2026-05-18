@@ -118,7 +118,7 @@ public class Core extends Site {
                     }
                 }
             }
-            return new CodeBlock(list);
+            return new CantoBlock(list);
         }
         
         public List<Name> getAdoptedSiteList() {

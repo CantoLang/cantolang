@@ -144,8 +144,9 @@ class CantoParserTest {
             "[`` literal block } { |] \\ [| ``]",
             "[| text {= z; =} text |]",
             "{ q = 50 [| first nested |] x = 100 [| second nested |] q; x; }",
-            "{ y = 'z' [| nested {= y; =} nested |] x = y }"
-    
+            "{ y = 'z' [| nested {= y; =} nested |] x = y }",
+            "[| <input forms['{= form_name; =}'] /> |]",
+            "[| {= /** W3C support **/ =} |]"
     })
     void testBlock(String block) {
         ParseTree tree = parseInput(block, "block");

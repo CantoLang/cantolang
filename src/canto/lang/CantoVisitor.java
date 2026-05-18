@@ -56,7 +56,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             Map.entry(Integer.valueOf(CantoParser.BANG), new LogicalNotOperator()),
             Map.entry(Integer.valueOf(CantoParser.TILDE), new BitflipOperator())
             );
-    
+    private static UnaryOperator negateOp = new NegateOperator();
 
     
     @Override
@@ -315,6 +315,21 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitExternalDefinition(CantoParser.ExternalDefinitionContext ctx) {
+        CantoParser.DefNameContext nameCtx = ctx.defName();
+        NameNode name = (NameNode) nameCtx.accept(this);
+        ParseTree typeCtx = nameCtx.simpleType();
+        if (typeCtx == null) {
+            typeCtx = nameCtx.multiType();
+        }
+        Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
+        
+        Block block = (Block) ctx.externalBlock().accept(this);
+        ComplexDefinition blockDef = new ComplexDefinition(superType, name, block);
+        return blockDef;
+    }
+
+    @Override
     public CantoNode visitBlockDefinition(CantoParser.BlockDefinitionContext ctx) {
         CantoParser.DefNameContext nameCtx = ctx.defName();
         NameNode name = (NameNode) nameCtx.accept(this);
@@ -327,9 +342,6 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ParseTree blockCtx = ctx.block(0);
         if (blockCtx == null) {
             blockCtx = ctx.abstractBlock();
-            if (blockCtx == null) {
-                blockCtx = ctx.externalBlock();
-            }
         }
         Block block = (Block) blockCtx.accept(this);
         ParseTree catchCtx = ctx.block(1);
@@ -363,7 +375,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 nodes.add(node);
             }
         }
-        return new CodeBlock(nodes);
+        return new CantoBlock(nodes);
     }
 
     @Override
@@ -396,6 +408,16 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             }
         }
         return new StaticBlock(nodes);
+    }
+    @Override
+
+    public CantoNode visitUnnestableTextBlock(CantoParser.UnnestableTextBlockContext ctx) {
+        int openDelim = ctx.openDelim.getType();
+        int closeDelim = ctx.closeDelim.getType();
+        boolean trimLeading = (openDelim == CantoParser.TEXT_OPEN || openDelim == CantoParser.TEXT_REOPEN);
+        boolean trimTrailing = (closeDelim == CantoParser.TEXT_CLOSE);
+        String text = ctx.textChunk().getText();
+        return new StaticText(text);
     }
 
     @Override
@@ -584,22 +606,25 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitMultiType(CantoParser.MultiTypeContext ctx) {
-        List<Type> types = new ArrayList<>();
+        List<CantoNode> types = new ArrayList<CantoNode>();
         for (CantoParser.SimpleTypeContext simpleTypeCtx : ctx.simpleType()) {
-            types.add((Type) simpleTypeCtx.accept(this));
+            types.add(simpleTypeCtx.accept(this));
         }
         return new TypeList(types);
     }
 
     @Override
     public CantoNode visitTypeWithArgs(CantoParser.TypeWithArgsContext ctx) {
+        String name;
         if (ctx.identifier() != null) {
-            return new ComplexType((NameNode) ctx.identifier().accept(this));
+            name = ctx.identifier().getText();
         } else {
-            return new ComplexType((NameNode) ctx.qualifiedName().accept(this));
+            name = ((NameNode) ctx.qualifiedName().accept(this)).getName();
         }
-    }
-    
+        ConstructionList args = (ctx.typeArgs() != null ? (ConstructionList) ctx.typeArgs().accept(this) : new ConstructionList());
+        NameNode nameNode = new NameWithArgs(name, args);
+        return new ComplexType(nameNode);
+    }   
     
     
     @Override
@@ -612,17 +637,35 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             return (NameNode) PrimitiveType.BOOLEAN;
         } else if (ctx.INT() != null) {
             return (NameNode) PrimitiveType.INT;
+        } else if (ctx.LONG() != null) {
+            return (NameNode) PrimitiveType.LONG;
         } else if (ctx.STRING() != null) {
             return (NameNode) PrimitiveType.STRING;
         } else if (ctx.FLOAT() != null) {
             return (NameNode) PrimitiveType.FLOAT;
+        } else if (ctx.DOUBLE() != null) {
+            return (NameNode) PrimitiveType.DOUBLE;
         } else if (ctx.CHAR() != null) {
             return (NameNode) PrimitiveType.CHAR;
         } else if (ctx.BYTE() != null) {
             return (NameNode) PrimitiveType.BYTE;
+        } else if (ctx.NUMBER() != null) {
+            return (NameNode) PrimitiveType.NUMBER;
         } else {
             return null;
         }
+    }
+
+    @Override
+    public CantoNode visitCollectionType(CantoParser.CollectionTypeContext ctx) {
+        Type baseType = (Type) ctx.simpleType().accept(this);
+        List<Dim> dims = new ArrayList<Dim>();
+        for (CantoParser.DimContext dimCtx : ctx.dim()) {
+            Dim dim = dimCtx.arrayDim() != null ? (Dim) dimCtx.arrayDim().accept(this) : (Dim) dimCtx.tableDim().accept(this);
+            dims.add(dim);
+        }
+
+        return new ComplexType(baseType, dims, null);
     }
 
     @Override
@@ -633,9 +676,17 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             return ctx.conditional().accept(this);
         } else if (ctx.loop() != null) {
             return ctx.loop().accept(this);
+        } else if (ctx.redirect() != null) {
+            return ctx.redirect().accept(this);
         } else {
             return ctx.expression().accept(this);
         }
+    }
+    
+    @Override
+    public CantoNode visitRedirect(CantoParser.RedirectContext ctx) {
+        CantoNode target = (CantoNode) ctx.instantiation().accept(this);
+        return new RedirectStatement(target);
     }
 
     @Override
@@ -758,7 +809,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         if (ctx.EMPTY_TABLE() != null) {
             return null;
         }
-        List<Object> elements = new ArrayList<>();
+        List<CantoNode> elements = new ArrayList<>();
         CantoParser.TableElementListContext listCtx = ctx.tableElementList();
         if (listCtx != null) {
             for (CantoParser.TableElementContext elemCtx : listCtx.tableElement()) {
@@ -768,7 +819,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 }
             }
         }
-        return new ListNode<Object>(elements);
+        return new ListNode<CantoNode>(elements);
     }
 
     @Override
@@ -856,7 +907,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         Construction to = (ctx.TO() != null ? (Construction) ctx.expression(i++).accept(this) : null);
         Construction through = (ctx.THROUGH() != null ? (Construction) ctx.expression(i++).accept(this) : null);
         Construction by = (ctx.BY() != null ? (Construction) ctx.expression(i++).accept(this) : null);
-        ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, null, null, null, from, to, through, by);
+        Construction where = (ctx.WHERE() != null ? (Construction) ctx.expression(i++).accept(this) : null);
+        Construction until = (ctx.UNTIL() != null ? (Construction) ctx.expression(i++).accept(this) : null);
+        ForStatement.IteratorValues iteratorValues = new ForStatement.IteratorValues(forDef, null, where, until, from, to, through, by);
         return iteratorValues;
     }
 
@@ -913,7 +966,19 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitUnaryExpression(CantoParser.UnaryExpressionContext ctx) {
         CantoNode operand = ctx.expression().accept(this);
-        UnaryOperator op = (UnaryOperator) ops.get(Integer.valueOf(ctx.op.getType()));
+        UnaryOperator op;
+        int opType = ctx.op.getType();
+        if (opType == CantoParser.PLUS) {
+            // unary plus is an empty operator, return the operand directly
+            return operand;
+            
+        } else if (opType == CantoParser.MINUS) {
+            // can't look up unary minus because the ops table holds the subtract
+            // operator for this token, so use the static value created for this purpose
+            op = negateOp;
+        } else {
+            op = (UnaryOperator) ops.get(Integer.valueOf(ctx.op.getType()));
+        }
         Expression expression = new UnaryExpression(op, operand);
         return expression;
     }
@@ -944,18 +1009,18 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitChoiceExpression(CantoParser.ChoiceExpressionContext ctx) {
-        CantoNode cond = ctx.getRuleContext(ExpressionContext.class, 0).accept(this);
-        CantoNode ifTrue = ctx.getRuleContext(ExpressionContext.class, 1).accept(this);
-        CantoNode ifFalse = ctx.getRuleContext(ExpressionContext.class, 2).accept(this);
+        CantoNode cond = ctx.expression(0).accept(this);
+        CantoNode ifTrue = ctx.expression(1).accept(this);
+        CantoNode ifFalse = ctx.expression(2).accept(this);
         Expression expression = new ChoiceExpression(cond, ifTrue, ifFalse);
         return expression;
     }
 
     @Override
     public CantoNode visitChoiceWithExpression(CantoParser.ChoiceWithExpressionContext ctx) {
-        CantoNode cond = new WithPredicate(ctx.getRuleContext(ExpressionContext.class, 0).accept(this), true);
-        CantoNode ifTrue = ctx.getRuleContext(ExpressionContext.class, 1).accept(this);
-        CantoNode ifFalse = ctx.getRuleContext(ExpressionContext.class, 2).accept(this);
+        CantoNode cond = new WithPredicate(ctx.identifier().accept(this), true);
+        CantoNode ifTrue = ctx.expression(0).accept(this);
+        CantoNode ifFalse = ctx.expression(1).accept(this);
         Expression expression = new ChoiceExpression(cond, ifTrue, ifFalse);
         return expression;
     }
@@ -1010,6 +1075,14 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 LOG.error("Invalid float literal: " + data);
                 return new PrimitiveValue(0.0f);
             }
+
+        } else if (ctx.unnestableTextBlock() != null) {
+            return ctx.unnestableTextBlock().accept(this);
+        } else if (ctx.literalBlock() != null) {
+            // a literal block contains a single StaticText child with the literal value 
+            Block block = (Block) ctx.literalBlock().accept(this);
+            return block.children[0];
+       
         } else if (ctx.BOOL_LITERAL() != null) {
             boolean value = data.equals("true");
             return new PrimitiveValue(value);
@@ -1047,6 +1120,21 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ConstructionList args = new ConstructionList(ctx.expression().size());
         for (CantoParser.ExpressionContext exprCtx : ctx.expression()) {
             args.add((Construction) exprCtx.accept(this));
+        }
+        return args;
+    }
+
+    @Override
+    public CantoNode visitTypeArgs(CantoParser.TypeArgsContext ctx) {
+        ConstructionList args;
+        if (ctx.any() != null) {
+            args = new ConstructionList(1);
+            args.add((Construction) ctx.any().accept(this));
+        } else {
+            args = new ConstructionList(ctx.expression().size());
+            for (CantoParser.ExpressionContext exprCtx : ctx.expression()) {
+                args.add((Construction) exprCtx.accept(this));
+            }
         }
         return args;
     }

@@ -84,6 +84,7 @@ public class CantoBuilder {
         } catch (Exception e) {
             exception = e;
             LOG.error("Error building site", e);
+            site = null;
         }
         
         return site;

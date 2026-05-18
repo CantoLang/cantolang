@@ -14,7 +14,7 @@ package cantocore;
  *
  */
 public final class CoreSource {
-    public static String[] corePaths = { "core.canto", "core_ui.canto", "core_js.canto", "core_platform_java.canto", "core_sandbox.canto" };
+    public static String[] corePaths = { "core.canto" }; // , "core_ui.canto", "core_js.canto", "core_platform_java.canto", "core_sandbox.canto" };
 
     public static String[] getCorePaths() {
         return corePaths;

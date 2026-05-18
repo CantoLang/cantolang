@@ -305,9 +305,13 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
      */
     @SuppressWarnings("unchecked")
     public void resolve(ParameterList forParamDef) {
-        kind = Kind.UNRESOLVED;
+        if (kind != Kind.UNRESOLVED && kind != Kind.DYNAMICALLY_RESOLVED) {
+            // already resolved
+            return;
+        }
         if (reference instanceof Definition && !(reference instanceof DefParameter)) {
             kind = Kind.STATICALLY_RESOLVED;
+            LOG.debug("   ..." + ((Definition) reference).getName() + " is statically resolved");
             return;
         }
         Definition owner = getOwner();
@@ -419,6 +423,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
         // formal parameters are dynamically resolved
         } else if (ndef.isFormalParam()) {
+            LOG.debug("   ..." + checkName + " refers to a formal parameter");
             kind = Kind.DYNAMICALLY_RESOLVED;
             return;
         }

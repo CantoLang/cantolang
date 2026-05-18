@@ -901,10 +901,12 @@ abstract public class Definition extends CantoNode implements Name, Construction
     }
     
     public String getFullName() {
-        if (owner == null) {
-            return name.getName();
+        String name = getName();
+        String ownerName = owner == null ? null : owner.getFullName();
+        if (ownerName == null || ownerName.length() == 0) {
+            return name;
         } else {
-            return owner.getFullName() + "." + name.getName();
+            return ownerName + "." + name;
         }
     }
 

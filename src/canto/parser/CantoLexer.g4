@@ -202,7 +202,7 @@ TEXT_CHUNK             : SafeText+;
 
 fragment OrphanDelim: '|' | '/' | '[' | '{';
 
-fragment NonDelim: ~[|/[{}\]]+;
+fragment NonDelim: ~[|/[{]+;
 
 fragment SafeDelim:
     ('|' ~[\]])

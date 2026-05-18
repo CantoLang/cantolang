@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import canto.runtime.Log;
 import canto.util.*;
 
 
@@ -21,6 +22,7 @@ import canto.util.*;
  *
  */
 abstract public class CantoNode implements Cloneable {
+    private static final Log LOG = Log.getLogger(CantoNode.class);
 
     /** Standard indent when displaying source */
     public final static String indent = "    ";
@@ -150,7 +152,19 @@ abstract public class CantoNode implements Cloneable {
     }
 
     protected boolean validate(CantoNode parent, Definition owner) {
-        if (parent != this.parent || owner != this.owner) {
+        if (parent != this.parent) {
+            if (this.parent == null) {
+                LOG.error("CantoNode " + getName() + " parent is null");
+            } else {
+                LOG.error("CantoNode " + getName() + " parent does not match");
+            }
+            return false;
+        } else if (owner != this.owner) {
+            if (this.parent == null) {
+                LOG.error("CantoNode " + getName() + " owner is null");
+            } else {
+                LOG.error("CantoNode " + getName() + " owner does not match");
+            }
             return false;
         }
         

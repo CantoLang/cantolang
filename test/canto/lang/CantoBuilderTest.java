@@ -24,7 +24,8 @@ public class CantoBuilderTest {
     @DisplayName("Builder should be able to load a site from a string")
     @ValueSource(strings = {
         "site a { int x = 1; public show_x() { x; } }",
-        "site b { public func_1 { sub_func_1(x) { \"x = \"; x; } } public func_2() { 2; } }"
+        "site b { public func_1 { sub_func_1(x) { \"x = \"; x; } } public func_2() { 2; } }",
+        "site c { public f() [| Hello |] named { name [/] } typed { named[] super_type = [] } named param [/] param,typed typed_param [/] }"
     })
     public void testBuildSiteFromString(String siteStr) {
         CantoBuilder builder;

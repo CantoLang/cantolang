@@ -2,7 +2,7 @@
  * 
  * RedirectStatement.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -18,8 +18,11 @@ package canto.lang;
 
 public class RedirectStatement extends Construction {
 
-    public RedirectStatement() {
-        super();
+    public RedirectStatement(CantoNode target) {
+        super(target);
+        children = new CantoNode[1];
+        children[0] = target;
+        children[0].parent = this;
         setDynStat(false, false);
     }
 

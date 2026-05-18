@@ -708,7 +708,7 @@ core {
 
     /** id generator **/
     dynamic int next_id {
-        keep as this in ids_in_session: int n(int x) = x
+        keep as next_id in ids_in_session: int n(int x) = x
         dynamic int incr = n + 1
         
         n(incr);

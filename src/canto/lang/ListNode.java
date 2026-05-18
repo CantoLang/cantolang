@@ -14,28 +14,34 @@ import java.util.*;
 /**
  * An ListNode is a node which contains a list of nodes.
  */
-public class ListNode<E> extends CantoNode implements List<E> {
+public class ListNode<E extends CantoNode> extends CantoNode implements List<E> {
 
-    private List<E> list;
+    private List<CantoNode> list;
     private int numInserted = 0;
 
     public ListNode() {
         super();
-        list = new ArrayList<E>();
+        list = new ArrayList<CantoNode>();
+        setChildren(list);   
     }
 
     public ListNode(int capacity) {
         super();
-        list = new ArrayList<E>(capacity);
+        list = new ArrayList<CantoNode>(capacity);
+        setChildren(list);   
     }
 
+    @SuppressWarnings("unchecked")
     public ListNode(List<E> list) {
         super();
-        this.list = list;
+        this.list = (List<CantoNode>) list;
+        setChildren(this.list);
     }
 
+    @SuppressWarnings("unchecked")
     protected void setList(List<E> list) {
-        this.list = list;
+        this.list = (List<CantoNode>) list;
+        setChildren((List<CantoNode>) list);   
     }
 
     /** Returns <code>false</code> */
@@ -75,13 +81,14 @@ public class ListNode<E> extends CantoNode implements List<E> {
     /** Insert items into this list.  The wrapped list is replaced with a new
      *  ArrayList combining the contents of the passed list and the current list.
      */
+    @SuppressWarnings("unchecked")
     public void insert(List<E> newItems) {
         if (list == null || list.size() == 0) {
-            list = (List<E>) Context.newArrayList(newItems);
+            list = (List<CantoNode>) Context.newArrayList(newItems);
         } else {
-            List<E> newList = (List<E>) Context.newArrayList(newItems);
-            newList.addAll(list);
-            list = newList;
+            List<CantoNode> newList = (List<CantoNode>) Context.newArrayList(newItems);
+            newList.addAll((Collection<? extends E>) list);
+            list = (List<CantoNode>) newList;
         }
         numInserted += newItems.size();
     }
@@ -105,7 +112,7 @@ public class ListNode<E> extends CantoNode implements List<E> {
         if (n > len) {
             throw new IndexOutOfBoundsException("Cannot remove " + n + "elements from list; list size is only " + len);
         }
-        List<E> newList = (List<E>) Context.newArrayList(len - n, list);
+        List<CantoNode> newList = (List<CantoNode>) Context.newArrayList(len - n, list);
         for (int i = n; i < len; i++) {
             newList.add(list.get(i));
         }
@@ -142,7 +149,7 @@ public class ListNode<E> extends CantoNode implements List<E> {
     public int size() { return list.size(); }
     public boolean isEmpty() { return list.isEmpty(); }
     public boolean contains(Object o) { return list.contains(o); }
-    public Iterator<E> iterator() { return list.iterator(); }
+    public Iterator<E> iterator() { return (Iterator<E>) list.iterator(); }
     public Object[] toArray() { return list.toArray(); }
     public <T> T[] toArray(T a[]) { return list.toArray(a); }
     public boolean add(E o) { return list.add(o); }
@@ -155,13 +162,13 @@ public class ListNode<E> extends CantoNode implements List<E> {
     public void clear() { list.clear(); }
     public boolean equals(Object o) { return list.equals(o); }
     public int hashCode() { return list.hashCode(); }
-    public E get(int index) { return list.get(index); }
-    public E set(int index, E element) { return list.set(index, element); }
+    public E get(int index) { return (E) list.get(index); }
+    public E set(int index, E element) { return (E) list.set(index, element); }
     public void add(int index, E element) { list.add(index, element); }
-    public E remove(int index) { return list.remove(index); }
+    public E remove(int index) { return (E) list.remove(index); }
     public int indexOf(Object o) { return list.indexOf(o); }
     public int lastIndexOf(Object o) { return list.lastIndexOf(o); }
-    public ListIterator<E> listIterator() { return list.listIterator(); }
-    public ListIterator<E> listIterator(int index) { return list.listIterator(index); }
-    public List<E> subList(int fromIndex, int toIndex) { return list.subList(fromIndex, toIndex); }
+    public ListIterator<E> listIterator() { return (ListIterator<E>) list.listIterator(); }
+    public ListIterator<E> listIterator(int index) { return (ListIterator<E>) list.listIterator(index); }
+    public List<E> subList(int fromIndex, int toIndex) { return (List<E>) list.subList(fromIndex, toIndex); }
 }

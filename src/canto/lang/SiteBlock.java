@@ -1,8 +1,8 @@
 /* Canto Compiler and Runtime Engine
  * 
- * Block.java
+ * SiteBlock.java
  *
- * Copyright (c) 2025 by cantolang.org
+ * Copyright (c) 2025-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -16,7 +16,7 @@ import canto.util.EmptyList;
 /**
  * 
  */
-public class SiteBlock extends CodeBlock {
+public class SiteBlock extends CantoBlock {
 
     private List<AdoptStatement> adopts;
     private List<ExternStatement> externs;
@@ -29,9 +29,8 @@ public class SiteBlock extends CodeBlock {
     
     public SiteBlock(List<CantoNode> children) {
         super(children);
-
-         this.adopts = ExtractAdopts(children);
-         this.externs = ExtractExterns(children);
+        this.adopts = ExtractAdopts(children);
+        this.externs = ExtractExterns(children);
     }
 
     private static List<AdoptStatement> ExtractAdopts(List<CantoNode> children) {

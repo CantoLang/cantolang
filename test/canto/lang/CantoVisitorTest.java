@@ -137,9 +137,9 @@ public class CantoVisitorTest {
         "'cosmic x = 42',                                          false,  SITE,   COSMIC,      false",
         "'public static x = 42',                                   false,  PUBLIC, STATIC,      false",
         "'public cosmic x = 42',                                   false,  PUBLIC, COSMIC,      false",
-        "'keep in cache; x = 42',                                  false,  SITE,   IN_CONTEXT,  true",
-        "'/* doc */ keep in cache; x = 42',                        true,   SITE,   IN_CONTEXT,  true",
-        "'/* doc */ keep in cache; public global x = 42',          true,   PUBLIC, GLOBAL,      true"
+        "'keep in cache: x = 42',                                  false,  SITE,   IN_CONTEXT,  true",
+        "'/* doc */ keep in cache: x = 42',                        true,   SITE,   IN_CONTEXT,  true",
+        "'/* doc */ keep in cache: public global x = 42',          true,   PUBLIC, GLOBAL,      true"
     })
     public void testVisitTopDefinition(String input, boolean hasDoc, String accessStr, String durStr, boolean hasKeep) {
         TypedParser<CantoParser.TopDefinitionContext> parser = new TypedParser<CantoParser.TopDefinitionContext>("topDefinition");
@@ -175,11 +175,11 @@ public class CantoVisitorTest {
         "'dynamic x = 42',                                 false,  SITE,  DYNAMIC,     false",
         "'local static x = 42',                            false,  LOCAL, STATIC,      false",
         "'local dynamic x = 42',                           false,  LOCAL, DYNAMIC,     false",
-        "'keep; x = 42',                                   false,  SITE,  IN_CONTEXT,  true",
-        "'/* doc */ keep; x = 42',                         true,   SITE,  IN_CONTEXT,  true",
-        "'/* doc */ keep; local x = 42',                   true,   LOCAL, IN_CONTEXT,  true",
-        "'/* doc */ keep; local static x = 42',            true,   LOCAL, STATIC,      true",
-        "'/* doc */ keep; local dynamic x = 42',           true,   LOCAL, DYNAMIC,     true"
+        "'keep: x = 42',                                   false,  SITE,  IN_CONTEXT,  true",
+        "'/* doc */ keep: x = 42',                         true,   SITE,  IN_CONTEXT,  true",
+        "'/* doc */ keep: local x = 42',                   true,   LOCAL, IN_CONTEXT,  true",
+        "'/* doc */ keep: local static x = 42',            true,   LOCAL, STATIC,      true",
+        "'/* doc */ keep: local dynamic x = 42',           true,   LOCAL, DYNAMIC,     true"
     })
     public void testVisitDefinition(String input, boolean hasDoc, String accessStr, String durStr, boolean hasKeep) {
         TypedParser<CantoParser.DefinitionContext> parser = new TypedParser<CantoParser.DefinitionContext>("definition");

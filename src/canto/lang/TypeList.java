@@ -13,17 +13,17 @@ import java.util.*;
 /**
  * A TypeList is a list of types.
  */
-public class TypeList extends ListNode<Type> implements Type {
+public class TypeList extends ListNode<CantoNode> implements Type {
 
     @SuppressWarnings("unchecked")
     static public Type addTypes(Type type1, Type type2) {
     	Definition owner = null;
-        List<Type> list = new ArrayList<Type>();
+        List<CantoNode> list = new ArrayList<CantoNode>();
         if (type1 != null) {
             if (type1 instanceof Collection<?>) {
-                list.addAll((Collection<Type>) type1);
+                list.addAll((Collection<CantoNode>) type1);
             } else {
-                list.add(type1);
+                list.add((CantoNode) type1);
             }
             owner = ((CantoNode) type1).getOwner();
         }
@@ -33,12 +33,12 @@ public class TypeList extends ListNode<Type> implements Type {
                 while (it.hasNext()) {
                     Object t = it.next();
                     if (!list.contains(t)) {
-                        list.add((Type) t);
+                        list.add((CantoNode) t);
                     }
                 }
             } else {
                 if (!list.contains(type2)) {
-                    list.add(type2);
+                    list.add((CantoNode) type2);
                 }
             }
             if (owner == null) {
@@ -62,11 +62,11 @@ public class TypeList extends ListNode<Type> implements Type {
         super();
     }
 
-    public TypeList(List<Type> list) {
+    public TypeList(List<CantoNode> list) {
         super(list);
     }
 
-    public TypeList(List<Type> list, Definition owner) {
+    public TypeList(List<CantoNode> list, Definition owner) {
         super(list);
         setOwner(owner);
         resolve();
@@ -76,9 +76,9 @@ public class TypeList extends ListNode<Type> implements Type {
      *  specified context.
      */
     public boolean isInstance(Object obj, Context context) {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isInstance(obj, context)) {
                 return true;
             }
@@ -88,9 +88,9 @@ public class TypeList extends ListNode<Type> implements Type {
 
     /** Returns true if any type in the list is external. */
     public boolean isExternal() {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isExternal()) {
                 return true;
             }
@@ -100,9 +100,9 @@ public class TypeList extends ListNode<Type> implements Type {
 
     /** Returns true only if every type in the list is primitive. */
     public boolean isPrimitive() {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (!t.isPrimitive()) {
                 return false;
             }
@@ -112,9 +112,9 @@ public class TypeList extends ListNode<Type> implements Type {
 
     /** Returns true only if every type in the list is special. */
     public boolean isSpecial() {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (!t.isSpecial()) {
                 return false;
             }
@@ -126,9 +126,9 @@ public class TypeList extends ListNode<Type> implements Type {
      *  member types in the specified context.
      */
     public boolean isTypeOf(Type type, Context context) {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isTypeOf(type, context)) {
                 return true;
             }
@@ -137,9 +137,9 @@ public class TypeList extends ListNode<Type> implements Type {
     }
 
     public boolean isTypeOf(String typeName) {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isTypeOf(typeName)) {
                 return true;
             }
@@ -155,9 +155,9 @@ public class TypeList extends ListNode<Type> implements Type {
         if (equals(type)) {
             return true;
         } else {
-            Iterator<Type> it = iterator();
+            Iterator<CantoNode> it = iterator();
             while (it.hasNext()) {
-                Type t = it.next();
+                Type t = (Type) it.next();
                 if (t.includes(type)) {
                     return true;
                 }
@@ -173,9 +173,9 @@ public class TypeList extends ListNode<Type> implements Type {
     	if (getName().equals(typeName)) {
     		return true;
         } else {
-            Iterator<Type> it = iterator();
+            Iterator<CantoNode> it = iterator();
             while (it.hasNext()) {
-                Type t = it.next();
+                Type t = (Type) it.next();
                 if (t.includes(typeName)) {
                     return true;
                 }
@@ -187,9 +187,9 @@ public class TypeList extends ListNode<Type> implements Type {
     public Type[] getChildTypes() {
         Type[] childTypes = null;
         List<Type> types = new ArrayList<Type>();
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             types.addAll(Arrays.asList(t.getChildTypes()));
         }
         childTypes = (Type[]) types.toArray(childTypes);
@@ -199,9 +199,9 @@ public class TypeList extends ListNode<Type> implements Type {
     public Type[] getPersistableChildTypes() {
         Type[] childTypes = null;
         List<Type> types = new ArrayList<Type>();
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             types.addAll(Arrays.asList(t.getPersistableChildTypes()));
         }
         childTypes = (Type[]) types.toArray(childTypes);
@@ -219,9 +219,9 @@ public class TypeList extends ListNode<Type> implements Type {
      */
     public List<Dim> getDims() {
         List<Dim> dims = null;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             List<Dim> tdims = t.getDims();
             if (dims == null || dims.size() == 0) {
                 dims = tdims;
@@ -235,9 +235,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns true if the list contains at least one collection type. */
     public boolean isCollection() {
         boolean iscoll = false;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isCollection()) {
                 iscoll = true;
                 break;
@@ -249,9 +249,9 @@ public class TypeList extends ListNode<Type> implements Type {
 
     /** Returns true if any of the types in the list inherits a collection. */
     public boolean inheritsCollection() {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.inheritsCollection()) {
                 return true;
             }
@@ -264,9 +264,9 @@ public class TypeList extends ListNode<Type> implements Type {
      */
     public Type getCollectionType() {
         Type collectionType = null;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (collectionType == null) {
                 collectionType = t.getCollectionType();
             } else {
@@ -279,9 +279,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns true if this type represents an array. */
     public boolean isArray() {
         boolean isarray = false;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isArray()) {
                 isarray = true;
             } else {
@@ -294,9 +294,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns the array type this type represents or is a subtype of, if any, else null. */
     public Type getArrayType() {
         Type arrayType = null;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (arrayType == null) {
                 arrayType = t.getArrayType();
             } else {
@@ -309,9 +309,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns true if this type represents a table. */
     public boolean isTable() {
         boolean istable = false;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.isTable()) {
                 istable = true;
             } else {
@@ -324,9 +324,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns the table type this type represents or is a subtype of, if any, else null. */
     public Type getTableType() {
         Type tableType = null;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (tableType == null) {
                 tableType = t.getTableType();
             } else {
@@ -339,9 +339,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns the base type, not including dimensions, represented by this type. */
     public Type getBaseType() {
         Type baseType = null;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (baseType == null) {
                 baseType = t.getBaseType();
             } else {
@@ -354,9 +354,9 @@ public class TypeList extends ListNode<Type> implements Type {
 
     /** Returns true if this type can be the supertype of a type with the specified parameters. **/
     public boolean canBeSuperForParams(ParameterList params, Context context) {
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.canBeSuperForParams(params, context)) {
                 return true;
             }
@@ -371,9 +371,9 @@ public class TypeList extends ListNode<Type> implements Type {
         Type closestType = null;
         int numClosestArgs = -1;
         int numParams = (params == null ? 0 : params.size());
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             if (t.getDefinition().hasNext(context)) {
             	continue;
             }
@@ -434,9 +434,9 @@ public class TypeList extends ListNode<Type> implements Type {
     /** Returns the most specific common class of values of this type. */
     public Class<?> getTypeClass(Context context) {
         Class<?> typeClass = null;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             Class<?> tc = t.getTypeClass(context);
             if (typeClass == null) {
                 typeClass = tc;
@@ -461,9 +461,9 @@ public class TypeList extends ListNode<Type> implements Type {
             return 0;
         }
         int levels = Integer.MAX_VALUE;
-        Iterator<Type> it = iterator();
+        Iterator<CantoNode> it = iterator();
         while (it.hasNext()) {
-            Type t = it.next();
+            Type t = (Type) it.next();
             int n = t.levelsBelow(type, context);
             if (n >= 0 && n < levels) {
                 levels = n;
@@ -483,9 +483,9 @@ public class TypeList extends ListNode<Type> implements Type {
     public void resolve() {
         if (!resolved) {
             List<Definition> definitions = new ArrayList<Definition>(size());
-            Iterator<Type> it = iterator();
+            Iterator<CantoNode> it = iterator();
             while (it.hasNext()) {
-                Type t = it.next();
+                Type t = (Type) it.next();
                 t.resolve();
                 Definition def = t.getDefinition();
                 // if any definition is unresolvable, abort
@@ -654,13 +654,13 @@ class MultiDefinition extends NamedDefinition {
      *  that have non-null supertypes.
      */
     public Type getSuper() {
-        List<Type> sts = Context.newArrayList(definitions.size(), Type.class);
+        List<CantoNode> sts = Context.newArrayList(definitions.size(), CantoNode.class);
         Iterator<Definition> it = definitions.iterator();
         while (it.hasNext()) {
             Definition def = it.next();
             Type st = def.getSuper();
             if (st != null) {
-                sts.add(st);
+                sts.add((CantoNode) st);
             }
         }
         int len = sts.size();
@@ -676,7 +676,7 @@ class MultiDefinition extends NamedDefinition {
 
     public NamedDefinition getSuperDefinition(Context context) {
         List<Definition> sdefs = Context.newArrayList(definitions.size(), Definition.class);
-        List<Type> sts = Context.newArrayList(definitions.size(), Type.class);
+        List<CantoNode> sts = Context.newArrayList(definitions.size(), CantoNode.class);
         Iterator<Definition> it = definitions.iterator();
         while (it.hasNext()) {
             Definition def = it.next();
@@ -684,7 +684,7 @@ class MultiDefinition extends NamedDefinition {
             Type st = def.getSuper();
             if (sdef != null && st != null) {
                 sdefs.add(sdef);
-                sts.add(st);
+                sts.add((CantoNode) st);
             }
         }
         if (sdefs.size() > 0) {
@@ -849,14 +849,14 @@ class MultiDefinition extends NamedDefinition {
      */
     public Definition getChildDefinition(NameNode node, Context context) {
         int size = types.size();
-        List<Type> childTypes = Context.newArrayList(size, Type.class);
+        List<CantoNode> childTypes = Context.newArrayList(size, CantoNode.class);
         List<Definition> childDefs = Context.newArrayList(size, Definition.class);
         Iterator<Definition> it = definitions.iterator();
         while (it.hasNext()) {
             Definition def = it.next();
             Definition child = def.getChildDefinition(node, context);
             if (child != null) {
-                childTypes.add(child.getType());
+                childTypes.add((CantoNode) child.getType());
                 childDefs.add(child);
             }
         }
