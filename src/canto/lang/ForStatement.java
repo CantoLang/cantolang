@@ -64,15 +64,15 @@ public class ForStatement extends Construction implements ConstructionContainer,
         return false;
     }
 
-    protected void resolve(ParameterList outerParams) {
+    protected int resolve(ParameterList outerParams) {
         ParameterList params = getParameters();
         if (outerParams == null) {
-            body.resolve(params);
+            return body.resolve(params);
         } else {
             ArrayList<DefParameter> newList = new ArrayList<DefParameter>(outerParams.size() + params.size());
             newList.addAll(outerParams);
             newList.addAll(params);
-            body.resolve(new ParameterList(newList));
+            return body.resolve(new ParameterList(newList));
         }
     }
     

@@ -480,7 +480,7 @@ public class TypeList extends ListNode<CantoNode> implements Type {
 
     /** Recursively resolves member types. **/
     @Override
-    public void resolve() {
+    public int resolve() {
         if (!resolved) {
             List<Definition> definitions = new ArrayList<Definition>(size());
             Iterator<CantoNode> it = iterator();
@@ -490,13 +490,14 @@ public class TypeList extends ListNode<CantoNode> implements Type {
                 Definition def = t.getDefinition();
                 // if any definition is unresolvable, abort
                 if (def == null) {
-                    return;
+                    return 1;
                 }
                 definitions.add(def);
             }
             multiDef = new MultiDefinition(this, definitions);
             resolved = true;
         }
+        return resolved ? 0 : 1;
     }
 }
 

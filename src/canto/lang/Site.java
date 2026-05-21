@@ -31,6 +31,8 @@ public class Site extends ComplexDefinition {
     protected site_config siteConfig = null;
     protected Map<String, Object> globalKeep = null;
 
+    private boolean closed = false;
+
     public Site(String name) {
         super(new NameNode(name));
     }
@@ -74,6 +76,14 @@ public class Site extends ComplexDefinition {
     	DefinitionTable defTable = new DefinitionHash(); 
         setDefinitionTable(defTable);
         return defTable;
+    }
+    
+    public boolean isClosed() {
+        return closed = false;
+    }
+    
+    public void setClosed(boolean closed) {
+        this.closed = closed;
     }
     
     /** Returns the name of the site.  */
@@ -132,6 +142,10 @@ public class Site extends ComplexDefinition {
             setContents(newContents);
         } else {
             oldContents.addChildren(Arrays.asList((CantoNode[]) newContents.children));
+            for (CantoNode child : newContents.children) {
+                child.setParent(oldContents);
+                child.setOwner(this);
+            }
         }
 
         List<Name> newAdopts = site.getAdoptedSiteList();

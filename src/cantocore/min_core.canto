@@ -1,0 +1,488 @@
+/-----------------------------------------------------------------------------
+ --  Canto Core
+ --  
+ --  core.canto                                                            --
+ --                                                                         --
+ --  This file contains core definitions -- ones that are broadly useful,   --
+ --  needed by many applications and therefore worth making accessible to   --
+ --  all by default.  In many languages this takes the form of standard     --
+ --  libraries.  The equivalent of a library in Canto is a site that        --
+ --  you adopt.                                                             --
+ --                                                                         --
+ --  core is also a Canto keyword, denoting the root of a site's            --
+ --  definition tree.  For a site to access another site, the two sites     --
+ --  must share the same definition tree.                                   -- 
+ --                                                                         --
+ --  core contains the following:                                           --
+ --      -- language metainformation (version number)                       --
+ --      -- global system properties, settings and configuration            -- 
+ --      -- reflection api                                                  --
+ --      -- database api                                                    --
+ --      -- standard page definition                                        --
+ --      -- user interface definitions (components, forms, layouts)         --
+ --      -- DHTML scripts and styles                                        --
+ --      -- Ajax support                                                    --
+ --      -- interfaces to other languages                                   --
+ --      -- string manipulation                                             --
+ --      -- file i/o                                                        --
+ --      -- math functions                                                  --
+ --      -- convenience functions                                           --
+ --                                                                         --
+ --  Some of the above categories are in their own files, such as core_ui   --
+ --  (containing user interface definitions) and core_js (containing        --
+ --  JavaScript for DHTML and Ajax).                                        --
+ --                                                                         --
+ -----------------------------------------------------------------------------/
+
+core {
+
+    /--- version ---/
+    version = this_server.version
+
+
+    /--- constants for runtime options ---/
+
+    /** Verbosity setting to minimize the information displayed on the console. **/
+    int TERSE = 0
+
+    /** Middle setting for verbosity; some but not all information is displayed on the console. **/
+    int MODERATE = 1
+
+    /** Verbosity setting to output all available information to the console. **/
+    int VERBOSE = 2
+
+    /--- wrapper for site configuration settings ---/
+    
+    /** A generic website configuration. **/
+    site_config {
+        name [?]
+
+        cantopath [?]
+                
+        boolean recursive = false;
+
+        filepath = "."
+        boolean files_first = false;
+        
+        /** Define the available external interfaces (address and port).  If implemented, this overrides 
+         *  the globally defined listen_to array.
+         **/
+        listen_to [?]
+        
+        this;
+    }
+    
+    /--- runtime system reflection and identification ---/
+    
+    /** Abstract Canto processor.  A Canto processor is capable of parsing Canto source
+     *  code and creating canto_site objects.
+     */
+    canto_processor {
+        name [?]
+        version [?]
+        props{} = {}
+        
+        /** Compile Canto source code and return a canto_domain object. **/
+        canto_domain compile(cantopath, boolean recursive, boolean autoload_core),
+                            (canto_source_text, boolean autoload_core) [&]
+
+        /** Returns the domain type.  The default for the primary domain is "site". **/
+        domain_type [?]
+    }
+
+
+    canto_processor canto_server {
+
+        /** The URL prefix that this server uses to filter requests.  This allows an
+         *  HTTP server to dispatch requests among multiple Canto servers, using the
+         *  first part of the URL to differentiate among them.
+         *
+         *  If null, this server accepts all requests.
+         */
+        base_url [/]
+
+        /** The base directory on the local system where this server accesses data files.
+         *  File names in requests are relative to this directory.
+         */
+        file_base [/]
+
+        /** A table associating paths in the request to specific sites.  By default, a site's
+         *  path is simply the site's name, except for the main site, whose path is an empty
+         *  string.  If, however, there is a string in this table associated with a site's name,
+         *  that string is used as the path for requests to that site.
+         */
+        site_paths{} = {}
+
+        /** Returns true if the server was successfully started and has not yet
+         *  been stopped.
+         **/
+        dynamic boolean is_running [/] 
+
+        /** Requests data from the server. **/
+        dynamic get(requestName, requestParams{}) [/]
+
+        /-- support for launching of canto_servers --/
+
+        /** Launches a new canto_server, initialized with the passed parameters, 
+         *  unless a server with the passed name has been launched already by this
+         *  server.  (To launch a new server even if it has already been launched,
+         *  use relaunch_server.)
+         **/
+        dynamic canto_server launch_server(name, params{}) [/]
+        
+        /** Launches a new canto_server, initialized with the passed parameters, after
+         *  stopping any previously launched server with the passed name.
+         */
+        dynamic canto_server relaunch_server(name, params{}) [/]
+    
+        /** Returns the canto_server with the specified name that was launched by this server, or null if
+         *  no such canto_server exists.
+         **/
+        dynamic canto_server get_server(name) [/] 
+    }
+  
+    canto_domain {
+        canto_site{} sites = {}
+        canto_domain{} domains = {}
+        main_site [?]
+        name [?]
+        
+        dynamic get(expr) [?]
+        dynamic definition get_definition(expr) [?]
+        dynamic get_instance(expr) [?]
+        dynamic get_array(expr)[] = []
+        dynamic get_table(expr){} = {}
+
+        canto_context context [&]
+        canto_domain child_domain(name),
+                                 (name, src, boolean is_url),
+                                 (name, path, filter, boolean recursive) [&]
+    }
+
+    /** A context for constructing objects **/
+    canto_context {
+
+        /** The name of the current site **/
+        site_name [?]
+         
+        /-- functions to retrieve cached data, or instantiate if not cached --/
+
+        /** Gets the cached value (if any) associated with the given name in this context. **/
+        dynamic get(name), (definition d, arg[] args) [&]
+
+        /** Modifies the cached value (if any) associated with the given name in this context. **/
+        put(name, data) [&]
+        
+        string{} cache [&]
+
+        /** Constructs the object with the given name in this context. **/
+        construct(name),(name, arg[] args) [&]
+        
+        /** Returns the context associated with the container of the current context. **/
+        canto_context container_context [&]
+    }
+
+    canto_domain complex_domain {
+        canto_domain[] domains = []
+    }
+
+ 
+    /** A Canto statement; base class for the various types of statements. **/
+    canto_node {
+        canto_node[] children = []
+    }
+
+   /** Interface for statements that include names. **/
+    named {
+        name [/]
+    }
+
+    /** Interface for statements that define types. **/
+    typed {
+        named[] super_type = []
+    }
+
+    named param [/]
+    param,typed typed_param [/]
+    param[] param_list = []
+    
+    construction arg [/]
+
+    /** Interface for owners of child constructions. **/
+    construction_owner {
+        construction[] constructions = []
+    }
+
+    parameterized {
+        param_list[] param_lists = []
+    }    
+
+    /** Interface for constructions. **/
+    construction {
+        reference [/]
+        
+        arg[] args = []
+        value(canto_context context) [?]
+    }
+
+    /** Interface for owners of child definitions. **/
+    definition_owner {
+        definition{} defs = [&]
+        definition[] children_of_type(type_name) = [&]
+        definition[] descendants_of_type(type_name) = [&]
+    }
+   
+    canto_node,
+    named,
+    parameterized,
+    construction_owner,
+    definition_owner definition {
+        full_name [&]
+        definition ancestor_of_type(type_name) [&]
+
+        /-- determine whether this is a collection and what kind it is --/
+        boolean is_collection = (is_array || is_table)
+        boolean is_array [&]
+        boolean is_table [&]
+        boolean is_a(type_name) [&]
+
+        /-- instantiate this definition as an object, an array or a table --/
+        dynamic instantiate(arg[] args) [&] 
+        dynamic instantiate_array[] = []
+        dynamic instantiate_table{} = {}
+        canto_context owner_context [?]
+    }
+
+    definition canto_site {
+        definition definition_of_type(type_name) [&]
+    }
+
+    /--- general utility functions ---/
+
+    /** Evaluates the passed reference silently and returns null. **/
+    dynamic eval(x) {
+        /--  if an implementation optimizes away empty conditionals then another
+             mechanism to force evaluation will be needed here. --/
+        if (x) {}
+    }
+
+    /** Returns the maximum of two values. **/
+    dynamic max(a, b) = (a >= b ? a : b)
+
+    /** Returns the minimum of two values. **/
+    dynamic min(a, b) = (a <= b ? a : b)
+
+    /** If the first argument is non-null, return it, else return the second argument. **/
+    dynamic either(a, b) = (a ? a : b)
+
+
+    /** Concatenates two strings, adding a file separator if necessary **/
+    dynamic meld_paths(path1, path2) {
+        path1;
+        if (char_at(path1, strlen(path1) - 1) != file_sep && char_at(path2, 0) != file_sep) {
+            file_sep;
+        }
+        trim_leading(path2, (string) file_sep);
+    }
+
+
+    /--------- platform-independent superclasses of platform-dependent types ---------/
+
+    /** request describes an HTTP request. This is an optional parameter passed to
+     *  pages when they are instantiated by the Canto server.
+     */
+    request {
+
+        /** the URL for the request (not including the query string) */
+        url [/]
+
+        /** the raw path (URL minus server context and query string) **/
+        path_info [/]
+        
+        /** the translated path **/
+        translated_path [/]
+        
+        /** the unparsed query string */
+        query [/]
+
+        /** a table containing the HTTP headers */
+        headers{} = {}
+
+        /** a table containing the parameters, either parsed from the query
+         *  string or extracted from the posted form data.
+         */
+        params{} = {}
+
+        /** a table containing any cookies passed by the client. */
+        cookies{} = {}
+
+        /** the HTTP method used to sent this request, either "GET" or "POST" */
+        method [?]
+
+        /** redirects the response to this request to the indicated url (same as
+         *  redirect statement)
+         */
+        redirectTo(url) [?]
+
+    }
+
+    session {
+        id [?]
+
+        attributes{} = {}
+
+        long created = 0
+
+        int accessed = 0
+
+        int max_inactive = -1
+    }
+
+    response {
+        int status = 200
+    }
+    
+
+
+    /------- display constants for convenience -------/
+
+    static sp = " "
+    static urlsp = "%20";
+    static nbsp = "&nbsp;"
+    static amp = "&amp;"
+    static gt = "&gt;"
+    static lt = "&lt;"
+
+    static bslash = "\\"
+    static bar = "|"
+    static colon = ":"
+    static comma = ","
+    static dash = "-"
+    static dblquote [| " |]
+    static dot = "."
+    static eq = "="
+    static quote = "'"
+    static semicolon = ";"
+    static slash = "/"
+    static uscore = "_"
+
+
+    static hr = "<hr>"
+    static br = "<br>"
+    static para = "<p>"
+    static end_para = "</p>"
+
+    static char tab = (char) 9
+    static char newline = (char) 10
+    static char lf = (char) 10
+    static char cr = (char) 13
+    
+
+    /------------ standard test definitions -----------/
+
+    /**
+     *  Standard test result
+     */
+
+    
+    dynamic test_result(test_name, boolean rslt, msgs[]) {
+        keep: name = test_name
+        keep: boolean result = rslt
+        keep: messages[] = msgs
+        
+        eval(name);
+        eval(result);
+        eval(messages);
+        
+        this;
+    }
+
+    /**
+     *  Standard test
+     */
+
+    dynamic test_base {
+
+        name = owner.type
+
+        /** every test has to define the expected output **/ 
+        expected [?]
+        
+        /** accumulator for logging messages **/
+        keep: string[] logged_messages(msgs[]) = msgs
+        
+        /** a test can log a message at any point **/
+        dynamic test_log(msg) {
+            eval(logged_messages(: logged_messages + msg :));
+            log("test_log: " + msg);
+        }
+
+        /** a test can log an error message at any point **/
+        dynamic error_log(msg) {
+            err_msg = "<span style='color:red'>" + msg + "</span>"
+            eval(logged_messages(: logged_messages + err_msg :));
+            log("error_log: " + msg);
+        }
+
+        sub;    
+    } 
+
+    /**
+     *  Standard test runner
+     */
+
+    dynamic test_runner {
+    
+        name = owner.type
+
+        test_base[] tests = owner.children_of_type("test_base")
+
+        /** accumulator for test results **/
+        keep: test_result[] results(test_result[] rslts) = rslts 
+        test_result newest_result(test_result tr) = tr
+
+        dynamic run {
+            eval(results(: :));
+            for test_base t in tests {
+                eval(newest_result(: run_test(t) :));
+                eval(results(: results + newest_result :));
+            }
+        } 
+        
+        dynamic test_result run_test(test_base t) {
+            log("Running " + t.name);
+            if (t == t.expected) {
+                log(" ...test " + t.name + " passed.");
+                log("     .... logged_messages[0]: " + t.logged_messages[0]);
+                test_result(: t.name, true, t.logged_messages :);
+            } else {
+                log(" ...test " + t.name + " failed.");
+                log("     .... logged_messages[0]: " + t.logged_messages[0]);
+                test_result(: t.name, false, t.logged_messages :);
+            }
+        }
+    } 
+
+    
+
+    /--------------- error handling --------------/
+
+    /**
+     * Base class for errors.
+     */
+    
+    dynamic error(int stat, msg, canto_context ctx),
+         (int stat, msg),
+         (msg, canto_context ctx),
+         (msg) {
+         
+        int status = stat ?? stat : 200
+        message = msg
+        context = ctx
+        
+        this;
+    }
+         
+
+
+}

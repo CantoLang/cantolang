@@ -1801,9 +1801,10 @@ public class NamedDefinition extends Definition {
     }
 
     @Override
-    public void resolve(ParameterList forParams) {
-        super.resolve(forParams);
+    public int resolve(ParameterList forParams) {
+        int unresolved = super.resolve(forParams);
         resolveKeeps();
+        return unresolved;
     }
 
     public void resolveKeeps() {

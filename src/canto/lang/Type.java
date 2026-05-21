@@ -115,8 +115,9 @@ public interface Type extends Name {
      **/
     public Class<?> getTypeClass(Context context);
 
-    /** Resolves any references for this type. **/
-    public void resolve();
+    /** Resolves any references for this type. 
+     * @return **/
+    public int resolve();
 
     /** Returns the number of inheritance levels this type is below the passed 
      *  type in the specified context, or -1 if type is not at the same level or

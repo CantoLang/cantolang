@@ -111,9 +111,9 @@ public class AliasedDefinition extends ExternalDefinition {
         }
     }
     
-    DefinitionTable getDefinitionTable() {
-        return def.getDefinitionTable();
-    }
+//    DefinitionTable getDefinitionTable() {
+//        return def.getDefinitionTable();
+//    }
 
     /** Create the type corresponding to this definition.  This is a copy of  
      *  the createType function in NamedDefinition -- i.e., the super super

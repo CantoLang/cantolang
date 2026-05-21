@@ -68,19 +68,29 @@ public class CantoBuilder {
         try {
             site = (Site) parser.compilationUnit().accept(new CantoVisitor());
             site.initializeTables(core);
-            if (site instanceof Core) {
-                core.mergeSite(site);
-            } else {
-                core.addSite(site);
-            }
-            
-            site.resolve(null);
             
             if (!site.validate(site.getParent(), site.getOwner())) {
                 LOG.error("Site validation failed for site " + site.getName());
+                if (exception == null) {
+                    exception = new RuntimeException("Site validation failed for site " + site.getName());
+                }
                 site = null;
+            } else {
+                if (site instanceof Core) {
+                    if (core.isClosed()) {
+                        LOG.error("Cannot merge new definitions into core because core is closed");
+                        if (exception == null) {
+                            exception = new IllegalStateException("Cannot merge new definitions into core because core is closed");
+                        }
+                        site = null;
+                    } else {
+                        core.mergeSite(site);
+                    }
+                } else {
+                    core.addSite(site);
+                }
             }
-            
+
         } catch (Exception e) {
             exception = e;
             LOG.error("Error building site", e);

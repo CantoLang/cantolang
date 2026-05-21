@@ -2,7 +2,7 @@
  * 
  * KeepNode.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -143,18 +143,20 @@ public class KeepNode extends CantoNode {
     }
 
     @Override
-    protected void resolve(ParameterList forParams) {
+    protected int resolve(ParameterList forParams) {
         Definition owner = getOwner();
+        int unresolved = 0;
         if (defName != null) {
             defInstance = new Instantiation(defName);
             defInstance.setOwner(owner);
-            defInstance.resolve(forParams);
+            unresolved += defInstance.resolve(forParams);
         }
         if (asName != null && asName.getName() != Name.THIS) {
             asInstance = new Instantiation(asName);
             asInstance.setOwner(owner);
-            asInstance.resolve(forParams);
+            unresolved += asInstance.resolve(forParams);
         }
+        return unresolved;
     }
 
     public String toString(String prefix) {

@@ -36,6 +36,18 @@ public class PrimitiveType extends AbstractType {
     public final static Type NUMBER = new PrimitiveType(Number.class);
     public final static Type VOID = new PrimitiveType(Void.TYPE);
 
+    public final static Type BOOLEAN() { return new PrimitiveType(Boolean.TYPE); }
+    public final static Type BYTE()    { return new PrimitiveType(Byte.TYPE); }
+    public final static Type CHAR()    { return new PrimitiveType(Character.TYPE); }
+    public final static Type DOUBLE()  { return new PrimitiveType(Double.TYPE); }
+    public final static Type FLOAT()   { return new PrimitiveType(Float.TYPE); }
+    public final static Type INT()     { return new PrimitiveType(Integer.TYPE); }
+    public final static Type LONG()    { return new PrimitiveType(Long.TYPE); }
+    public final static Type SHORT()   { return new PrimitiveType(Short.TYPE); }
+    public final static Type STRING()  { return new PrimitiveType(String.class); }
+    public final static Type NUMBER()  { return new PrimitiveType(Number.class); }
+    public final static Type VOID()    { return new PrimitiveType(Void.TYPE); }
+
     public Class<?> type;
     public List<Dim> dims;
 

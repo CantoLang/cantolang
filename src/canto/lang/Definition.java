@@ -114,16 +114,19 @@ abstract public class Definition extends CantoNode implements Name, Construction
     protected Definition() {
         super();
         this.name = new NameNode(ANONYMOUS);
+        staticData = new StaticData();
     }
 
     protected Definition(Name name) {
         super();
         this.name = name;
+        staticData = new StaticData();
     }
 
     protected Definition(Name name, CantoNode contents) {
         this(name);
         setContents(contents);
+        staticData = new StaticData();
     }
     
     public Definition(Definition def, Context context) {

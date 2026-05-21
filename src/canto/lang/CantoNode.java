@@ -50,31 +50,6 @@ abstract public class CantoNode implements Cloneable {
 
     /** Constructs a node. */
     protected CantoNode() {}
-
-    /** Initialize this node.  Called right after a node tree has been constructed, to handle initialization
-     *  that cannot be handled in the constructor or by the visitor. The default implementation sets the owner
-     *  field and then calls initNode() on the children.  Subclasses that override this should either call 
-     *  super.initNode() or implement the same functionality.
-     */
-    
-    protected void initNode() {
-        if (parent == null) {
-            if (Definition.class.isInstance(this)) {
-                owner = (Definition) this;
-            } else {
-                owner = null;
-            }
-        } else if (parent instanceof Definition) {
-            owner = (Definition) parent;
-        } else {
-            owner = parent.getOwner();
-        }
-        if (children != null) {
-            for (CantoNode child : children) {
-                child.initNode();
-            }
-        }
-    }
     
     /** Gets the name of this node.  The default name is just the class name, but nodes types that have
      *  meaningful names should override this to return the name.
@@ -141,14 +116,19 @@ abstract public class CantoNode implements Cloneable {
         }
     }
     
-    protected void resolve(ParameterList forParams) {
+    /** Resolve ant references in this node and its children, and return
+     *  the number of unresolved references.
+     */
+    protected int resolve(ParameterList forParams) {
+        int unresolved = 0;
         if (children != null) {
             for (CantoNode child : children) {
                 if (child != null) {
-                    child.resolve(forParams);
+                    unresolved += child.resolve(forParams);
                 }
             }
         }
+        return unresolved;
     }
 
     protected boolean validate(CantoNode parent, Definition owner) {

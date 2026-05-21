@@ -33,6 +33,25 @@ public class NameNode extends CantoNode implements Name {
 
     private List<ParameterList> paramLists = null;
 
+    private static String checkForSpecial(String name) {
+        if (name.equals(DEFAULT)) return DEFAULT;
+        else if (name.equals(CONTAINER)) return CONTAINER;
+        else if (name.equals(COUNT)) return COUNT;
+        else if (name.equals(CORE)) return CORE;
+        else if (name.equals(KEYS)) return KEYS;
+        else if (name.equals(HERE)) return HERE;
+        else if (name.equals(OWNER)) return OWNER;
+        else if (name.equals(SITE)) return SITE;
+        else if (name.equals(SOURCE)) return SOURCE;
+        else if (name.equals(SUB)) return SUB;
+        else if (name.equals(SUPER)) return SUPER;
+        else if (name.equals(THIS)) {
+            return THIS;
+        }
+        else if (name.equals(TYPE)) return TYPE;
+        else return name;
+    }
+    
     public NameNode() {
         super();
     }
@@ -50,8 +69,8 @@ public class NameNode extends CantoNode implements Name {
         if (name == null) {
             throw new IllegalArgumentException("name cannot be set to null");
         }
-        this.name = name;
-        cachedName = stripDelims(name);
+        this.name = checkForSpecial(name);
+        cachedName = stripDelims(this.name);
         parts = cachedName.split("\\.");
     }
     

@@ -73,9 +73,9 @@ public class ComplexType extends AbstractType {
     /** Find the definition associated with this type.
      */
     @Override
-    public void resolve() {
+    public int resolve() {
         if (getDefinition() != null) {
-            return;
+            return 0;
         }
         CantoNode parent = getParent();
         boolean allowCircular = (parent instanceof Expression);
@@ -140,9 +140,11 @@ public class ComplexType extends AbstractType {
             } else {
                 LOG.debug("   ...type " + checkName + " refers to class definition " + def.getFullName());
             }
+            return 0;
 
         } else {
             LOG.debug("   ...type " + checkName + " could not be resolved");
+            return 1;
         }
     }
 

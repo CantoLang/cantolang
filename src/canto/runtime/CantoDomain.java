@@ -155,14 +155,16 @@ public class CantoDomain implements canto_domain {
 
     public Exception getException() {
         Exception e = null;
-        for (int i = 0; i < exceptions.length; i++) {
-            if (exceptions[i] != null) {
-                if (e == null) {
-                    e = exceptions[i];
-                } else if (e instanceof BundledException) {
-                    ((BundledException) e).add(exceptions[i]);
-                } else {
-                    e = new BundledException(e, exceptions[i]);
+        if (exceptions != null) {
+            for (int i = 0; i < exceptions.length; i++) {
+                if (exceptions[i] != null) {
+                    if (e == null) {
+                        e = exceptions[i];
+                    } else if (e instanceof BundledException) {
+                        ((BundledException) e).add(exceptions[i]);
+                    } else {
+                        e = new BundledException(e, exceptions[i]);
+                    }
                 }
             }
         }
@@ -236,10 +238,12 @@ public class CantoDomain implements canto_domain {
         sources = loader.getSources();
         exceptions = loader.getExceptions();
         
-        for (int i = 0; i < exceptions.length; i++) {
-            if (exceptions[i] != null) {
-                loadError = true;
-                break;
+        if (exceptions != null) {
+            for (int i = 0; i < exceptions.length; i++) {
+                if (exceptions[i] != null) {
+                    loadError = true;
+                    break;
+                }
             }
         }
 

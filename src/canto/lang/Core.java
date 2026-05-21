@@ -203,4 +203,15 @@ public class Core extends Site {
         // TODO Auto-generated method stub
         
     }
+
+    public void resolveOpenSites() {
+        Iterator<Site> it = getSites();
+        while (it.hasNext()) {
+            Site site = it.next();
+            if (!site.isClosed()) {
+                site.resolve(null);
+                site.setClosed(true);
+            }
+        }
+    }
 }

@@ -80,6 +80,7 @@ public class SiteLoader {
     	// if the core is empty, load core canto files useing the loader
         // from the CoreSource class, which will most often be loading from canto.jar
 
+        int finishedLoaders = 0;
         if (core.isEmpty()) {
             String[] corePaths = CoreSource.getCorePaths();
             Class<CoreSource> cs = CoreSource.class;
@@ -105,9 +106,16 @@ public class SiteLoader {
                     }
                     LOG.error("Unable to autoload " + corePath + ": " + e);
                 }
+                throw new SiteLoadException("Unable to autoload core: " + e);
             }
         }
+        waitForLoaders(finishedLoaders);
+        finishedLoaders = loaders.size();
 
+        // resolve references in core and mark as closed to prevent further definitions from being added
+        core.resolve(null);
+        core.setClosed(true);
+        
     	String config = "config.canto";
     	Path configPath = Paths.get(config);
         Class<?> c = getClass();
@@ -128,13 +136,13 @@ public class SiteLoader {
         }
         if (url != null) {
             loadURL(url, loaders, true);
-            LOG.info(siteName + " loaded from " + url.toString());
+            LOG.info(config + " loaded from " + url.toString());
         } else if (sourceString != null) {            
             loadString(sourceString, loaders, true);
-            LOG.info(siteName + " loaded from source code");
+            LOG.info(config + " loaded from source code");
         } else if (Files.exists(configPath)) {
             loadFile(configPath.toFile(), filter, loaders, true);
-            LOG.info(siteName + " loaded from " + configPath.toString());
+            LOG.info(config + " loaded from " + configPath.toString());
         } else if (externalPath != null) {
             String[] paths = parsePath(externalPath);
             for (int i = 0; i < paths.length; i++) {
@@ -142,50 +150,40 @@ public class SiteLoader {
             }
         }
 
-        int firstStepSize = loaders.size();
-
-        // wait for all the loader threads
-        waitForLoaders(0, firstStepSize);
+        waitForLoaders(finishedLoaders);
+        finishedLoaders = loaders.size();
 
 
-        // the second step requires querying the site as loaded up to this point
-        // for its cantopath
-
-        // determine the site to query
-        Site site = core.getSite(Name.DEFAULT);
-        if (site == null) {
-            site = core;
+        // the next step requires querying the configuration for cantopath and other
+        // useful information. The configuration is presumed to have loaded to the default
+        // site. If not found there, query core.
+        
+        Site defaultSite = core.getSite(Name.DEFAULT);
+        if (defaultSite == null) {
+            defaultSite = core;
+        } else {
+            // resolve the configuration site
+            defaultSite.resolve(null);
+            defaultSite.setClosed(true);
         }
+        
 
-        LOG.info("site name is " + (siteName == null ? "null; running default site" : siteName));
+        //LOG.info("site name is " + (siteName == null ? "null; running default site" : siteName));
         
         internalPath = null;
         try {
-            Context context = null;
-            if (siteName != null && siteName.length() > 0 && !siteName.equals(Name.DEFAULT)) {
-                Site thisSite = core.getSite(siteName);
-                if (thisSite != null) {
-                    site = thisSite;
-                    context = new Context(site);
-                }
-            } else {
-                context = new Context(site);
-                String name = getProperty("sitename", site, context);
-                if (name != null && name.length() > 0 && !name.equals(Name.DEFAULT)) {
+            Context context = new Context(defaultSite);
+            if (siteName == null || siteName.length() == 0) {
+                String name = getProperty("sitename", defaultSite, context);
+                if (name != null && name.length() > 0) {
                 	siteName = name;
-                    Site thisSite = core.getSite(siteName);
-                    if (thisSite != null) {
-                        site = thisSite;
-                        context = new Context(site);
-                    }
                 }
             }
-            if (context == null) {
-                context = new Context(site);
-            }
+            internalPath = getProperty("cantopath", defaultSite, context);
             
-        	CantoObjectWrapper mainSite = getPropertyObject("main_site", site, context);
-            Object[] sites = (Object[]) getPropertyArray("all_sites", site, context);
+            
+        	CantoObjectWrapper mainSite = getPropertyObject("main_site", defaultSite, context);
+            Object[] sites = (Object[]) getPropertyArray("all_sites", defaultSite, context);
             
             if (sites == null || sites.length == 0) {
             	if (mainSite == null) {
@@ -197,7 +195,6 @@ public class SiteLoader {
             		siteConfig = sc;
             		internalPath = sc.cantopath();
             	}
-            	site.setSiteConfig(sc);
             } else {
                 for (Object siteObj: sites) {
                 	CantoObjectWrapper obj = (CantoObjectWrapper) siteObj;
@@ -222,11 +219,11 @@ public class SiteLoader {
                 loadFile(new File(paths[i]), filter, loaders, true);
             }
     
-            int secondStepSize = loaders.size() - firstStepSize;
-    
-            // wait for the loader threads added in the second step
-            waitForLoaders(firstStepSize, secondStepSize);
-    
+            waitForLoaders(finishedLoaders);
+            finishedLoaders = loaders.size();
+
+            core.resolveOpenSites();
+            
             // everything is loaded, now link
             //link(loaders);
             
@@ -347,7 +344,13 @@ public class SiteLoader {
 
     }
     
-    private final void waitForLoaders(int startIx, int endIx) {
+    private final void waitForLoaders(int startIx) {
+        
+        int endIx = loaders.size();
+        if (startIx >= endIx) {
+            return;
+        }
+        
         synchronized (loaders) {
             while (true) {
                 boolean stillRunning = false;
@@ -468,6 +471,11 @@ public class SiteLoader {
                     fileLoader.load(wait);
                     loaders.add(fileLoader);
                     System.out.flush();
+                    Exception e = fileLoader.getException();
+                    if (e != null) {
+                        throw e;
+                    }
+
                 }
             }
 
@@ -475,6 +483,7 @@ public class SiteLoader {
             LOG.error("Exception loading file: " + path.getAbsolutePath() + ": " + e);
             System.out.flush();
             e.printStackTrace();
+            throw new SiteLoadException("Unable to load " + path.getAbsolutePath() + ": " + e);
         }
     }
 
@@ -494,12 +503,17 @@ public class SiteLoader {
                 CantoSourceLoader urlLoader = new CantoSourceLoader(url);
                 urlLoader.load(wait);
                 loaders.add(urlLoader);
+                Exception e = urlLoader.getException();
+                if (e != null) {
+                    throw e;
+                }
             }
 
         } catch (Exception e) {
             LOG.error("Exception loading URL: " + url.toString() + ": " + e);
             System.out.flush();
             e.printStackTrace();
+            throw new SiteLoadException("Unable to load " + url.toString() + ": " + e);
         }
     }
 
@@ -518,11 +532,16 @@ public class SiteLoader {
             CantoSourceLoader srcLoader = new CantoSourceLoader(reader);
             srcLoader.load(wait);
             loaders.add(srcLoader);
+            Exception e = srcLoader.getException();
+            if (e != null) {
+                throw e;
+            }
 
         } catch (Exception e) {
             LOG.error("Exception loading source code: " + e);
             System.out.flush();
             e.printStackTrace();
+            throw new SiteLoadException("Unable to load source code: " + e);
         }
     }
 
@@ -621,8 +640,11 @@ public class SiteLoader {
             try {
                 CantoBuilder cantoBuilder = new CantoBuilder(source);
                 Site site = cantoBuilder.buildSite(core);
-                exception = cantoBuilder.getException();
                 this.parseResult = site;
+                exception = cantoBuilder.getException();
+                if (exception != null) {
+                    LOG.error("...error loading " + getSourceName() + ": " + exception.getMessage());
+                }
 
             } catch (RecognitionException re) {
                 LOG.error("...syntax error in " + getSourceName() + ": " + re.getMessage());

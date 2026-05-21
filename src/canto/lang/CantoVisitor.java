@@ -31,31 +31,58 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     private static final Log LOG = Log.getLogger(CantoVisitor.class);
 
-    private static Map<Integer, AbstractOperator> ops = Map.ofEntries(
-            Map.entry(Integer.valueOf(CantoParser.PLUS), new AddOperator()),
-            Map.entry(Integer.valueOf(CantoParser.MINUS), new SubtractOperator()),
-            Map.entry(Integer.valueOf(CantoParser.STAR), new MultiplyOperator()),
-            Map.entry(Integer.valueOf(CantoParser.SLASH), new DivideByOperator()),
-            Map.entry(Integer.valueOf(CantoParser.MOD), new ModOperator()),
-            Map.entry(Integer.valueOf(CantoParser.STARSTAR), new PowerOperator()),
-            Map.entry(Integer.valueOf(CantoParser.EQ), new EqualsOperator()),
-            Map.entry(Integer.valueOf(CantoParser.NE), new NotEqualsOperator()),
-            Map.entry(Integer.valueOf(CantoParser.LT), new LessThanOperator()),
-            Map.entry(Integer.valueOf(CantoParser.LE), new LessThanOrEqualOperator()),
-            Map.entry(Integer.valueOf(CantoParser.GT), new GreaterThanOperator()),
-            Map.entry(Integer.valueOf(CantoParser.GE), new GreaterThanOrEqualOperator()),
-            Map.entry(Integer.valueOf(CantoParser.ANDAND), new LogicalAndOperator()),
-            Map.entry(Integer.valueOf(CantoParser.OROR), new LogicalOrOperator()),
-            Map.entry(Integer.valueOf(CantoParser.BITAND), new BitwiseAndOperator()),
-            Map.entry(Integer.valueOf(CantoParser.BITOR), new BitwiseOrOperator()),
-            Map.entry(Integer.valueOf(CantoParser.CARET), new XorOperator()),
-            Map.entry(Integer.valueOf(CantoParser.LSHIFT), new LeftShiftOperator()),
-            Map.entry(Integer.valueOf(CantoParser.RSHIFT), new RightShiftOperator()),
-            Map.entry(Integer.valueOf(CantoParser.RUSHIFT), new RightUnsignedShiftOperator()),
-            Map.entry(Integer.valueOf(CantoParser.IN), new InOperator()),
-            Map.entry(Integer.valueOf(CantoParser.BANG), new LogicalNotOperator()),
-            Map.entry(Integer.valueOf(CantoParser.TILDE), new BitflipOperator())
-            );
+    private static AbstractOperator getOp(int opType) {
+         switch (opType) {
+             case CantoParser.PLUS:
+                 return new AddOperator();
+             case CantoParser.MINUS:
+                 return new SubtractOperator();
+             case CantoParser.STAR:
+                 return new MultiplyOperator();
+             case CantoParser.SLASH:
+                 return new DivideByOperator();
+             case CantoParser.MOD:
+                 return new ModOperator();
+             case CantoParser.STARSTAR:
+                 return new PowerOperator();
+             case CantoParser.EQ:
+                 return new EqualsOperator();
+             case CantoParser.NE:
+                 return new NotEqualsOperator();
+             case CantoParser.LT:
+                 return new LessThanOperator();
+             case CantoParser.LE:
+                 return new LessThanOrEqualOperator();
+             case CantoParser.GT:
+                 return new GreaterThanOperator();
+             case CantoParser.GE:
+                 return new GreaterThanOrEqualOperator();
+             case CantoParser.ANDAND:
+                 return new LogicalAndOperator();
+             case CantoParser.OROR:
+                 return new LogicalOrOperator();
+             case CantoParser.BITAND:
+                 return new BitwiseAndOperator();
+             case CantoParser.BITOR:
+                 return new BitwiseOrOperator();
+             case CantoParser.CARET:
+                 return new XorOperator();
+             case CantoParser.LSHIFT:
+                 return new LeftShiftOperator();
+             case CantoParser.RSHIFT:
+                 return new RightShiftOperator();
+             case CantoParser.RUSHIFT:
+                 return new RightUnsignedShiftOperator();
+             case CantoParser.IN:
+                 return new InOperator();
+             case CantoParser.BANG:
+                 return new LogicalNotOperator();
+             case CantoParser.TILDE:
+                 return new BitflipOperator();
+             default:
+                 throw new IllegalArgumentException("Unknown operator type: " + opType);
+         }
+    }
     private static UnaryOperator negateOp = new NegateOperator();
 
     
@@ -634,23 +661,23 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         } else if (ctx.qualifiedName() != null) {
             return new ComplexType((NameNode) ctx.qualifiedName().accept(this));
         } else if (ctx.BOOLEAN() != null) {
-            return (NameNode) PrimitiveType.BOOLEAN;
+            return (NameNode) PrimitiveType.BOOLEAN();
         } else if (ctx.INT() != null) {
-            return (NameNode) PrimitiveType.INT;
+            return (NameNode) PrimitiveType.INT();
         } else if (ctx.LONG() != null) {
-            return (NameNode) PrimitiveType.LONG;
+            return (NameNode) PrimitiveType.LONG();
         } else if (ctx.STRING() != null) {
-            return (NameNode) PrimitiveType.STRING;
+            return (NameNode) PrimitiveType.STRING();
         } else if (ctx.FLOAT() != null) {
-            return (NameNode) PrimitiveType.FLOAT;
+            return (NameNode) PrimitiveType.FLOAT();
         } else if (ctx.DOUBLE() != null) {
-            return (NameNode) PrimitiveType.DOUBLE;
+            return (NameNode) PrimitiveType.DOUBLE();
         } else if (ctx.CHAR() != null) {
-            return (NameNode) PrimitiveType.CHAR;
+            return (NameNode) PrimitiveType.CHAR();
         } else if (ctx.BYTE() != null) {
-            return (NameNode) PrimitiveType.BYTE;
+            return (NameNode) PrimitiveType.BYTE();
         } else if (ctx.NUMBER() != null) {
-            return (NameNode) PrimitiveType.NUMBER;
+            return (NameNode) PrimitiveType.NUMBER();
         } else {
             return null;
         }
@@ -977,7 +1004,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             // operator for this token, so use the static value created for this purpose
             op = negateOp;
         } else {
-            op = (UnaryOperator) ops.get(Integer.valueOf(ctx.op.getType()));
+            op = (UnaryOperator) getOp(Integer.valueOf(ctx.op.getType()));
         }
         Expression expression = new UnaryExpression(op, operand);
         return expression;
@@ -994,7 +1021,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     private CantoNode handleBinaryExpression(CantoParser.ExpressionContext ctx, Token opToken) {
         CantoNode left = ctx.getRuleContext(ExpressionContext.class, 0).accept(this);
         CantoNode right = ctx.getRuleContext(ExpressionContext.class, 1).accept(this);
-        BinaryOperator op = (BinaryOperator) ops.get(Integer.valueOf(opToken.getType()));
+        BinaryOperator op = (BinaryOperator) getOp(Integer.valueOf(opToken.getType()));
         Expression expression = new BinaryExpression(left, op, right);
         return expression;
     }
@@ -1052,7 +1079,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             NameNode name = (NameNode) nameCtx.accept(this);
             nodeList.add(name);
         }
-        NameNode name = new ComplexName(nodeList);
+        NameNode name = nodeList.size() == 1 ? (NameNode) nodeList.get(0) : new ComplexName(nodeList);
         return new Instantiation(name);
     }
 

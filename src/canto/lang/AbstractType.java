@@ -238,13 +238,17 @@ abstract public class AbstractType extends NameNode implements Type {
     }
 
     @Override
-    public void resolve(ParameterList forParams) {
-        resolve();
+    public int resolve(ParameterList forParams) {
+        return resolve();
     }
 
-    /** Most types don't need to be resolved, so do nothing by default. **/
+    /** Resolve references in this type and return the number that could not be resolved. Most
+     *  types don't need to be resolved, so do nothing by default.
+     **/
     @Override
-    public void resolve() {}
+    public int resolve() {
+        return 0;
+    }
 
     public int levelsBelow(Type type, Context context) {
         if (this.equals(type)) {
