@@ -255,7 +255,8 @@ public class CantoVisitorTest {
             "f{} = { \"\": \"D\", \"item_a\": \"A\", \"item_b\": item_b, \"item_c\": \"C\" }",
             "J{} = { for int i from 0 to 2 {= key_array[i]: value_array[i] =} }",
             "k{} = { for k in nested_table.keys {= k: nested_table[k] =} }",
-            "l{} = { if (t) {= 'e': 'E' =} }"
+            "l{} = { if (t) {= 'e': 'E' =} }",
+            "string{} c = { 'a': 'A', 'b': 'B', 'c': 'C' }"
     })
     public void testVisitTableCollectionDefinition(String input) {
         TypedParser<CantoParser.CollectionDefinitionContext> parser = new TypedParser<CantoParser.CollectionDefinitionContext>("collectionDefinition");

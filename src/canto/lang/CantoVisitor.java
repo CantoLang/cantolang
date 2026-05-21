@@ -528,7 +528,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         
         if (type != null) {
             if (typeDims != null && typeDims.size() > 0) {
-                type = new ComplexType(type, typeDims, null);
+                type = addDimsToType(type, typeDims);
             }
             name = new TypedName(type, name.getName(), paramsList, dims);
         } else if (dims != null && dims.size() > 0) {
@@ -618,7 +618,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             if (dimCtx != null && dimCtx.size() > 0) {
                 List<Dim> dims = dimsHelper(dimCtx);
                 if (paramType != null) {
-                    paramType = new ComplexType(paramType, dims, null);
+                    paramType = addDimsToType(paramType, dims);
                 }
                 paramName = new NameWithDims(paramCtx.identifier().getText(), null, dims);
             } else {
@@ -631,6 +631,15 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         return paramList;
     }
 
+    private Type addDimsToType(Type baseType, List<Dim> dims) {
+        if (baseType instanceof PrimitiveType) {
+            ((PrimitiveType) baseType).setDims(dims);
+            return baseType;
+        } else {
+            return new ComplexType(baseType, dims, null);
+        }
+    }
+    
     @Override
     public CantoNode visitMultiType(CantoParser.MultiTypeContext ctx) {
         List<CantoNode> types = new ArrayList<CantoNode>();
@@ -692,7 +701,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             dims.add(dim);
         }
 
-        return new ComplexType(baseType, dims, null);
+        return (CantoNode) addDimsToType(baseType, dims);
     }
 
     @Override

@@ -347,9 +347,7 @@ typeWithArgs
     ;
 
 simpleType
-    : qualifiedName
-    | identifier
-    | BOOLEAN
+    : BOOLEAN
     | BYTE
     | CHAR
     | DOUBLE
@@ -358,6 +356,8 @@ simpleType
     | LONG
     | NUMBER
     | STRING
+    | qualifiedName
+    | identifier
     ;
 
 multiType

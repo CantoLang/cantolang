@@ -173,7 +173,7 @@ public class SiteLoader {
         internalPath = null;
         try {
             Context context = new Context(defaultSite);
-            if (siteName == null || siteName.length() == 0) {
+            if (siteName == null || siteName.length() == 0 || siteName.equals(Name.DEFAULT)) {
                 String name = getProperty("sitename", defaultSite, context);
                 if (name != null && name.length() > 0) {
                 	siteName = name;
