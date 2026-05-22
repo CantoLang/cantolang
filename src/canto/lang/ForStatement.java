@@ -349,12 +349,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
         public ValueSource getWhere() {
             if (next != null && next.getWhere() != null) {
                 if (where != null) {
-                    CantoNode[] nodes = new CantoNode[3];
-                    nodes[0] = (CantoNode) where;
-                    nodes[1] = new LogicalAndOperator();
-                    nodes[2] = (CantoNode) next.getWhere();
-                    ValueExpression exp = new ValueExpression();
-                    exp.children = nodes;
+                    BinaryExpression exp = new BinaryExpression((CantoNode) where, new LogicalAndOperator(), (CantoNode) next.getWhere());
                     return exp;
                 } else {
                     return next.getWhere();
@@ -371,12 +366,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
         public ValueSource getUntil() {
             if (next != null && next.getUntil() != null) {
                 if (until != null) {
-                    CantoNode[] nodes = new CantoNode[3];
-                    nodes[0] = (CantoNode) until;
-                    nodes[1] = new LogicalAndOperator();
-                    nodes[2] = (CantoNode) next.getUntil();
-                    ValueExpression exp = new ValueExpression();
-                    exp.children = nodes;
+                    BinaryExpression exp = new BinaryExpression((CantoNode) until, new LogicalAndOperator(), (CantoNode) next.getUntil());
                     return exp;
                 } else {
                     return next.getUntil();

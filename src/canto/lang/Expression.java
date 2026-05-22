@@ -26,10 +26,10 @@ public abstract class Expression extends Construction {
         copyChildren(expression);
     }
 
-    @Override
-    public int getNumChildren() {
-        return 0;
-    }
+//    @Override
+//    public int getNumChildren() {
+//        return 0;
+//    }
 
     @Override
     public boolean isPrimitive() {

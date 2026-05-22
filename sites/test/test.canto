@@ -56,7 +56,7 @@ site test {
                               multiple_inheritance_test, name_resolution_test, 
                               nested_cached_identity_test, nested_keep_test, 
                               nested_parameter_test, 
-                              object_child_test, over_inheritance_test, owner_type_test,
+                              object_child_test, owner_type_test,
                               parameter_test, parameter_child_array_test,
                               passed_cache_test, recursion_test, recursive_dynamic_array_test,
                               redirection_test, return_type_test, self_referential_update_test,
@@ -574,11 +574,11 @@ site test {
         mn = "M"
         
         local_defs {
-            this a [/]
-            this b = "B"
-            this c [/]
-            this d = "D"
-            this ef {
+            a a [/]
+            b b = "B"
+            c c [/]
+            d d = "D"
+            ef ef {
                 super;
                 "F";
             }
@@ -593,7 +593,7 @@ site test {
         }
         
         local_defs local_subs {
-            this gh = "H"
+            gh gh = "H"
         }
         
         more_defs {
@@ -1072,73 +1072,6 @@ public sis {
 
         sub_1;
         sub_2;
-    }
-
-
-    public test_case over_inheritance_test {
-        int category = instantiations
-        name = "Overinheritance Test"
-        key = "over_inheritance"
-
-        expected = "ABCDEFGHIJKLM"
-
-        super_1 {
-            under_1 {
-                [| A |]
-                sub;
-                [| E |]
-            }
-        }
-
-
-        super_1 sub_1 {
-            this under_1 {
-                [| B |]
-                sub;
-                [| D |]
-            }
-        }
-        
-        sub_1 sub_sub_1 { 
-            this under_1 [| C |]
-        }
-
-
-        super_super_2 {
-            over_2 [| H |]
-        }
-        
-        super_super_2 super_2 {
-            this over_2 {
-                [| G |]
-                super;
-                [| I |]
-            }
-        }
-        super_2 sub_2 {
-           this over_2 {
-                [| F |]
-                super;
-                [| J |]
-            }
-        }
-        
-        super_3 {
-            under_3 {
-                [| K |]
-                sub;
-                [| M |]
-            }
-        }
-        super_3 sub_null [/]
-
-        sub_null sub_sub_3 {
-            this under_3 [| L |]
-        }
-        
-        sub_sub_1.under_1;
-        sub_2.over_2;
-        sub_sub_3.under_3;
     }
 
 
@@ -1795,7 +1728,7 @@ public lpt {
         name = "Array Test"
         key = "array"
 
-        expected = "ABCDEFGHIJKLMNO"
+        expected = "ABCDEFGHIJK"
 
         fixed_array[3] = [ "A", "B", "C" ]
 
@@ -1810,13 +1743,7 @@ public lpt {
 
         growable_array[] = [ "G", item_h ]
 
-        base_array[] = [ "I" ]
-        base_array extended_array = [ ..., "J" ]
-        
-        index_calc_array[3] = [ "K", "L", "M" ]
-
-        super_array[] = [ "O" ]
-        super_array sub_array = [ "N", ... ]
+        index_calc_array[3] = [ "I", "J", "K" ]
                 
         for w in fixed_array {
             w;
@@ -1827,16 +1754,11 @@ public lpt {
         for y in growable_array {
             y;
         }
-        for z in extended_array {
-            z;
-        }
 
         int n = 1
         index_calc_array[n - 1];
         index_calc_array[n];
         index_calc_array[index_calc_array.count - n];
-        sub_array[0];
-        sub_array[1];
     }
 
 

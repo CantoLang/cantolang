@@ -61,12 +61,18 @@ class CantoParserTest {
     }
 
     @Test
-    @DisplayName("Parser should parse simple identifier")
+    @DisplayName("Parser should parse a simple identifier")
     void testSimpleIdentifier() {
         ParseTree tree = parseInput("hello", "identifier");
         
         Assertions.assertThat(tree).isNotNull();
         Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+
+        tree = parseInput("`~~~`", "identifier");
+        
+        Assertions.assertThat(tree).isNotNull();
+        Assertions.assertThat(parser.getNumberOfSyntaxErrors()).isEqualTo(0);
+
     }
 
     @ParameterizedTest
@@ -74,6 +80,8 @@ class CantoParserTest {
     @ValueSource(strings = {
         "42",           // integer
         "3.14",         // float  
+        "0xFF",         // hex
+        "#7F",          // hex
         "true",         // boolean
         "false",        // boolean
         "'hello'",      // string

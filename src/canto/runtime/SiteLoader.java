@@ -177,10 +177,11 @@ public class SiteLoader {
                 String name = getProperty("sitename", defaultSite, context);
                 if (name != null && name.length() > 0) {
                 	siteName = name;
+                    LOG.info("site name specified in config is " + siteName);
                 }
             }
             internalPath = getProperty("cantopath", defaultSite, context);
-            
+            LOG.info("cantopath specified in config is " + internalPath);
             
         	CantoObjectWrapper mainSite = getPropertyObject("main_site", defaultSite, context);
             Object[] sites = (Object[]) getPropertyArray("all_sites", defaultSite, context);

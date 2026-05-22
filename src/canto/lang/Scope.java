@@ -81,6 +81,7 @@ public class Scope {
         scopesCloned++;
 
         def = scope.def;
+        superdef = scope.superdef;
         params = (scope.params != null ? (ParameterList) scope.params.clone() : new ParameterList(Context.newArrayList(0, DefParameter.class)));
         args = (scope.args != null ? (ConstructionList) scope.args.clone() : new ConstructionList(Context.newArrayList(0, Construction.class)));
 

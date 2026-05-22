@@ -35,7 +35,7 @@
 
     site_config test_config {
         name = "test"
-        cantopath = "./sites/test"
+        cantopath = "./sites/test/test.canto"
         listen_to[] = [ "127.0.0.1:8080" ]
     }    
 

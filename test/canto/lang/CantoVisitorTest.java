@@ -334,6 +334,7 @@ public class CantoVisitorTest {
     @ParameterizedTest
     @DisplayName("Visitor should build various literals")
     @ValueSource(strings = {
+        "\"test\"",
         "42",           // integer
         "3.14",         // float  
         "true",         // boolean

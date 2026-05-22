@@ -3888,7 +3888,7 @@ public class Context {
                 scope.clear();
                 addAbandonedScope(scope);
             } else {
-                LOG.debug(" !!! popped an scope with ref count of " + scope.refCount);
+                LOG.debug(" !!! popped a scope with ref count of " + scope.refCount);
             }
         }
 

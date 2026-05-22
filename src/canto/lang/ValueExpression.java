@@ -2,12 +2,13 @@
  * 
  * ValueExpression.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
 package canto.lang;
 
+import canto.runtime.Log;
 import canto.util.SingleItemList;
 
 /**
@@ -17,6 +18,7 @@ import canto.util.SingleItemList;
  * @version $Revision: 1.8 $
  */
 public class ValueExpression extends Expression {
+    private static final Log LOG = Log.getLogger(ValueExpression.class);
 
     public ValueExpression() {
         super();
@@ -63,4 +65,18 @@ public class ValueExpression extends Expression {
         resolvedExpression.resolveChildrenInPlace(context);
         return resolvedExpression;
     }
+
+    @Override
+    protected boolean validate(CantoNode parent, Definition owner) {
+        if (super.validate(parent, owner)) {
+            if (getNumChildren() != 1) {
+                LOG.error("ValueExpression must have exactly one child; " + getNumChildren() + " found intead", this);
+                return false;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

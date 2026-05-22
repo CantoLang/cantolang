@@ -366,31 +366,32 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         }
         Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
         
-        ParseTree blockCtx = ctx.block(0);
+        ParseTree blockCtx = ctx.block();
         if (blockCtx == null) {
             blockCtx = ctx.abstractBlock();
         }
         Block block = (Block) blockCtx.accept(this);
-        ParseTree catchCtx = ctx.block(1);
-        if (catchCtx != null) {
-            Block catchBlock = (Block) catchCtx.accept(this);
-            block.setCatchBlock(catchBlock);
-        }
         ComplexDefinition blockDef = new ComplexDefinition(superType, name, block);
         return blockDef;
     }
 
     @Override
     public CantoNode visitBlock(CantoParser.BlockContext ctx) {
+        Block block;
         if (ctx.codeBlock() != null) {
-            return ctx.codeBlock().accept(this);
+            block = (Block) ctx.codeBlock().accept(this);
         } else if (ctx.textBlock() != null) {
-            return ctx.textBlock().accept(this);
+            block = (Block) ctx.textBlock().accept(this);
         } else if (ctx.literalBlock() != null) {
             return ctx.literalBlock().accept(this);
         } else {
             return ctx.emptyBlock().accept(this);
         }
+        if (ctx.catchBlock() != null) {
+            Block catchBlock = (Block) ctx.catchBlock().accept(this);
+            block.setCatchBlock(catchBlock);
+        }
+        return block;
     }
 
     @Override
@@ -960,6 +961,11 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitPowerExpression(CantoParser.PowerExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
     public CantoNode visitShiftExpression(CantoParser.ShiftExpressionContext ctx) {
         return handleBinaryExpression(ctx, ctx.op);
     }
@@ -1132,6 +1138,10 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitIdentifier(CantoParser.IdentifierContext ctx) {
         String name = ctx.getText();
+        if (ctx.BACK_QUOTE_IDENTIFIER() != null) {
+            // remove backticks from back quoted identifier
+            name = name.substring(1, name.length() - 1);
+        }
         return new NameNode(name);
     }
 

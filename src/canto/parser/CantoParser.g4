@@ -75,10 +75,14 @@ adoptDirective
     ;
 
 block
-    : codeBlock
-    | textBlock
+    : codeBlock catchBlock?
+    | textBlock catchBlock?
     | literalBlock
     | emptyBlock
+    ;
+
+catchBlock
+    : CATCH block
     ;
 
 emptyBlock
@@ -240,7 +244,7 @@ namedElementDefinition
     ;
 
 blockDefinition
-    : defName (block (CATCH block)? | abstractBlock)
+    : defName (block | abstractBlock)
     ;
 
 externalDefinition
@@ -416,7 +420,7 @@ specialName
     ;
 
 identifier
-   : IDENTIFIER
+   : IDENTIFIER | BACK_QUOTE_IDENTIFIER
    ;
 
 qualifiedName
@@ -486,14 +490,15 @@ expression
     | LPAREN expression RPAREN                                  #NestedExpression
     | op = (PLUS | MINUS | TILDE | BANG) expression             #UnaryExpression
     | expression op = ISA simpleType                            #IsaExpression
+    | expression op = STARSTAR expression                       #PowerExpression
     | expression op = (STAR | SLASH | MOD) expression           #MulDivExpression
     | expression op = (PLUS | MINUS) expression                 #AddSubExpression
     | expression op = (LSHIFT | RUSHIFT | RSHIFT) expression    #ShiftExpression
-    | expression op = (LE | GE | LT | GT) expression            #RelExpression
-    | expression op = (EQ | NE) expression                      #EqExpression
     | expression op = BITAND expression                         #BitAndExpression
     | expression op = CARET expression                          #BitXorExpression
     | expression op = BITOR expression                          #BitOrExpression
+    | expression op = (LE | GE | LT | GT) expression            #RelExpression
+    | expression op = (EQ | NE) expression                      #EqExpression
     | expression op = ANDAND expression                         #LogicalAndExpression
     | expression op = OROR expression                           #LogicalOrExpression
     | <assoc = right> expression op = QMARK

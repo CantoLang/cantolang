@@ -70,7 +70,7 @@ WITHOUT      : 'without';
 
 // Literals
 DECIMAL_LITERAL : ('0' | [1-9] (Digits? | '_'+ Digits)) [lL]?;
-HEX_LITERAL     : '0' [xX] [0-9a-fA-F] ([0-9a-fA-F_]* [0-9a-fA-F])? [lL]?;
+HEX_LITERAL     : ('#' | '0' [xX]) [0-9a-fA-F] ([0-9a-fA-F_]* [0-9a-fA-F])? [lL]?;
 OCT_LITERAL     : '0' '_'* [0-7] ([0-7_]* [0-7])? [lL]?;
 BINARY_LITERAL  : '0' [bB] [01] ([01_]* [01])? [lL]?;
 
@@ -84,8 +84,9 @@ HEX_FLOAT_LITERAL: '0' [xX] (HexDigits '.'? | HexDigits? '.' HexDigits) [pP] [+-
 BOOL_LITERAL: 'true' | 'false';
 
 STRING_LITERAL:
-    '\'' (~['\\\r\n] | EscapeSequence)* '\''
+    ('\'' (~['\\\r\n] | EscapeSequence)* '\''
     | '"' (~["\\\r\n] | EscapeSequence)* '"'
+    ) { setText(getText().substring(1, getText().length()-1)); }
 ;
 
 NULL_LITERAL: 'null';
@@ -164,6 +165,7 @@ NONDOC_COMMENT_OPEN : '/--'            -> pushMode(NONDOC_COMMENT), channel(HIDD
 
 // Identifiers
 IDENTIFIER: Letter LetterOrDigit*;
+BACK_QUOTE_IDENTIFIER: '`' ~[`]+ '`' { setText(getText().substring(1, getText().length()-1)); };
 
 // Fragment rules
 
