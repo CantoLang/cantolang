@@ -139,6 +139,7 @@ definition
     ( collectionElementDefinition
     | collectionDefinition
     | externalCollectionDefinition
+    | dimlessCollectionDefinition
     | namedElementDefinition
     | blockDefinition
     | externalDefinition
@@ -183,6 +184,10 @@ externalCollectionDefinition
 
 collectionDefinition
     : collectionDefName ASSIGN collectionInitBlock
+    ;
+    
+dimlessCollectionDefinition
+    : dimlessCollectionName ASSIGN collectionInitBlock
     ;
 
 collectionInitBlock
@@ -338,6 +343,10 @@ collectionDefName
     : collectionType identifier (multiParams | params)? collectionSuffix?
     | typeWithArgs identifier (multiParams | params)? collectionSuffix
     | simpleType? identifier (multiParams | params)? collectionSuffix
+    ;
+
+dimlessCollectionName
+    : (typeWithArgs | simpleType) identifier (multiParams | params)?
     ;
     
 defName

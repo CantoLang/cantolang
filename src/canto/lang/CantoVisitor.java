@@ -319,6 +319,15 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
     
     @Override
+    public CantoNode visitDimlessCollectionDefinition(CantoParser.DimlessCollectionDefinitionContext ctx) {
+        CantoParser.DimlessCollectionNameContext nameCtx = ctx.dimlessCollectionName();
+        NameNode name = (NameNode) nameCtx.accept(this);
+        Type superType = name.getType();
+        CantoNode contents = ctx.collectionInitBlock().accept(this);
+        return new CollectionDefinition(superType, name, contents);
+    }
+    
+    @Override
     public CantoNode visitExternalCollectionDefinition(CantoParser.ExternalCollectionDefinitionContext ctx) {
         CantoParser.CollectionDefNameContext nameCtx = ctx.collectionDefName();
         NameNode name = (NameNode) nameCtx.accept(this);
@@ -537,8 +546,39 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         } else {
             name = new NameWithParams(name.getName(), paramsList);
         }
-        
+
         return name;
+    }
+
+    @Override
+    public CantoNode visitDimlessCollectionName(CantoParser.DimlessCollectionNameContext ctx) {
+        NameNode name = (NameNode) ctx.identifier().accept(this);
+        Type type;
+
+        CantoParser.TypeWithArgsContext typeWithArgsCtx = ctx.typeWithArgs();
+        if (typeWithArgsCtx != null) {
+            type = (Type) typeWithArgsCtx.accept(this);
+        } else {
+            type = (Type) ctx.simpleType().accept(this);
+        }
+
+        ParseTree paramsCtx = ctx.params();
+        ParseTree multiParamsCtx = ctx.multiParams();
+
+        List<ParameterList> paramsList = null;
+
+        if (multiParamsCtx != null) {
+            paramsList = new ArrayList<>();
+            CantoParser.MultiParamsContext multiCtx = (CantoParser.MultiParamsContext) multiParamsCtx;
+            for (CantoParser.ParamsContext pCtx : multiCtx.params()) {
+                paramsList.add(paramsHelper(pCtx));
+            }
+        } else if (paramsCtx != null) {
+            paramsList = new ArrayList<>(1);
+            paramsList.add(paramsHelper((CantoParser.ParamsContext) paramsCtx));
+        }
+
+        return new TypedName(type, name.getName(), paramsList, null);
     }
 
     /**
