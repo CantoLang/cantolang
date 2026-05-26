@@ -8,6 +8,7 @@
 
 package canto.lang;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -45,8 +46,8 @@ abstract public class CantoNode implements Cloneable {
     /** The children of this node. */
     protected CantoNode[] children;
 
-    /** The documenting comment for this node. */
-    private String docComment;
+    /** The documenting comments for this node. */
+    private List<String> docComments;
 
     /** Constructs a node. */
     protected CantoNode() {}
@@ -58,12 +59,15 @@ abstract public class CantoNode implements Cloneable {
         return '[' + getClass().getName() + ']';
     }
 
-    public void setDocComment(String docComment) {
-        this.docComment = docComment;
+    public void addDocComment(String docComment) {
+        if (docComments == null) {
+            docComments = new ArrayList<String>();
+        }
+        docComments.add(docComment);
     }
     
-    public String getDocComment() {
-        return docComment;
+    public String[] getDocComments() {
+        return docComments == null ? new String[0] : docComments.toArray(new String[docComments.size()]);
     }
     
     public void setOwner(Definition owner) {

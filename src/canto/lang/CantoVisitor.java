@@ -16,6 +16,7 @@ import java.util.Map;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 import canto.parser.CantoParser;
 import canto.parser.CantoParserBaseVisitor;
@@ -93,9 +94,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         for (int i = 0; i < numChildren; i++) {
             Site site = (Site) ctx.getChild(i).accept(this);
             if (site != null) {
-                if (ctx.doc != null) {
-                    site.setDocComment(ctx.doc.getText());
-                }
+                ctx.DOC_COMMENT().forEach(comment -> site.addDocComment(comment.getText()));
                 if (mainSite == null) {
                     mainSite = site;
                 } else if (site.getName().equals(mainSite.getName())) {
@@ -181,8 +180,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         } else {
             node = ctx.adoptDirective().accept(this);
         }
-        if (ctx.doc != null && node != null) {
-            node.setDocComment(ctx.doc.getText());
+        if (node != null) {
+            ctx.DOC_COMMENT().forEach(comment -> node.addDocComment(comment.getText()));
         }
         return node;
     }
@@ -204,13 +203,13 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitTopDefinition(CantoParser.TopDefinitionContext ctx) {
-        Definition def = handleDefinition(ctx.doc, ctx.keep, ctx.access, ctx.dur, ctx);
+        Definition def = handleDefinition(ctx.DOC_COMMENT(), ctx.keep, ctx.access, ctx.dur, ctx);
         return def;
     }
     
     @Override
     public CantoNode visitDefinition(CantoParser.DefinitionContext ctx) {
-        Definition def = handleDefinition(ctx.doc, ctx.keep, ctx.access, ctx.dur, ctx);
+        Definition def = handleDefinition(ctx.DOC_COMMENT(), ctx.keep, ctx.access, ctx.dur, ctx);
         return def;
     }
 
@@ -229,9 +228,14 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitKeepPrefix(CantoParser.KeepPrefixContext ctx) {
         KeepNode keepNode = new KeepNode();
-        if (ctx.keepAs() != null) {
-            NameNode asName = (NameNode) ctx.keepAs().identifier().accept(this);
-            keepNode.setAsName(asName);
+        CantoParser.KeepAsContext keepAsCtx = ctx.keepAs();
+        if (keepAsCtx != null) {
+            if (keepAsCtx.identifier() != null) {
+                NameNode asName = (NameNode) ctx.keepAs().identifier().accept(this);
+                keepNode.setAsName(asName);
+            } else {
+                keepNode.setAsName(new NameNode(Name.THIS));
+            }
         }
         if (ctx.keepIn() != null) {
             Instantiation tableInstance = (Instantiation) ctx.keepIn().instantiation().accept(this);
@@ -272,7 +276,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         }
     }
     
-    private Definition handleDefinition(Token doc, ParseTree keep, Token access, ParseTree dur, ParserRuleContext ctx) {
+    private Definition handleDefinition(List<TerminalNode> comments, ParseTree keep, Token access, ParseTree dur, ParserRuleContext ctx) {
         Definition def = null;
         KeepNode keepNode = null;
         int numNodes = ctx.getChildCount();
@@ -280,8 +284,10 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         def = (Definition) child.accept(this);
 
         if (def != null) {
-            if (doc != null) {
-                def.setDocComment(doc.getText());
+            if (comments != null) {
+                for (TerminalNode comment : comments) {
+                    def.addDocComment(comment.getText());
+                }
             }
             if (keep != null) {
                 keepNode = (KeepNode) keep.accept(this);
@@ -325,6 +331,15 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         Type superType = name.getType();
         CantoNode contents = ctx.collectionInitBlock().accept(this);
         return new CollectionDefinition(superType, name, contents);
+    }
+    
+    @Override
+    public CantoNode visitAbstractCollectionDefinition(CantoParser.AbstractCollectionDefinitionContext ctx) {
+        CantoParser.CollectionDefNameContext nameCtx = ctx.collectionDefName();
+        NameNode name = (NameNode) nameCtx.accept(this);
+        Type superType = name.getType();
+        CantoNode contents = ctx.abstractBlock().accept(this);
+        return new ExternalCollectionDefinition(superType, name, contents);
     }
     
     @Override
@@ -397,8 +412,13 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             return ctx.emptyBlock().accept(this);
         }
         if (ctx.catchBlock() != null) {
-            Block catchBlock = (Block) ctx.catchBlock().accept(this);
+            CantoParser.CatchBlockContext catchCtx = ctx.catchBlock();
+            Block catchBlock = (Block) catchCtx.block().accept(this);
             block.setCatchBlock(catchBlock);
+            if (catchCtx.identifier() != null) {
+                NameNode catchIdentifier = (NameNode) catchCtx.identifier().accept(this);
+                block.setCatchIdentifier(catchIdentifier);
+            }
         }
         return block;
     }
@@ -412,7 +432,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 nodes.add(node);
             }
         }
-        return new CantoBlock(nodes);
+        CantoBlock block = new CantoBlock(nodes);
+        ctx.DOC_COMMENT().forEach(comment -> block.addDocComment(comment.getText()));
+        return block;
     }
 
     @Override
@@ -747,17 +769,20 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitConstruction(CantoParser.ConstructionContext ctx) {
+        CantoNode node;
         if (ctx.block() != null) {
-            return ctx.block().accept(this);
+            node = ctx.block().accept(this);
         } else if (ctx.conditional() != null) {
-            return ctx.conditional().accept(this);
+            node = ctx.conditional().accept(this);
         } else if (ctx.loop() != null) {
-            return ctx.loop().accept(this);
+            node = ctx.loop().accept(this);
         } else if (ctx.redirect() != null) {
-            return ctx.redirect().accept(this);
+            node = ctx.redirect().accept(this);
         } else {
-            return ctx.expression().accept(this);
+            node = ctx.expression().accept(this);
         }
+        ctx.DOC_COMMENT().forEach(comment -> node.addDocComment(comment.getText()));
+        return node;
     }
     
     @Override
@@ -833,6 +858,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             return ctx.expression().accept(this);
         } else if (ctx.arrayDynamicInitExpression() != null) {
             return ctx.arrayDynamicInitExpression().accept(this);
+        } else if (ctx.codeBlock() != null) {
+            return ctx.codeBlock().accept(this);
         } else if (ctx.textBlock() != null) {
             return ctx.textBlock().accept(this);
         } else if (ctx.literalBlock() != null) {
@@ -856,6 +883,21 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 } else if (element != null) {
                     elements.add(new Instantiation(element));
                 }
+            }
+        }
+        return new ArrayBlock(elements);
+    }
+
+    @Override
+    public CantoNode visitAnonymousArray(CantoParser.AnonymousArrayContext ctx) {
+        ConstructionList elements = new ConstructionList();
+        CantoParser.ArrayElementListContext listCtx = ctx.arrayElementList();
+        for (CantoParser.ArrayElementContext elemCtx : listCtx.arrayElement()) {
+            CantoNode element = elemCtx.accept(this);
+            if (element instanceof Construction) {
+                elements.add((Construction) element);
+            } else if (element != null) {
+                elements.add(new Instantiation(element));
             }
         }
         return new ArrayBlock(elements);
@@ -1016,6 +1058,11 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitInExpression(CantoParser.InExpressionContext ctx) {
+        return handleBinaryExpression(ctx, ctx.op);
+    }
+
+    @Override
     public CantoNode visitEqExpression(CantoParser.EqExpressionContext ctx) {
         return handleBinaryExpression(ctx, ctx.op);
     }
@@ -1119,6 +1166,12 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitAnonymousArrayExpression(CantoParser.AnonymousArrayExpressionContext ctx) {
+        ArrayBlock arrayBlock = (ArrayBlock) ctx.anonymousArray().accept(this);
+        return arrayBlock;
+    }
+
+    @Override
     public CantoNode visitInstantiationExpression(CantoParser.InstantiationExpressionContext ctx) {
         Instantiation instantiation = (Instantiation) ctx.instantiation().accept(this);
         return instantiation;
@@ -1143,12 +1196,28 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         String data = ctx.getText();
         if (ctx.integerLiteral() != null) {
             try {
-                int value = Integer.parseInt(data);
-                return new PrimitiveValue(value);
+                int radix = 10;
+                if (data.startsWith("0x") || data.startsWith("0X")) {
+                    radix = 16;
+                    data = data.substring(2);
+                } else if (data.startsWith("#") && data.length() > 1) {
+                    radix = 16;
+                    data = data.substring(1);
+                } else if (data.startsWith("0b") || data.startsWith("0B")) {
+                    radix = 2;
+                    data = data.substring(2);
+                }
+                if (data.endsWith("L") || data.endsWith("l")) {
+                    data = data.substring(0, data.length() - 1);
+                    return new PrimitiveValue(Long.parseLong(data, radix));
+                } else {
+                    return new PrimitiveValue(Integer.parseInt(data, radix));
+                }
             } catch (NumberFormatException e) {
                 LOG.error("Invalid integer literal: " + data);
                 return new PrimitiveValue(0);
             }
+
         } else if (ctx.floatLiteral() != null) {
             try {
                 double value = Double.parseDouble(data);
@@ -1158,8 +1227,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 return new PrimitiveValue(0.0f);
             }
 
-        } else if (ctx.unnestableTextBlock() != null) {
-            return ctx.unnestableTextBlock().accept(this);
+        } else if (ctx.textBlock() != null) {
+            return ctx.textBlock().accept(this);
+
         } else if (ctx.literalBlock() != null) {
             // a literal block contains a single StaticText child with the literal value 
             Block block = (Block) ctx.literalBlock().accept(this);
@@ -1168,6 +1238,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         } else if (ctx.BOOL_LITERAL() != null) {
             boolean value = data.equals("true");
             return new PrimitiveValue(value);
+
         } else if (ctx.NULL_LITERAL() != null) {
             return new PrimitiveValue(null);
         }
@@ -1215,7 +1286,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ConstructionList args;
         if (ctx.any() != null) {
             args = new ConstructionList(1);
-            args.add((Construction) ctx.any().accept(this));
+            args.add(ConstructionList.ANY_ARG);
         } else {
             args = new ConstructionList(ctx.expression().size());
             for (CantoParser.ExpressionContext exprCtx : ctx.expression()) {

@@ -150,9 +150,9 @@ public class CantoVisitorTest {
         Definition def = (Definition) node;
 
         if (hasDoc) {
-            Assertions.assertThat(def.getDocComment()).isNotNull();
+            Assertions.assertThat(def.getDocComments().length).isGreaterThan(0);
         } else {
-            Assertions.assertThat(def.getDocComment()).isNull();
+            Assertions.assertThat(def.getDocComments().length).isEqualTo(0);
         }
 
         Assertions.assertThat(def.getAccess()).isEqualTo(Definition.Access.valueOf(accessStr));
@@ -190,9 +190,9 @@ public class CantoVisitorTest {
         Definition def = (Definition) node;
 
         if (hasDoc) {
-            Assertions.assertThat(def.getDocComment()).isNotNull();
+            Assertions.assertThat(def.getDocComments().length).isGreaterThan(0);
         } else {
-            Assertions.assertThat(def.getDocComment()).isNull();
+            Assertions.assertThat(def.getDocComments().length).isEqualTo(0);
         }
 
         Assertions.assertThat(def.getAccess()).isEqualTo(Definition.Access.valueOf(accessStr));
@@ -336,7 +336,11 @@ public class CantoVisitorTest {
     @ValueSource(strings = {
         "\"test\"",
         "42",           // integer
+        "37L",          // long
         "3.14",         // float  
+        "0xFF",         // hex
+        "0X7fffffffffffffffL", // long hex 
+        "#7F",          // hex
         "true",         // boolean
         "false",        // boolean
         "'hello'",      // string

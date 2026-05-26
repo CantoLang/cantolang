@@ -157,6 +157,12 @@ abstract public class Definition extends CantoNode implements Name, Construction
                 LOG.error("Definition " + this + " has null name");
                 return false;
             }
+            if (access == Access.PUBLIC) {
+                if (owner != null && owner.getAccess() != Access.PUBLIC) {
+                    LOG.error("Definition " + this + " is public but its owner " + owner + " is not public");
+                    return false;
+                }
+            }
             DefinitionTable defTable = getDefinitionTable();
             if (defTable == null) {
                 LOG.error("Definition " + this + " has null definition table");

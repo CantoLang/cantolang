@@ -26,7 +26,7 @@ globeDefinition
 
 compilationUnit
     :
-    ( doc = DOC_COMMENT?
+    ( DOC_COMMENT*
     ( cosmosDefinition
     | globeDefinition
     | siteDefinition
@@ -59,7 +59,7 @@ siteBlock
     ;
 
 directive
-    : doc = DOC_COMMENT?
+    : DOC_COMMENT*
     ( externDirective
     | adoptDirective
     )
@@ -82,7 +82,7 @@ block
     ;
 
 catchBlock
-    : CATCH block
+    : CATCH identifier? block
     ;
 
 emptyBlock
@@ -98,8 +98,8 @@ externalBlock
     ;
 
 codeBlock
-    : LCURLY (definition | construction)* DOC_COMMENT? RCURLY
-    | (CODE_OPEN | CODE_REOPEN) (definition | construction)* DOC_COMMENT? CODE_CLOSE
+    : LCURLY (definition | construction)* DOC_COMMENT* RCURLY
+    | (CODE_OPEN | CODE_REOPEN) (definition | construction)* DOC_COMMENT* CODE_CLOSE
     | EMPTY_TABLE
     ;
 
@@ -124,7 +124,9 @@ literalBlock
     ;
 
 topDefinition
-    : doc = DOC_COMMENT? keep = topKeepPrefix? access = PUBLIC? dur = topDurability?
+    : DOC_COMMENT* keep = topKeepPrefix?
+      DOC_COMMENT* access = PUBLIC?
+      DOC_COMMENT* dur = topDurability?
     ( collectionElementDefinition
     | collectionDefinition
     | externalCollectionDefinition
@@ -135,9 +137,12 @@ topDefinition
     ;
 
 definition
-    : doc = DOC_COMMENT? keep = keepPrefix? access = LOCAL? dur = durability?
+    : DOC_COMMENT* keep = keepPrefix?
+      DOC_COMMENT* access = (LOCAL | PUBLIC)?
+      DOC_COMMENT* dur = durability?
     ( collectionElementDefinition
     | collectionDefinition
+    | abstractCollectionDefinition
     | externalCollectionDefinition
     | dimlessCollectionDefinition
     | namedElementDefinition
@@ -155,7 +160,7 @@ keepPrefix
     ;
 
 keepAs
-    : AS identifier
+    : AS (identifier | THIS)
     ;
     
 keepIn
@@ -178,6 +183,10 @@ collectionElementDefinition
     : collectionDefName ASSIGN expression SEMICOLON?
     ;
     
+abstractCollectionDefinition
+    : collectionDefName ASSIGN? abstractBlock
+    ;
+
 externalCollectionDefinition
     : collectionDefName ASSIGN? externalBlock
     ;
@@ -205,7 +214,7 @@ arrayElementList
     ;
 
 arrayElement
-    : expression | arrayDynamicInitExpression | collectionInitBlock | textBlock | literalBlock
+    : expression | arrayDynamicInitExpression | collectionInitBlock | codeBlock | textBlock | literalBlock
     ;
 
 arrayDynamicInitExpression
@@ -219,6 +228,10 @@ arrayBlock
     | LCURLY arrayElementList RCURLY
     ;
     
+anonymousArray
+    : LBRACKET arrayElementList RBRACKET
+    ;
+
 tableInitBlock
     : EMPTY_TABLE
     | LCURLY tableElementList? RCURLY
@@ -257,7 +270,7 @@ externalDefinition
     ;
 
 construction
-    : doc = DOC_COMMENT?
+    : DOC_COMMENT*
     ( expression SEMICOLON
     | block SEMICOLON?
     | conditional
@@ -267,39 +280,39 @@ construction
     ;
     
 conditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) block (elseIfPart)* (elsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier index* | LPAREN identifier index* RPAREN))) block (elseIfPart)* (elsePart)?
     ;
 
 elseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) block
+    : DOC_COMMENT* ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier index* | LPAREN identifier index* RPAREN))) block
     ;
 
 elsePart
-    : doc = DOC_COMMENT? ELSE block
+    : DOC_COMMENT* ELSE block
     ; 
 
 arrayConditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) arrayBlock (arrayElseIfPart)* (arrayElsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier index* | LPAREN identifier  index* RPAREN))) arrayBlock (arrayElseIfPart)* (arrayElsePart)?
     ;
 
 arrayElseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) arrayBlock
+    : DOC_COMMENT* ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier index* | LPAREN identifier index* RPAREN))) arrayBlock
     ;
 
 arrayElsePart
-    : doc = DOC_COMMENT? ELSE arrayBlock
+    : DOC_COMMENT* ELSE arrayBlock
     ; 
 
 tableConditional
-    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) tableBlock (tableElseIfPart)* (tableElsePart)?
+    : ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier index* | LPAREN identifier index* RPAREN))) tableBlock (tableElseIfPart)* (tableElsePart)?
     ;
 
 tableElseIfPart
-    : doc = DOC_COMMENT? ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier | LPAREN identifier RPAREN))) tableBlock
+    : DOC_COMMENT* ELSE ((cond = IF expression) | (cond = (WITH | WITHOUT) (identifier index* | LPAREN identifier index* RPAREN))) tableBlock
     ;
 
 tableElsePart
-    : doc = DOC_COMMENT? ELSE tableBlock
+    : DOC_COMMENT* ELSE tableBlock
     ; 
 
 loop
@@ -470,14 +483,13 @@ literal
     | BOOL_LITERAL
     | STRING_LITERAL
     | NULL_LITERAL
-    | unnestableTextBlock
+    | textBlock
     | literalBlock
     ;
     
 integerLiteral
     : DECIMAL_LITERAL
     | HEX_LITERAL
-    | OCT_LITERAL
     | BINARY_LITERAL
     ;
 
@@ -506,6 +518,7 @@ expression
     | expression op = BITAND expression                         #BitAndExpression
     | expression op = CARET expression                          #BitXorExpression
     | expression op = BITOR expression                          #BitOrExpression
+    | expression op = IN expression                             #InExpression
     | expression op = (LE | GE | LT | GT) expression            #RelExpression
     | expression op = (EQ | NE) expression                      #EqExpression
     | expression op = ANDAND expression                         #LogicalAndExpression
@@ -516,5 +529,6 @@ expression
        expression COLON expression                              #ChoiceWithExpression 
     | literal                                                   #LiteralExpression
     | instantiation                                             #InstantiationExpression
+    | anonymousArray                                            #AnonymousArrayExpression
     ;
 

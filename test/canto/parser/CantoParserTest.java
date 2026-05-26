@@ -79,8 +79,10 @@ class CantoParserTest {
     @DisplayName("Parser should handle various literals")
     @ValueSource(strings = {
         "42",           // integer
+        "37L",          // long
         "3.14",         // float  
         "0xFF",         // hex
+        "0X7fffffffffffffffL", // long hex 
         "#7F",          // hex
         "true",         // boolean
         "false",        // boolean
@@ -185,6 +187,7 @@ class CantoParserTest {
     @ParameterizedTest
     @DisplayName("Parser should handle various conditionals")
     @ValueSource(strings = {
+            "with (tbl[\"a\"]) { 'J'; }",
             "if (x) { x; }",
             "if x { x; } else { z; }",
             "if y > 0 { y; } else [| zero |]",
@@ -220,6 +223,8 @@ class CantoParserTest {
     @ParameterizedTest
     @DisplayName("Parser should handle various element definitions")
     @ValueSource(strings = {
+            "t = [| 42 |]",
+            "title = [| title: {= label; =} |]",
             "x = 42",
             "y(z) = z",
             "w = f(5)",

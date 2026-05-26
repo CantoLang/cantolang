@@ -39,16 +39,19 @@ public class Site extends ComplexDefinition {
 
     public Site(NameNode name) {
         super(name);
+        setAccess(Access.PUBLIC);
     }
 
     public Site(String domain, String name) {
         super(new NameNode(name));
         setDomainName(domain);
+        setAccess(Access.PUBLIC);
     }
 
     public Site(String domain, NameNode name) {
         super(name);
         setDomainName(domain);
+        setAccess(Access.PUBLIC);
     }
     
     void initializeTables(Core core) {

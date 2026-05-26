@@ -34,20 +34,31 @@ public class ConstructionList extends ListNode<Construction> {
         public long getLong(Context context)                         { return 0; }
 		public double getDouble(Context context)                     { return 0; }
 		public Value getValue(Context context)                       { return NullValue.NULL_VALUE; }
-		public boolean isPrimitive()                                 { return true; }
-        @Override
-        public boolean isStatic() {
-            // TODO Auto-generated method stub
-            return false;
-        }
-        @Override
-        public boolean isDynamic() {
-            // TODO Auto-generated method stub
-            return false;
-        }
         @Override
         public Object generateData(Context context, Definition def) {
-            // TODO Auto-generated method stub
+            return null;
+        }
+    };
+    
+    public final static Construction ANY_ARG = new Construction() {
+        public boolean getBoolean(Context context)                   { return false; }
+        public String getText(Context context)                       { return null; }
+        public Object getData(Context context)                       { return null; }
+        public Object getData(Context context, Definition def)       { return null; }
+        public boolean isAbstract(Context context)                   { return false; }
+        public Type getType(Context context, boolean generate)       { return null; }
+        public String getDefinitionName()                            { return "*"; }
+        public Construction getUltimateConstruction(Context context) { return this; }
+        public String toString()                                     { return "(any arg)"; }
+        public String getString(Context context)                     { return null; }
+        public byte getByte(Context context)                         { return 0; }
+        public char getChar(Context context)                         { return 0; }
+        public int getInt(Context context)                           { return 0; }
+        public long getLong(Context context)                         { return 0; }
+        public double getDouble(Context context)                     { return 0; }
+        public Value getValue(Context context)                       { return NullValue.NULL_VALUE; }
+        @Override
+        public Object generateData(Context context, Definition def) {
             return null;
         }
     };

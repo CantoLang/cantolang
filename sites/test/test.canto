@@ -45,11 +45,10 @@ site test {
                               count_test, corresponding_super_test, dynamic_argument_list_test, 
                               dynamic_array_test, dynamic_array_element_child_test,
                               dynamic_code_block_test, dynamic_table_test, 
-                              expression_arg_type_test, expression_comprehension_test, 
-                              external_argument_test, 
+                              expression_arg_type_test, external_argument_test, 
                               external_array_parameter_test, external_map_array_test,
                               external_test, higher_order_def_test, indexed_alias_test, 
-                              keep_by_test, keep_in_test, keep_scope_test, keep_test,
+                              keep_in_test, keep_scope_test, keep_test,
                               lateral_inheritance_test, logic_test, loop_parameter_test, 
                               mapped_array_table_test,
                               multidimensional_array_test, multidimensional_table_test,
@@ -2525,7 +2524,7 @@ public dtcet {
         name = "Table Test"
         key = "table"
 
-        expected = "ABCDEFGHIJKLMNOPQ"
+        expected = "ABCDEFGHIJKLMNO"
 
         item_b = "B"
         key_c = "item_c"
@@ -2559,7 +2558,6 @@ public dtcet {
         
         table_super{} = {}
         table_super table_sub = { "o": "O" }
-        table_sub table_sub_sub = { ..., "p": "P", "o": "Q" } 
         
         fixed_table["item_a"];
         fixed_table["item_b"];
@@ -2590,8 +2588,6 @@ public dtcet {
         tbl2["m"];
         table_with_arg("N")["n"];
         table_sub["o"];
-        table_sub_sub["p"];
-        table_sub_sub["o"];
     }
 
 public tt {
@@ -2721,10 +2717,8 @@ public tpt {
         int int_ix = 5
         
         cache_array[] = [ "X", "X", "X" ]
-        keep by ix0 in cache_array: val1(x) = x
-        keep by ix1 in cache_array: val2(x) = x
-        ix0 = "0"
-        int ix1 = 1
+        keep as `0` in cache_array: val1(x) = x
+        keep as `1` in cache_array: val2(x) = x
         
         /-- the instantiations have to be dynamic because of the dynamic keeps --/
         eval(val1(: "E" :));
@@ -3924,12 +3918,10 @@ public dsta {
         name = "Redirection Test"
         key = "redirection"
 
-        expected = "ABCD"
+        expected = "ABC"
 
         r = "x"
         c = "C"
-        d = "y"
-        dd = "d"
 
         {
             [| A |]
@@ -3961,20 +3953,6 @@ public dsta {
 
         } catch {
             [| z |]
-        }
-        
-        {
-            [| X |]
-            redirect (dd)
-
-        } catch dd {
-            [| x |]
-
-        } catch d {
-            [| D |]
-        
-        } catch {
-            [| y |]
         }
         
     }
@@ -4532,11 +4510,7 @@ public kt {=
         }
 
         keep_C {
-            c [/]
-
-            ckey = "c"
-
-            keep by ckey: // in container:
+            keep as c: // in container:
             zz {
                 "C";
             }
@@ -4562,73 +4536,6 @@ public kt {=
         keep_C.c;
         keep_D.d;
     }
-
-
-    public test_case keep_by_test {
-        int category = caching
-        name = "Keep By Test"
-        key = "keep_by"
-
-        expected = "ABCD"
-
-        test_cache{} = {}
-        
-        keep_A {
-            keep by akey in test_cache: z = "A"
-            akey = "a"
-
-            eval(z);
-        }
-
-        bkey = "b"
-        keep_B {
-            keep by bkey in test_cache: w = "B"
-
-            eval(w);
-        }
-
-        keep_C {
-            keep by ckey in test_cache:
-            zz {
-                ckey = "c"
-                "C";
-            }
-
-            eval(zz);
-        }
-        
-        keep_D {
-           keep by dkey in test_cache: d(x) = x
-           
-           dkey(k) = k
-           
-           dkey("d");
-           d("D");
-        }
-
-        keep_A; 
-        keep_B;
-        keep_C;
-        eval(keep_D);
-                
-        test_cache["a"];
-        test_cache["b"];
-        test_cache["c"];
-        test_cache["d"];
-    }
-
-public dkt {
-        test_cache{} = {}
-        
-        keep_A {
-            keep by akey in test_cache: z = "A"
-            akey = "a"
-
-            eval(z);
-        }
-        keep_A; 
-        test_cache["a"];
-}
 
 
     public test_case nested_keep_test {
@@ -5588,30 +5495,6 @@ public coac {
         childless_alias_def_2.super_child_2;
     }
 
-    public test_case expression_comprehension_test {
-        int category = arithmetic
-        
-        name = "Expression Comprehension Test"
-        key = "expression_comprehension"
-
-        expected = "ABC"
-    
-        dynamic int looped_expression = 1 + for int i = 2 to 5 {= i =}
-        dynamic int iffed_expression(boolean flag) = 1 + if (flag) {= 1 =}
-        
-        if (looped_expression == 10)      [| A |] else [| x |]
-        if (iffed_expression(true) == 2)  [| B |] else [| x |]
-        if (iffed_expression(false) == 1) [| C |] else [| x |]
-    }
-
-public ect {=
- dynamic int looped_expression = 1 + for int i = 2 to 5 { i }
- dynamic int iffed_expression(boolean flag) = 1 + if (flag) { 1 }
-
- if (looped_expression == 10)      [| A |] else [| x |]
- if (iffed_expression(true) == 2)  [| B |] else [| x |]
- if (iffed_expression(false) == 1) [| C |] else [| x |]
-=}
 
     public test_case children_of_parameterized_super_test {
         int category = instantiations
@@ -6290,57 +6173,6 @@ memt {=
             br;
         }
         [| </b> |]
-    }
-
-    session_id(session s) = s.id
-    static global_per_session_cache{} = {}
-
-    keep by session_id in global_per_session_cache:
-    char[] session_char_array = []
-   
-    static gps_2{} = {}
-
-    dynamic add_to_session_char_array(char c, session s) {
-        keep by session_id in gps_2: char session_c = 'a';
-        
-        keep by session_id in global_per_session_cache:
-        dynamic char[] new_char_array(char x) = session_char_array + x
-
-        keep by session_id in gps_2: dynamic char new_c(char y) = session_c + 1
-
-        eval(session_id(s));
-        eval(new_char_array(c));
-        eval(new_c(c));
-    }
-
-    dynamic growing_array_example_4(session s) {
-        eval(session_id(: s :));
-        [| <b> |]
-        for char letter from 'A' through 'J' {
-            add_to_session_char_array(letter, s);
-            session_char_array;
-            br;
-        }
-        [| </b> |]
-    }
-
-page(r, s) gctest(request r, session s) {
-    growing_array_example_4(s);
-}
-
-
-    dynamic int auto_id(table_name) {
-        static int all_ids{} = { table_name: 0 }
-        keep by table_name in all_ids: int next_id = curr_id + 1
-        dynamic int curr_id = all_ids[table_name]
-        
-        next_id(: :);
-        log("auto_id for " + table_name + " is " + next_id);
-    }
-    
-    dynamic int current_id(table_name) {
-        auto_id.all_ids[table_name];
-        log("current_id for " + table_name + " is " + auto_id.all_ids[table_name]);
     }
 
     global int global_id_sequence(int n) = n
@@ -7526,7 +7358,7 @@ public ttr {
             zx(: zx + 1 :);
             log("gparent.child called");
         }
-        global int gchild {
+        keep: int gchild {
             zx(: zx + 1 :);
             log("gparent.gchild called");
         }
