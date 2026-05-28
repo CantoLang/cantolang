@@ -236,10 +236,12 @@ public class ExternalDefinition extends ComplexDefinition {
 //    }
 
     /** Returns <code>true</code> */
+    @Override
     public boolean isExternal() {
         return true;
     }
 
+    @Override
     public String getFullName() {
         String name = getName();
         
@@ -255,11 +257,13 @@ public class ExternalDefinition extends ComplexDefinition {
     /** Returns the full name in context.  For external definitions, the full name
      *  in context is just the full name.
      */
+    @Override
     public String getFullNameInContext(Context context) {
         return getFullName();
     }
     
 
+    @Override
     protected Type createType() {
         return new ExternalType(this);
     }
@@ -270,6 +274,7 @@ public class ExternalDefinition extends ComplexDefinition {
 //
 //   }
 
+    @Override
     public List<Dim> getDims() {
         if (dims == null) {
             Class<?> c = getExternalClass();
@@ -372,6 +377,7 @@ public class ExternalDefinition extends ComplexDefinition {
         return true;
     }
 
+    @Override
     public Definition getExplicitChildDefinition(NameNode node) {
         return getExternalChildDefinition(node, null);
     }
@@ -392,6 +398,7 @@ public class ExternalDefinition extends ComplexDefinition {
         }
     }
 
+    @Override
     public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
 
         ComplexName restOfName = null;

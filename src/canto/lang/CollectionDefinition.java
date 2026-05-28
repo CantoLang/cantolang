@@ -207,10 +207,15 @@ public class CollectionDefinition extends ComplexDefinition {
     public void setDims(List<Dim> dims) {
         this.dims = dims;
         int numDims = dims.size();
-        Dim majorDim = (Dim) dims.get(numDims - 1);
-        majorDimType = majorDim.getType();
-        if (builder == null) {
-            setTable(majorDim.isTable());
+        if (numDims > 0) {
+            Dim majorDim = (Dim) dims.get(numDims - 1);
+            majorDimType = majorDim.getType();
+            if (builder == null) {
+                setTable(majorDim.isTable());
+            }
+        } else {
+            majorDimType = null;
+            setTable(false);
         }
     }
         

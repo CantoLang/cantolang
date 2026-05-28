@@ -3888,7 +3888,8 @@ public class Context {
                 scope.clear();
                 addAbandonedScope(scope);
             } else {
-                LOG.debug(" !!! popped a scope with ref count of " + scope.refCount);
+                // this just means that the scope is still in use somewhere else, most likely in a ResolvedInstance
+                LOG.debug("Scope (" + scope.toString() + ") popped a scope with ref count of " + scope.refCount);
             }
         }
 

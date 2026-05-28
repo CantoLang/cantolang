@@ -335,6 +335,9 @@ class ArrayInstance implements CantoArray, DynamicObject {
         } else if (valueGen instanceof IndexedMethodConstruction) {
             data = ((IndexedMethodConstruction) valueGen).getCollectionObject(context);
             
+        } else if (valueGen instanceof ConstructionGenerator) {
+            data = ((ConstructionGenerator) valueGen).generateConstructions(context);
+
         } else {
             data = valueGen.getValue(context);
         }

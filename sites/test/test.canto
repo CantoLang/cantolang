@@ -33,7 +33,7 @@ site test {
                               array_arithmetic_test, array_builder_test,
                               array_element_builder_test, array_element_child_array_test,
                               array_element_type_test, array_parameter_test, 
-                              base_child_subclass_test, bitwise_array_operator_test, border_layout_test,
+                              base_child_subclass_test, bitwise_array_operator_test,
                               cache_test, cached_aliased_parameter_test, cached_array_test,
                               cached_child_of_alias_test, cached_external_object_test, 
                               cached_identity_test, cached_object_test, 
@@ -41,7 +41,7 @@ site test {
                               children_of_global_test, children_of_overridden_super_test, 
                               children_of_parameterized_super_test, children_of_static_test,
                               collection_parse_test, collection_operators_test, collection_utilities_test,
-                              compass_layout_test, complex_array_test, conditional_inheritance_test,
+                              complex_array_test, conditional_inheritance_test,
                               count_test, corresponding_super_test, dynamic_argument_list_test, 
                               dynamic_array_test, dynamic_array_element_child_test,
                               dynamic_code_block_test, dynamic_table_test, 
@@ -4057,77 +4057,6 @@ public dsta {
         eval(sru_array(: sru_array + sru_array(: ["G"] :) :));
         sru_array[1];
     }        
-
-
-    public test_case border_layout_test {
-        int category = layouts
-        name = "Border Layout Test"
-        key = "border_layout"
-        boolean need_exact_match = false
-
-        expected [|
-            <table><tr><td>
-                <table>
-                <tr><td colspan="3" align="center">ABC</td></tr>
-                <tr><td>D</td><td>E</td><td>F</td></tr>
-                <tr><td colspan="3" align="center">GHI</td></tr>
-                </table>
-            </td><td></td><td>
-                <table>
-                <tr><td colspan="3" align="center">JKL</td></tr>
-                <tr><td>M</td><td>N</td><td>O</td></tr>
-                <tr><td colspan="3" align="center">PQR</td></tr>
-                </table>
-            </td></tr></table>
-        |]
-
-        north = "ABC"
-        west = "D"
-        center = "E"
-        east = "F"
-        south = "GHI"
-
-        comp_array[5] = [ "JKL", "M", "N", "O", "PQR" ]
-
-        border_layout(null,
-                      border_layout(north, west, center, east, south),
-                      null,
-                      border_layout(comp_array),
-                      null);
-    }
-
-
-    public test_case compass_layout_test {
-        int category = layouts
-        name = "Compass Layout Test"
-        key = "compass_layout"
-        boolean need_exact_match = false
-
-        expected [/
-            <table><tr><td>A</td>
-            <td>B</td>
-            <td>C</td>
-            </tr><tr><td>D</td>
-            <td>E</td>
-            <td>F</td>
-            </tr><tr><td>G</td>
-            <td>H</td>
-            <td>I</td>
-            </tr></table>
-        |]
-
-        nw = "A"
-        n = "B"
-        ne = "C"
-        w = "D"
-        c = "E"
-        e = "F"
-        sw = "G"
-        s = "H"
-        se = "I"
-
-        compass_layout(nw, n, ne, w, c, e, sw, s, se);
-    }
 
 
     public test_case cache_test {

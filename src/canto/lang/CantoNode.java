@@ -136,6 +136,7 @@ abstract public class CantoNode implements Cloneable {
     }
 
     protected boolean validate(CantoNode parent, Definition owner) {
+        //LOG.debug("Validating " + getName());
         if (parent != this.parent) {
             if (this.parent == null) {
                 LOG.error("CantoNode " + getName() + " parent is null");

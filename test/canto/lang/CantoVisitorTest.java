@@ -229,6 +229,7 @@ public class CantoVisitorTest {
     @ParameterizedTest
     @DisplayName("Visitor should build various array definitions")
     @ValueSource(strings = {
+            "t[] = [ \"123\" ]",
             "u[] = [ 42, 43, 44 ]",
             "v[] = [ z + 1, x * 2, f(z) ]",
             "w[] = [ for x in a { x, x + 1 } ] ",

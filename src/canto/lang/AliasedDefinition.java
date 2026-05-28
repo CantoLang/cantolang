@@ -45,20 +45,29 @@ public class AliasedDefinition extends ExternalDefinition {
     /** Returns true, because this definition represents a special name, whose
      *  meaning can change. 
      */
+    @Override
     public boolean isDynamic() {
         return true;
     }
 
+    @Override
     public Durability getDurability() {
         return Durability.IN_CONTEXT;
     }
 
+    @Override
+    public String getFullName() {
+        return owner.getFullName();
+    }
+
     /** Construct this definition with the specified arguments in the specified context. */
+    @Override
     public Object instantiate(ConstructionList args, IndexList indexes, Context context) throws Redirection {
         return def.instantiate(args, indexes, context);
     }
 
         
+    @Override
     public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
         
         Object data = def.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
@@ -77,6 +86,7 @@ public class AliasedDefinition extends ExternalDefinition {
         return this;
     }
 
+    @Override
     public Definition getUltimateDefinition(Context context) {
         if (Name.THIS.equals(getName())) {
             // this is to make sure an object wrapper is created
@@ -94,6 +104,7 @@ public class AliasedDefinition extends ExternalDefinition {
     }
 
 
+    @Override
     public List<ParameterList> getParamLists() {
         return def.getParamLists();
     }
@@ -103,6 +114,7 @@ public class AliasedDefinition extends ExternalDefinition {
     //    return def != null ? def.getType() : super.getType();
     //}
 
+    @Override
     public Site getSite() {
         if (def instanceof Site) {
             return (Site) def;
@@ -122,6 +134,7 @@ public class AliasedDefinition extends ExternalDefinition {
      *  This way we get a regular, non-external type, which works better
      *  for parameter list matching (see this_type_test.show_c).
      **/
+    @Override
     protected Type createType() {
         NameNode nameNode = getNameNode();
         ComplexType type = new ComplexType(this, nameNode.getName(), nameNode.getDims(), nameNode.getArguments());

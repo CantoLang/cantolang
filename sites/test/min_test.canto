@@ -1,0 +1,124 @@
+/-- canto test file --/
+
+
+site test {
+
+    /------------------------------------------------------------------/
+    /---                         Test cases                         ---/
+    /------------------------------------------------------------------/
+
+    /** All standard test cases **/
+    test_case[] all_tests = [ abstract_test, arithmetic_test ]
+
+    /** Base class for test cases. **/
+    base_test {
+
+        name [?]
+        
+        boolean need_exact_match = true
+
+    }
+
+    base_test test_case {
+
+        expected [/]
+
+        [|
+           <table bgcolor="#F7F1DD" cellpadding="2" cellspacing="4" width="400">
+           <tr><th bgcolor="#CCBB77" colspan="2">{= name; =}</th></tr>
+        |]
+
+        if (expected) [|
+           <tr><td><b>Expected:</b></td><td>{= expected; =} </td></tr>
+        |]
+
+        [| <tr><td><b>Result:</b></td> |]
+
+        if (need_exact_match && sub != expected) [|
+            <td style="color: red">
+        |] else [|
+            <td>
+        |]
+        sub;
+
+        [| </td></tr></table> |]
+
+    }
+
+
+    public test_case arithmetic_test {
+        name = "Arithmetic Test"
+
+        expected = "ABCDE"
+
+        int n = 2
+        float f = 1.999999999999999
+        long x = 0x7fffffffffffffffL
+
+        float expr1 = (n * f) / f
+        if (expr1 == 2.0) [| A |]
+
+        long expr2 = (n - x) * -1 + n
+        if (expr2 == x) [| B |]
+
+        int expr3 = (int) f
+        if (expr3 == 1) [| C |]
+        
+        int d = 2**3
+        if (d == 8) [| D |]
+        
+        float e = 6.25**0.5
+        if (e == 2.5) [| E |]
+    }
+
+
+    public test_case abstract_test {
+        name = "Abstract Definition Test"
+        
+        expected = "ABCDEF"
+        
+        test_super {
+            test_child [?]
+        
+            [| A |] catch [| x |]
+        }
+        
+        test_super test_sub_1 {
+            [| B |] catch [| x |]
+        }
+        
+        test_super test_sub_2 {
+            {
+                test_child;
+                [| x |]
+            } catch [| C |]
+        }
+
+        test_super test_sub_3 {
+            test_child [/]
+        
+            {
+                test_child;
+                [| D |]
+            } catch [| x |]
+        }
+        
+        test_abs [?]
+        test_nonabs [/]
+              
+        test_super;
+        test_sub_1;
+        test_sub_2;
+        test_sub_3;
+        
+        with (test_abs) [| x |]
+        else [| E |]
+        
+        with (test_nonabs) [| F |]
+        else [| x |]
+        
+    }
+
+
+}
+

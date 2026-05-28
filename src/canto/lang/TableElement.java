@@ -70,7 +70,7 @@ public class TableElement extends ElementDefinition {
 
     /** Returns <code>false</code> */
     public boolean isDefinition() {
-        return false;
+        return true;
     }
 
     public String getDefinitionName() {

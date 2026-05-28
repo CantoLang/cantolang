@@ -25,14 +25,15 @@ public class CantoBuilderTest {
     @ValueSource(strings = {
         "site a { int x = 1; public show_x() { x; } }",
         "site b { public func_1 { sub_func_1(x) { \"x = \"; x; } } public func_2() { 2; } }",
-        "site c { public f() [| Hello |] named { name [/] } typed { named[] super_type = [] } named param [/] param,typed typed_param [/] }"
+        "site c { public f() [| Hello |] named { name [/] } typed { named[] super_type = [] } named param [/] param,typed typed_param [/] }",
+        "site d { table_parent { element{} = { \"g\": \"G\" } } }"
     })
     public void testBuildSiteFromString(String siteStr) {
         CantoBuilder builder;
         Site site = null;
         try {
             builder = new CantoBuilder(siteStr);
-            site = builder.buildSite(new Core());
+            site = builder.buildSite(new Core(true));
         } catch (IOException e) {
             e.printStackTrace();
             fail("IOException should not occur when building from string");

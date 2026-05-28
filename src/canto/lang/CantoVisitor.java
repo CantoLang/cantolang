@@ -84,9 +84,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                  throw new IllegalArgumentException("Unknown operator type: " + opType);
          }
     }
-    private static UnaryOperator negateOp = new NegateOperator();
 
-    
+
     @Override
     public CantoNode visitCompilationUnit(CantoParser.CompilationUnitContext ctx) {
         int numChildren = ctx.getChildCount();
@@ -1103,8 +1102,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             
         } else if (opType == CantoParser.MINUS) {
             // can't look up unary minus because the ops table holds the subtract
-            // operator for this token, so use the static value created for this purpose
-            op = negateOp;
+            // operator for this token, so create a new NegateOperator instance directly
+            op = new NegateOperator();
         } else {
             op = (UnaryOperator) getOp(Integer.valueOf(ctx.op.getType()));
         }
@@ -1249,10 +1248,6 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitIdentifier(CantoParser.IdentifierContext ctx) {
         String name = ctx.getText();
-        if (ctx.BACK_QUOTE_IDENTIFIER() != null) {
-            // remove backticks from back quoted identifier
-            name = name.substring(1, name.length() - 1);
-        }
         return new NameNode(name);
     }
 

@@ -19,23 +19,22 @@ import java.util.List;
  */
 public class ArrayBlock extends Block implements ConstructionGenerator {
 
-    private ConstructionList elements;
-
     public ArrayBlock(ConstructionList elements) {
-        super();
-        this.elements = (elements != null ? elements : new ConstructionList());
+        super(elements.getList());
     }
 
     @Override
     public List<Construction> generateConstructions(Context context) {
-        return elements;
+        return getConstructions(context);
     }
 
     /** Returns true if the block is non-empty or contains a dynamic element. */
     @Override
     public boolean isDynamic() {
-        if (elements.isEmpty()) return false;
-        for (Construction c : elements) {
+        if (children.length == 0) {
+            return false;
+        }
+        for (Construction c : getConstructions()) {
             if (c.isDynamic()) return true;
         }
         return true;  // non-empty static arrays are still "present" as a body

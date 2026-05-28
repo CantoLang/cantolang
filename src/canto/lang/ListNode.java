@@ -38,6 +38,10 @@ public class ListNode<E extends CantoNode> extends CantoNode implements List<E> 
         setChildren(this.list);
     }
 
+    protected List<CantoNode> getList() {
+        return list;
+    }
+    
     @SuppressWarnings("unchecked")
     protected void setList(List<E> list) {
         this.list = (List<CantoNode>) list;

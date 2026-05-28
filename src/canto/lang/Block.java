@@ -46,6 +46,10 @@ public class Block extends Construction {
         return constructions;
     }
 
+    protected List<Construction> getConstructions() {
+        return constructions;
+    }
+
     public Object generateData(Context context, Definition def) throws Redirection {
         return context.construct(constructions);
     }
