@@ -481,7 +481,11 @@ public class CantoServer implements canto_server {
 
     public void handle(Request request, Response response, Callback callback) throws IOException {
         String contextPath = Request.getContextPath(request);
-        String ru = request.getHttpURI().asString();
+        if (contextPath == null) {
+            contextPath = "";
+        }
+
+        String ru = request.getHttpURI().getCanonicalPath();
         
         RequestState state = (RequestState) request.getAttribute(REQUEST_STATE_ATTRIBUTE);
         if (state != null && state == RequestState.EXPIRED) {

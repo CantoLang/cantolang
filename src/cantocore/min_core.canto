@@ -377,6 +377,257 @@ core {
     static char lf = (char) 10
     static char cr = (char) 13
     
+    /-------------- basic types --------------/
+
+    /** Base class for DOCTYPE definitions. */
+    doctype [/]
+
+
+    static doctype html4strict [| <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+           "http://www.w3.org/TR/html4/strict.dtd">
+    |]
+
+    static doctype html4loose [| <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+           "http://www.w3.org/TR/html4/loose.dtd">
+    |]
+
+    static doctype html4frames [| <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
+           "http://www.w3.org/TR/html4/frameset.dtd">
+    |]
+
+    static doctype xhtmlstrict [| <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+           "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    |]
+
+    static doctype xhtmltrans [| <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    |]
+
+    static doctype xhtmlframes [| <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+    |]
+
+    static doctype xhtml11 [| <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+    |]
+
+
+    imagepath [/]
+
+    dynamic image {
+        if (imagepath) { imagepath; }
+        sub;
+    }
+
+    color [/]
+
+    /**
+     *  Standard base class for all pages.
+     */
+    response page(),(params{}),(request r),(request r, session s) {
+      
+      /---------------------------------------------/
+      /------------ page initialization ------------/
+      /---------------------------------------------/
+      
+        /** If a page needs to perform an initialization before construction of the
+         *  page commences it should override this.
+         **/
+        page_init [/]
+
+      /---------------------------------------------/
+      /--------------- page metadata ---------------/
+      /---------------------------------------------/
+
+        /** The title of the page.  Appears in title bar. */
+        title = owner.type
+        
+        /** Label for the page, suitable for a link or menu item pointing to this page. */
+        label [/]
+
+        /** The author of the page. */
+        author [| me |]
+
+        /** A short description of the page. */
+        description [/]
+        
+        /** Optional value for expires meta tag **/
+        expiration [| -1 |]
+        
+        viewport [| width=device-width, initial-scale=1 |]
+
+        /** Indexing instructions for web crawlers **/
+        robots = "all"
+
+        meta[] = [ [| http-equiv="content-type" content="text/html; charset=iso-8859-1" |],
+                   if (expiration)  {= [| http-equiv="expires" content="{= expiration; =}" |] =},
+                   if (author)      {= [| name="author" content="{= author; =}"            |] =},
+                   if (description) {= [| name="description" content="{= description; =}"  |] =},
+                   if (viewport)    {= [| name="viewport" content="{= viewport; =}"        |] =},
+                   if (robots)      {= [| name="robots" content="{= robots; =}"            |] =} ]
+
+        links[] = []
+
+      /---------------------------------------------/
+      /-------------- page attributes --------------/
+      /---------------------------------------------/
+
+        dynamic page_name = owner.type
+
+        /------- scripting options -------/
+        boolean ajax_enabled = false
+        boolean drag_enabled = false
+        boolean debug_enabled = false
+        boolean use_wait_cursor = false
+        
+        /------- style options -------/
+        boolean auto_style = false
+                
+        /------- visual properties -------/
+        color bgcolor [/]
+        color linkcolor [/]
+        color vlinkcolor [/]
+        color alinkcolor [/]
+        image bgimage [/]
+
+        string[] additional_styles = owner.descendants_of_type("style")
+        
+        style {
+            if (core_styles(options)) {
+                core_styles(options);
+            }
+            
+            if (auto_style) {
+                for s in additional_styles {
+                    if (s.full_name != this.full_name) {
+                        s;
+                        /-- log("...adding style " + s.full_name + " owned by " + s.owner.full_name); --/ 
+                    }
+                }
+            }
+        }
+
+        boolean options{} = { "ajax": ajax_enabled,
+                              "drag": drag_enabled,
+                              "debug": debug_enabled,
+                              "use_wait_cursor": use_wait_cursor }
+
+        string[] additional_scripts = owner.descendants_of_type("script")
+
+        dynamic core_script { 
+            core_scripts(options, find_element_function, page_name);
+            if (onload_script) {
+                [| window.onload = function() { |]
+                onload_script;
+                [| } |]
+            }
+        }
+        
+        dynamic script {
+            core_script; 
+            
+            for s in additional_scripts {
+                if (s.full_name != this.full_name) {
+                    s;
+                    log("...adding script " + s.full_name + " owned by " + s.owner.full_name); 
+                }
+            }
+            
+        }
+        
+        onload_script [/]
+        
+        /** find_element_function encapsulates the javascript code for calls to
+         *  document.getElementById, allowing pages to customize this behavior,
+         *  for example to allow finding an element in another frame.
+         **/
+        find_element_function [|
+            function findElement(id) {    
+                return document.getElementById(id);
+            }
+        |]
+        
+
+      /---------------------------------------------/
+      /-------------- page components --------------/
+      /---------------------------------------------/
+
+        doctype doctype_header = xhtmltrans
+
+        html_header [|
+            <head>
+            <title>{= title; =}</title>
+            {=
+                for m in meta [|
+                    <meta {= m; =} >
+                |]
+                
+                for l in links [|
+                    <link {= l; =} >
+                |]
+
+                if (style) [|
+                    <style type="text/css" media="all">
+                    {= style; =}
+                    </style>
+                |]
+            =}
+            </head>
+        |]
+
+        body_attribs = background;
+
+        background {
+            if (bgimage) {
+                [| background="{= bgimage; =}" |]
+                sp;
+            }
+            if (bgcolor) {
+                [| bgcolor="{= bgcolor; =}" |]
+                sp;
+            }
+            if (linkcolor) {
+                [| link="{= linkcolor; =}" |]
+                sp;
+            }
+            if (vlinkcolor) {
+                [| vlink="{= vlinkcolor; =}" |]
+                sp;
+            }
+            if (alinkcolor) {
+                [| alink="{= alinkcolor; =}" |]
+                sp;
+            }
+        }
+
+        page_begin [|
+            {= doctype_header; =}
+            <html>
+            {= html_header; =}
+            <body {= body_attribs; =}>
+        |]
+
+        page_end [|
+            {=
+                if (script) [|
+                    <script>
+                    {= script; =}
+                    </script>
+                |]
+            =}
+            </body>
+            </html>
+        |]
+
+      /---------------------------------------------/
+      /------------- page construction -------------/
+      /---------------------------------------------/
+
+        eval(page_init);
+        page_begin;
+        sub;
+        page_end;
+    }
 
     /------------ standard test definitions -----------/
 
