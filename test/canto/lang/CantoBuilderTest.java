@@ -26,7 +26,8 @@ public class CantoBuilderTest {
         "site a { int x = 1; public show_x() { x; } }",
         "site b { public func_1 { sub_func_1(x) { \"x = \"; x; } } public func_2() { 2; } }",
         "site c { public f() [| Hello |] named { name [/] } typed { named[] super_type = [] } named param [/] param,typed typed_param [/] }",
-        "site d { table_parent { element{} = { \"g\": \"G\" } } }"
+        "site d { table_parent { element{} = { \"g\": \"G\" } } }",
+        "site e { array_parent { element[] = [\"123\"] } }"
     })
     public void testBuildSiteFromString(String siteStr) {
         CantoBuilder builder;

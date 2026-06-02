@@ -3565,8 +3565,9 @@ public class Context {
         }
 
         if (definition instanceof CollectionDefinition) {
-            CollectionInstance collection = ((CollectionDefinition) definition).getCollectionInstance(this, args, indexes);
-            return collection.getCollectionObject();
+            CollectionDefinition collectionDef = (CollectionDefinition) definition;
+            Object collectionObj = collectionDef.getCollectionInstance(this, args, indexes).getCollectionObject();
+            return collectionDef.instantiateCollectionObject(this, collectionObj);
 
         } else {
             return construct(definition, args);

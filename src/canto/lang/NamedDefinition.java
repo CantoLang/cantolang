@@ -10,6 +10,7 @@ package canto.lang;
 
 import java.util.*;
 
+import canto.lang.Definition.Durability;
 import canto.runtime.CantoObjectWrapper;
 import canto.runtime.Log;
 import canto.util.Holder;
@@ -202,6 +203,16 @@ public class NamedDefinition extends Definition {
         ownerOfDefs = flag;
     }
    
+    @Override
+    public void setOwner(Definition owner) {
+        super.setOwner(owner);
+        if (keeps != null) {
+            for (KeepNode keep : keeps) {
+                keep.setOwner(owner);
+            }
+        }
+    }
+
     /** Returns true if this definition represents a collection. */
     public boolean isCollection() {
         return getType().isCollection();
@@ -1745,6 +1756,7 @@ public class NamedDefinition extends Definition {
         }
     }
 
+    @Override
     public KeepNode getKeep(String key) {
         if (keepsAndSuperKeeps != null) {
             Iterator<KeepNode> it = keepsAndSuperKeeps.iterator();

@@ -66,18 +66,6 @@ core {
     dynamic string[] update(base{}, addition{}) = canto.runtime.Utils.update(base, addition)
 
 
-    /------ Database objects ------/
-
-    database_interface db_impl(driver, url, user, password) = canto.runtime.Database(driver, url, user, password)
-
-    java.sql.ResultSet result_set [/]
-
-    string{} db_row(result_set results, int row) = canto.runtime.DatabaseRow(results, row)
-
-    /------ Math ------/
-    
-    dynamic number pow(number i, number j) = canto.runtime.Utils.pow(i, j)
-
     /------ Useful types ------/
 
     static java.text.DateFormat date_format [/]
@@ -328,17 +316,17 @@ core {
     /------ Logging ------/
 
     /** sends a string to log file/console **/
-    dynamic log(str) = canto.runtime.CantoLogger.log(str)
+    dynamic log(str) = canto.runtime.CantoLogger.CANTOLOG.info(str)
 
     /** sends a string to log file/console if Canto is running in
      *  verbose mode.
      **/
-    dynamic vlog(str) = canto.runtime.CantoLogger.vlog(str)
+    dynamic vlog(str) = canto.runtime.CantoLogger.CANTOLOG.debug(str)
     
     /** sends a string and a newline to the console, bypasses log file **/
     dynamic console_println(str) = java.lang.System.out.println(str)
     
     /** sends an error message to log file/console **/
-    dynamic err(str) = canto.runtime.CantoLogger.err(str)
+    dynamic err(str) = canto.runtime.CantoLogger.CANTOLOG.error(str)
     
 }

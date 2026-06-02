@@ -385,7 +385,7 @@ public class CollectionDefinition extends ComplexDefinition {
     /**
      * @throws Redirection 
      */
-    protected Object instantiateCollectionObject(Context context, Object collection) throws Redirection {
+    Object instantiateCollectionObject(Context context, Object collection) throws Redirection {
         //Type st = getSuper();
         // this seems to be unnecessary
         boolean resolveOnly = false; //!(st == null || st.isPrimitive() || st.isExternal());

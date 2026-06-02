@@ -87,6 +87,7 @@ public class CantoServer implements canto_server {
     private String stateFileName = null;
     private String logFileName = null;
     private boolean appendToLog = true;
+    private boolean verbose = false;
     private String cantoPath = ".";
     private boolean debuggingEnabled = false;
     protected String fileHandlerName = null;
@@ -393,12 +394,15 @@ public class CantoServer implements canto_server {
         
         stateFileName = initParams.get("statefile");
         
+        
         logFileName = initParams.get("log");
         String appendLog = initParams.get("log.append");
         appendToLog = isTrue(appendLog);
         if (logFileName != null) {
             Log.setLogFile(logFileName, appendToLog);
         }
+        verbose = isTrue(initParams.get("verbose"));
+        Log.setLogLevel(verbose ? "DEBUG" : "INFO");
 
         cantoPath = initParams.get("cantopath");
         if (cantoPath == null) {
@@ -550,15 +554,16 @@ public class CantoServer implements canto_server {
         CantoContext cantoContext = null;
         try {
             Session session = request.getSession(true);
-            Construction cantoRequest = createRequestArg(site, new CantoRequest(request));
-            Construction cantoSession = createSessionArg(site, new CantoSession(session));
+            CantoSession cantoSession = session != null ? new CantoSession(session) : new CantoSession();
+            Construction sessionArg = createSessionArg(site, cantoSession);
+            Construction requestArg = createRequestArg(site, new CantoRequest(request));
             Map<String, String> params = new HashMap<String, String>();
             Request.getParameters(request).stream().forEach(p -> params.put(p.getName(), p.getValue()));
             Construction requestParams = createParamsArg(site, params);
     
             // contexts are stored under a name that is not a legal name
             // in Canto, so that it won't collide with cached Canto values.
-            cantoContext = (CantoContext) session.getAttribute("@");
+            cantoContext = (CantoContext) cantoSession.getAttribute("@");
 
             PrintStream out = new PrintStream(Response.asBufferedOutputStream(request, response));
             
@@ -572,7 +577,7 @@ public class CantoServer implements canto_server {
             if (cantoContext == null) {
                 cantoContext = (CantoContext) site.context();
                 site.getPropertyInContext("session_init", cantoContext.getContext());
-                session.setAttribute("@", cantoContext);
+                cantoSession.setAttribute("@", cantoContext);
             }
 
             cantoContext = new CantoContext(cantoContext);
@@ -584,7 +589,7 @@ public class CantoServer implements canto_server {
             }
             
             synchronized (context) {
-                status = site.respond(pageName, requestParams, cantoRequest, cantoSession, context, out);
+                status = site.respond(pageName, requestParams, requestArg, sessionArg, context, out);
             }
             response.setStatus(status);                
             callback.succeeded();

@@ -215,12 +215,19 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitTopKeepPrefix(CantoParser.TopKeepPrefixContext ctx) {
         KeepNode keepNode = new KeepNode();
-        if (ctx.keepAs() != null) {
-            NameNode asName = (NameNode) ctx.keepAs().identifier().accept(this);
+        CantoParser.KeepAsContext keepAsCtx = ctx.keepAs();
+        int numChildren = (keepAsCtx != null ? 2 : 1);
+        List<CantoNode> children = new ArrayList<>(numChildren);
+        
+        if (keepAsCtx != null) {
+            NameNode asName = (NameNode) keepAsCtx.identifier().accept(this);
             keepNode.setAsName(asName);
+            children.add(asName);
         }
         Instantiation tableInstance = (Instantiation) ctx.keepIn().instantiation().accept(this);
         keepNode.setTableInstance(tableInstance);
+        children.add(tableInstance);
+        keepNode.setChildren(children);
         return keepNode;
     }
 
@@ -228,18 +235,31 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     public CantoNode visitKeepPrefix(CantoParser.KeepPrefixContext ctx) {
         KeepNode keepNode = new KeepNode();
         CantoParser.KeepAsContext keepAsCtx = ctx.keepAs();
+        CantoParser.KeepInContext keepInCtx = ctx.keepIn();
+        
+        int numChildren = (keepAsCtx != null ? 1 : 0) + (keepInCtx != null ? 1 : 0);
+        List<CantoNode> children = new ArrayList<>(numChildren);
+        
         if (keepAsCtx != null) {
+            NameNode asName;
             if (keepAsCtx.identifier() != null) {
-                NameNode asName = (NameNode) ctx.keepAs().identifier().accept(this);
-                keepNode.setAsName(asName);
+                asName = (NameNode) ctx.keepAs().identifier().accept(this);
             } else {
-                keepNode.setAsName(new NameNode(Name.THIS));
+                asName = new NameNode(Name.THIS);
             }
+            keepNode.setAsName(asName);
+            children.add(asName);
         }
         if (ctx.keepIn() != null) {
             Instantiation tableInstance = (Instantiation) ctx.keepIn().instantiation().accept(this);
             keepNode.setTableInstance(tableInstance);
+            children.add(tableInstance);
         }
+
+        if (numChildren > 0) {
+            keepNode.setChildren(children);
+        }
+
         return keepNode;
     }
 

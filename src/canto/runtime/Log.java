@@ -2,26 +2,54 @@
  * 
  * Log.java
  *
- * Copyright (c) 2024-2025 by cantolang.org
+ * Copyright (c) 2024-2026 by cantolang.org
  * All rights reserved.
  */
 
 package canto.runtime;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+
 public class Log implements Logger {
 
+    private static Level logLevel = Level.INFO;
+    
     public static Log getLogger(Class<?> clazz) {
-        return new Log(clazz);
+        Log log = new Log(clazz);
+        ((ch.qos.logback.classic.Logger) log.logger).setLevel(logLevel);
+        return log;
+    }
+    
+    public static Log CANTOLOG = getCantoLogger();
+    
+    private static Log getCantoLogger() {
+        Log log = new Log("canto");
+        ((ch.qos.logback.classic.Logger) log.logger).setLevel(logLevel);
+        return log;
+    }
+    
+    public static void setLogLevel(String level) {
+        logLevel = Level.toLevel(level.toUpperCase(), Level.INFO);
+        LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
+        List<ch.qos.logback.classic.Logger> loggerList = loggerContext.getLoggerList();
+        loggerList.stream().forEach(tmpLogger -> tmpLogger.setLevel(logLevel));
     }
     
     private Logger logger;
     
     private Log(Class<?> clazz) {
         logger = LoggerFactory.getLogger(clazz);
+    }
+    
+    private Log(String name) {
+        logger = LoggerFactory.getLogger(name);
     }
 
     @Override

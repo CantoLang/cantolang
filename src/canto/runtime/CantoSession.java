@@ -27,6 +27,8 @@ public class CantoSession {
      **/
     public static int DEFAULT_INACTIVE_INTERVAL = 0;
 
+    private static Random random = new Random();
+    
     private String id = null;
     private Session session = null;
     private Map<String, Object> attributes = null;
@@ -42,6 +44,18 @@ public class CantoSession {
         createdTime = lastAccessedTime = session.getLastAccessedTime();
         maxInactive = session.getMaxInactiveInterval();
         id = session.getId();
+    }
+
+    public CantoSession() {
+        attributes = new HashMap<String, Object>();
+        createdTime = lastAccessedTime = System.currentTimeMillis();
+        maxInactive = DEFAULT_INACTIVE_INTERVAL;
+        
+        long timestamp = System.currentTimeMillis();
+        long mostSigBits = (timestamp << 16) | (random.nextLong() & 0xFFFFL);
+        long leastSigBits = random.nextLong();
+
+        id = (new UUID(mostSigBits, leastSigBits)).toString();
     }
 
     public CantoSession(String sessionId) {

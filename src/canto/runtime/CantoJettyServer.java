@@ -2,7 +2,7 @@
  * 
  * CantoJettyServer.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -11,6 +11,7 @@ package canto.runtime;
 import java.net.InetSocketAddress;
 
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.session.*;
 import org.eclipse.jetty.util.*;
 
 
@@ -23,7 +24,7 @@ public class CantoJettyServer extends Server implements CantoStandaloneServer {
     private String virtualHost = null;
     private CantoServer cantoServer = null;
     
-	public CantoJettyServer(InetSocketAddress addr, CantoServer server) {
+	public CantoJettyServer(InetSocketAddress addr, CantoServer server) throws Exception {
 	    super(addr);
 	    this.cantoServer = server;
 
@@ -51,6 +52,17 @@ public class CantoJettyServer extends Server implements CantoStandaloneServer {
 	            return true;
 	        }
 	    });
+	    
+	    // Set a session manager
+	    DefaultSessionIdManager idMgr = new DefaultSessionIdManager(this);
+	    idMgr.setWorkerName("cantoserver");
+	    addBean(idMgr, true);
+
+	    HouseKeeper houseKeeper = new HouseKeeper();
+	    houseKeeper.setSessionIdManager(idMgr);
+	    //set the frequency of scavenge cycles
+	    houseKeeper.setIntervalSec(3600L);
+	    idMgr.setSessionHouseKeeper(houseKeeper);
 	}
 	
     @Override

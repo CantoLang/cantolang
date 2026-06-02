@@ -127,9 +127,9 @@ topDefinition
     : DOC_COMMENT* keep = topKeepPrefix?
       DOC_COMMENT* access = PUBLIC?
       DOC_COMMENT* dur = topDurability?
-    ( collectionElementDefinition
-    | collectionDefinition
+    ( collectionDefinition
     | externalCollectionDefinition
+    | collectionElementDefinition
     | namedElementDefinition
     | blockDefinition
     | externalDefinition
@@ -140,11 +140,11 @@ definition
     : DOC_COMMENT* keep = keepPrefix?
       DOC_COMMENT* access = (LOCAL | PUBLIC)?
       DOC_COMMENT* dur = durability?
-    ( collectionElementDefinition
-    | collectionDefinition
+    ( collectionDefinition
     | abstractCollectionDefinition
     | externalCollectionDefinition
     | dimlessCollectionDefinition
+    | collectionElementDefinition
     | namedElementDefinition
     | blockDefinition
     | externalDefinition
