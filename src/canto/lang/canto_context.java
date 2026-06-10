@@ -2,7 +2,7 @@
  * 
  * canto_context.java
  *
- * Copyright (c) 2018 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -34,7 +34,7 @@ public interface canto_context {
     public Object construct(String name) throws Redirection;
 
     /** Constructs a Canto object of a particular name, passing in particular arguments.  **/
-    public Object construct(String name, List<Construction> args) throws Redirection;
+    public Object construct(String name, List<String> args) throws Redirection;
 
     /** Returns the context associated with the container of the current context. **/
     public canto_context container_context() throws Redirection;

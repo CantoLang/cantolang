@@ -2,7 +2,7 @@
  * 
  * ConditionalStatement.java
  *
- * Copyright (c) 2018-2025 by cantolang.org
+ * Copyright (c) 2018-2026 by cantolang.org
  * All rights reserved.
  */
 
@@ -54,23 +54,36 @@ public class ConditionalStatement extends Construction implements ConstructionCo
         this.condition = condition;
         if (body != null && (body.getNumChildren() > 0 || body.isDynamic())) {
             this.body = body;
+            children = new CantoNode[2];
+            setChild(1, body);
         } else {
+            children = new CantoNode[1];
             this.body = null;
         }
         elseBody = null;
         elseIf = null;
+        setChild(0, (CantoNode) condition);
     }
 
     /** if - else **/
     protected void setIfElse(ValueSource condition, Block body, Block elseBody) {
         this.condition = condition;
-        if (body != null && (body.getNumChildren() > 0 || body.isDynamic())) {
+        boolean hasBody = (body != null && (body.getNumChildren() > 0 || body.isDynamic()));
+        boolean hasElseBody = (elseBody != null && (elseBody.getNumChildren() > 0 || elseBody.isDynamic()));
+
+        int numChildren = 1 + (hasBody ? 1 : 0) + (hasElseBody ? 1 : 0);
+        children = new CantoNode[numChildren];
+        setChild(0, (CantoNode) condition);
+        
+        if (hasBody) {
             this.body = body;
+            setChild(1, body);
         } else {
             this.body = null;
         }
-        if (elseBody != null && (elseBody.getNumChildren() > 0 || elseBody.isDynamic())) {
+        if (hasElseBody) {
             this.elseBody = elseBody;
+            setChild(numChildren - 1, elseBody);
         } else {
             this.elseBody = null;
         }
@@ -80,13 +93,25 @@ public class ConditionalStatement extends Construction implements ConstructionCo
     /** if - else if **/
     protected void setIfElseIf(ValueSource condition, Block body, ConditionalStatement elseIf) {
         this.condition = condition;
-        if (body != null && (body.getNumChildren() > 0 || body.isDynamic())) {
+        boolean hasBody = (body != null && (body.getNumChildren() > 0 || body.isDynamic()));
+        boolean hasElseIf = (elseIf != null);
+
+        int numChildren = 1 + (hasBody ? 1 : 0) + (hasElseIf ? 1 : 0);
+        children = new CantoNode[numChildren];
+        setChild(0, (CantoNode) condition);
+        if (hasBody) {
             this.body = body;
+            setChild(1, body);
         } else {
             this.body = null;
         }
+        if (hasElseIf) {
+            this.elseIf = elseIf;
+            setChild(numChildren - 1, elseIf);
+        } else {
+            this.elseIf = null;
+        }
         elseBody = null;
-        this.elseIf = elseIf;
     }
 
     public Block getBody() {

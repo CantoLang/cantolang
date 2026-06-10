@@ -27,22 +27,13 @@ import canto.util.Holder;
 
 public abstract class Construction extends CantoNode implements ValueGenerator {
 
-    private CantoNode contents;
-    
     protected Construction() {
         super();
     }
 
-    protected Construction(CantoNode contents) {
+    protected Construction(CantoNode child) {
         super();
-        setContents(contents);
-    }
-
-    private void setContents(CantoNode contents) {
-        this.contents = contents;
-        if (contents != null) {
-            contents.setParent(this);
-        }
+        addChild(child);
     }
 
     protected Construction(List<CantoNode> children) {

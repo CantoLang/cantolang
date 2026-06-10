@@ -34,15 +34,18 @@ public class ForStatement extends Construction implements ConstructionContainer,
 
     public ForStatement() {
         super();
+        children = new CantoNode[2];
     }
 
     protected void setBody(Block body) {
         this.body = body;
+        setChild(1, body);
     }
 
     protected void addIteratorValues(IteratorValues vals) {
         if (this.vals == null) {
             this.vals = vals;
+            setChild(0, vals);
         } else {
             this.vals.addNext(vals);
         }
@@ -299,6 +302,34 @@ public class ForStatement extends Construction implements ConstructionContainer,
             this.by = by;
             this.where = where;
             this.until = until;
+            
+            List<CantoNode> children = CollectionFactory.newArrayList(CantoNode.class);
+            if (forDef != null) {
+                children.add(forDef);
+            }
+            if (in != null) {
+                children.add(in);
+            }
+            if (from != null) {
+                children.add((CantoNode) from);
+            }
+            if (to != null) {
+                children.add((CantoNode) to);
+            }
+            if (through != null) {
+                children.add((CantoNode) through);
+            }
+            if (by != null) {
+                children.add((CantoNode) by);
+            }
+            if (where != null) {
+                children.add((CantoNode) where);
+            }
+            if (until != null) {
+                children.add((CantoNode) until);
+            }
+            setChildren(children);
+        
         }
 
         /** Returns <code>false</code> */
@@ -329,6 +360,7 @@ public class ForStatement extends Construction implements ConstructionContainer,
         public void addNext(IteratorValues next) {
             if (this.next == null) {
                 this.next = next;
+                addChild(next);
             } else {
                 this.next.addNext(next);
             }

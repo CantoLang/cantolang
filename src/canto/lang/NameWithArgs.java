@@ -19,25 +19,39 @@ public class NameWithArgs extends NameNode {
     
     public NameWithArgs() {
         super();
+        init(null, null);
     }
 
     public NameWithArgs(String name, ConstructionList args) {
         super(name);
-        children = new CantoNode[1];
-        children[0] = args;
+        init(args, null);
     }
 
     public NameWithArgs(String name, IndexList indexes) {
         super(name);
-        children = new CantoNode[1];
-        children[0] = indexes;
+        init(null, indexes);
     }
 
     public NameWithArgs(String name, ConstructionList args, IndexList indexes) {
         super(name);
-        children = new CantoNode[2];
-        children[0] = args;
-        children[1] = indexes;
+        init(args, indexes);
+    }
+    
+    private void init(ConstructionList args, IndexList indexes) {
+        if (args != null) {
+            children = new CantoNode[indexes == null ? 1 : 2];
+            setChild(0, args);
+        }
+        if (indexes != null) {
+            if (args == null) {
+                children = new CantoNode[1];
+                setChild(0, indexes);
+            } else {
+                setChild(1, indexes);
+            }
+        } else if (args == null) {
+            children = new CantoNode[0];
+        }
     }
 
     /** Returns true if there are arguments. */

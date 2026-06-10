@@ -406,6 +406,9 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ParseTree typeCtx = nameCtx.simpleType();
         if (typeCtx == null) {
             typeCtx = nameCtx.multiType();
+            if (typeCtx == null) {
+                typeCtx = nameCtx.typeWithArgs();
+            }
         }
         Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
         
@@ -642,7 +645,6 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     @Override
     public CantoNode visitDefName(CantoParser.DefNameContext ctx) {
         NameNode name = (NameNode) ctx.identifier().accept(this);
-
         CantoParser.SimpleTypeContext simpleTypeCtx = ctx.simpleType();
         CantoParser.MultiTypeContext multiTypeCtx = ctx.multiType();
         CantoParser.TypeWithArgsContext typeWithArgsCtx = ctx.typeWithArgs();
@@ -670,7 +672,6 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
             ParameterList params = paramsHelper((CantoParser.ParamsContext) paramsCtx);
             paramsList = new ArrayList<>(1);
             paramsList.add(params);
-            return new NameWithParams(name.getName(), paramsList);
         }
 
         if (type != null) {
@@ -1301,7 +1302,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         ConstructionList args;
         if (ctx.any() != null) {
             args = new ConstructionList(1);
-            args.add(ConstructionList.ANY_ARG);
+            args.add(ConstructionList.ANY_ARG());
         } else {
             args = new ConstructionList(ctx.expression().size());
             for (CantoParser.ExpressionContext exprCtx : ctx.expression()) {
@@ -1354,6 +1355,26 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     }
 
     @Override
+    public CantoNode visitComplexNameComponent(CantoParser.ComplexNameComponentContext ctx) {
+        String name = ctx.getChild(0).getText();
+        ConstructionList args = null;
+        IndexList indexes = null;
+        
+        if (ctx.args() != null) {
+            args = (ConstructionList) ctx.args().accept(this);
+        }
+        
+        List<CantoParser.IndexContext> indexCtxs = ctx.index();
+        if (indexCtxs != null && !indexCtxs.isEmpty()) {
+            indexes = new IndexList(indexCtxs.size());
+            for (CantoParser.IndexContext indexCtx : indexCtxs) {
+                indexes.add((Index) indexCtx.accept(this));
+            }
+        }
+        return new NameWithArgs(name, args, indexes);
+    }
+
+    @Override
     public CantoNode visitNameRange(CantoParser.NameRangeContext ctx) {
         int numNodes = ctx.getChildCount();
         List<CantoNode> nodeList = new ArrayList<CantoNode>(numNodes);
@@ -1380,8 +1401,8 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
     public CantoNode visitComplexName(CantoParser.ComplexNameContext ctx) {
         int numNodes = ctx.getChildCount();
         List<CantoNode> nodeList = new ArrayList<CantoNode>(numNodes);
-        for (CantoParser.IdentifierContext identifier : ctx.identifier()) {
-            nodeList.add(identifier.accept(this));
+        for (CantoParser.ComplexNameComponentContext node : ctx.complexNameComponent()) {
+            nodeList.add(node.accept(this));
         }
         return new ComplexName(nodeList);
     }

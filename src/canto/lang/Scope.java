@@ -67,7 +67,7 @@ public class Scope {
 
         // fill out the argument list with nulls if it's shorter than the parameter list
         while (origArgsSize < origParamsSize) {
-            this.args.add(ConstructionList.MISSING_ARG);
+            this.args.add(ConstructionList.MISSING_ARG());
             origArgsSize++;
         }
         loopIndexFactory = new StateFactory();
@@ -116,7 +116,7 @@ public class Scope {
 
         // fill out the argument list with nulls if it's shorter than the parameter list
         while (origArgsSize < origParamsSize) {
-            this.args.add(ConstructionList.MISSING_ARG);
+            this.args.add(ConstructionList.MISSING_ARG());
             origArgsSize++;
         }
 
@@ -315,7 +315,7 @@ public class Scope {
         int numParams = params.size();
         for (int i = 0; i < numParams; i++) {
             DefParameter param = params.get(i);
-            if (name.equals(param.getName()) && (!checkForArg || args.get(i) != ConstructionList.MISSING_ARG)) {
+            if (name.equals(param.getName()) && (!checkForArg || !(args.get(i) instanceof ConstructionList.MissingArg))) {
                 isPresent = true;
                 break;
             }
@@ -332,7 +332,7 @@ public class Scope {
         int numParams = params.size();
         for (int i = 0; i < numParams; i++) {
             DefParameter param = params.get(i);
-            if (name.equals(param.getName()) && args.get(i) != ConstructionList.MISSING_ARG) {
+            if (name.equals(param.getName()) && !(args.get(i) instanceof ConstructionList.MissingArg)) {
                 return param;
             }
         }
@@ -791,7 +791,7 @@ public class Scope {
         }
     }
 
-    Map<String, Object> getKeep() {
+    public Map<String, Object> getKeep() {
         if (cache == null) {
             cache = Context.newHashMap(Object.class);
         }

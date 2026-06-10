@@ -103,8 +103,8 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
     public Instantiation(Object reference, Definition owner) {
         super();
-        setOwner(owner);
         setReference(reference);
+        setOwner(owner);
         resolve(null);
     }
 
@@ -112,16 +112,15 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         // this instantiation is unowned
         super();
         setReference(reference);
-        setArguments(args);
         setIndexes(indexes);
     }
     
     public Instantiation(Object reference, ConstructionList args, IndexList indexes, Definition owner) {
         super();
-        setOwner(owner);
         setReference(reference);
         setArguments(args);
         setIndexes(indexes);
+        setOwner(owner);
         resolve(null);
     }
 
@@ -140,8 +139,6 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         this.isParamChild = instance.isParamChild;
         this.kind = instance.kind;
         this.reference = instance.reference;
-        setArguments(args);
-        setIndexes(indexes);
     }
 
     public boolean isPrimitive() {
@@ -158,10 +155,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         } else {
             reference = new PrimitiveValue(obj);
         }
-        if (reference instanceof NameNode) {
-            setArguments(((NameNode) reference).getArguments());
-            setIndexes(((NameNode) reference).getIndexes());
-        }
+        
+        setChild(0, reference);
+        
         if (reference instanceof ValueGenerator) {
             // value generators are inherently dynamic
             setDynStat(true, false);
@@ -191,32 +187,29 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
     }
 
     public void setArguments(ConstructionList args) {
+        if (reference instanceof NameNode) {
+            throw new IllegalArgumentException("Cannot set arguments on an instantiation with a NameNode reference; arguments must be set on the NameNode");
+        }
         this.args = args;
+        setChild(1, args);
     }
 
     /** Returns the list of arguments this instantiation has, if any. */
     public ConstructionList getArguments() {
-        return args;
-    }
-
-    public void addIndexes(IndexList indexes) {
-        if (indexes != null) {
-            if (this.indexes != null) {
-                this.indexes = new IndexList(this.indexes);
-                this.indexes.addAll(indexes);
-            } else {
-                this.indexes = indexes;
-            }
-        }
+        return (reference instanceof NameNode ? ((NameNode) reference).getArguments() : this.args);
     }
 
     public void setIndexes(IndexList indexes) {
+        if (reference instanceof NameNode) {
+            throw new IllegalArgumentException("Cannot set indexes on an instantiation with a NameNode reference; indexes must be set on the NameNode");
+        }
         this.indexes = indexes;
+        setChild(2, indexes);
     }
 
     /** Returns the list of indexes this instantiation has, if any. */
     public IndexList getIndexes() {
-        return indexes;
+        return (reference instanceof NameNode ? ((NameNode) reference).getIndexes() : this.indexes);
     }
 
     /** Returns true if this instantiation constructs a next **/
@@ -663,7 +656,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                             if (arg != null) {
                                 if (arg instanceof ConstructionList) {
                                     dynamic = ((ConstructionList) arg).isDynamic();
-                                } else if (arg != ConstructionList.MISSING_ARG && arg instanceof Instantiation) {
+                                } else if (arg instanceof Instantiation) {
                                     argArgs = ((Instantiation) arg).getArguments();
                                     if (argArgs != null) {
                                         dynamic = argArgs.isDynamic();
@@ -797,7 +790,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 	   if (isParam || isParamChild) {
            NameNode name = (NameNode) reference;
            Object arg = context.getArgumentForParameter(name, isParamChild, isContainerParameter(context));
-           if (arg != null && arg != ConstructionList.MISSING_ARG) {
+           if (arg != null && !(arg instanceof ConstructionList.MissingArg)) {
                if (arg instanceof ConstructionList) {
                    arg = ((ConstructionList) arg).get(0);
                }
@@ -878,14 +871,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         ConstructionList args = getArguments();
         IndexList prefixIndexes = null;
         ConstructionList prefixArgs = null;
-
-//if (getOwner() == null) {
-//  System.out.println("instance " + getName() + " has no owner");
-//  return null;
-//}
+        Definition owner = getOwner();
+        if (owner == null) {
+            throw new NullPointerException("Instantiation " + name.getName() + " has no owner");
+        }
         
-        NamedDefinition owner = (NamedDefinition) getOwner().getSubdefInContext(context);
-
         int numPushes = 0;
         
        // This was breaking a test, so I commented it out.
@@ -1170,7 +1160,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         return data;
     }
 
-    private static Definition lookupDef(NameNode name, IndexList indexes, CantoNode parent, NamedDefinition owner, Definition classDef, Context context, Definition resolver, boolean localScope) throws Redirection {
+    private static Definition lookupDef(NameNode name, IndexList indexes, CantoNode parent, Definition owner, Definition classDef, Context context, Definition resolver, boolean localScope) throws Redirection {
         Definition def = null;
         ConstructionList args = name.getArguments();
         Definition defclass = context.peek().def;

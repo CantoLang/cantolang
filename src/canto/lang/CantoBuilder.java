@@ -110,4 +110,18 @@ public class CantoBuilder {
         }
         return name;
     }
+    
+    public CollectionDefinition buildCollectionDefinition() {
+        CollectionDefinition collectionDef = null;
+        try {
+            collectionDef = (CollectionDefinition) parser.collectionDefinition().accept(new CantoVisitor());
+        } catch (Exception e) {
+            exception = e;
+            LOG.error("Error parsing collection", e);
+        }
+        return collectionDef;
+    }
+    
+    
+    
 }

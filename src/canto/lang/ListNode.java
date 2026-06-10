@@ -88,11 +88,11 @@ public class ListNode<E extends CantoNode> extends CantoNode implements List<E> 
     @SuppressWarnings("unchecked")
     public void insert(List<E> newItems) {
         if (list == null || list.size() == 0) {
-            list = (List<CantoNode>) Context.newArrayList(newItems);
+            setList((List<E>) Context.newArrayList(newItems));
         } else {
             List<CantoNode> newList = (List<CantoNode>) Context.newArrayList(newItems);
             newList.addAll((Collection<? extends E>) list);
-            list = (List<CantoNode>) newList;
+            setList((List<E>) newList);
         }
         numInserted += newItems.size();
     }
@@ -150,29 +150,105 @@ public class ListNode<E extends CantoNode> extends CantoNode implements List<E> 
     
     // List implementation
 
+    @Override
+    public boolean add(E o) {
+        addChild(o);
+        return list.add(o);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public E set(int index, E element) {
+        setChild(index, element);
+        return (E) list.set(index, element);
+    }
+    
+    @Override
+    public void add(int index, E element) {
+        addChild(element);
+        list.add(index, element);
+    }
+    
+    @Override
+    public boolean addAll(Collection<? extends E> c) {
+        boolean change = list.addAll(c);
+        setChildren(list);
+        return change;
+    }
+    
+    @Override
+    public boolean addAll(int index, Collection<? extends E> c) {
+        boolean change = list.addAll(index, c);
+        setChildren(list);
+        return change;
+    }
+    
+    
+    
+    @Override
     public int size() { return list.size(); }
+    
+    @Override
     public boolean isEmpty() { return list.isEmpty(); }
+    
+    @Override
     public boolean contains(Object o) { return list.contains(o); }
-    public Iterator<E> iterator() { return (Iterator<E>) list.iterator(); }
+    
+    @SuppressWarnings("unchecked")
+    public Iterator<E> iterator() {
+        return (Iterator<E>) list.iterator();
+    }
+    
+    @Override
     public Object[] toArray() { return list.toArray(); }
+    
+    @Override
     public <T> T[] toArray(T a[]) { return list.toArray(a); }
-    public boolean add(E o) { return list.add(o); }
+    
+    @Override
     public boolean remove(Object o) { return list.remove(o); }
+    
+    @Override
     public boolean containsAll(Collection<?> c) { return list.containsAll(c); }
-    public boolean addAll(Collection<? extends E> c) { return list.addAll(c); }
-    public boolean addAll(int index, Collection<? extends E> c) { return list.addAll(index, c); }
+    
+    @Override
     public boolean removeAll(Collection<?> c) { return list.removeAll(c); }
+    
+    @Override
     public boolean retainAll(Collection<?> c) { return list.retainAll(c); }
+    
+    @Override
     public void clear() { list.clear(); }
+    
+    @Override
     public boolean equals(Object o) { return list.equals(o); }
+    
+    @Override
     public int hashCode() { return list.hashCode(); }
+
+    @SuppressWarnings("unchecked")
+    @Override
     public E get(int index) { return (E) list.get(index); }
-    public E set(int index, E element) { return (E) list.set(index, element); }
-    public void add(int index, E element) { list.add(index, element); }
+    
+    @SuppressWarnings("unchecked")
+    @Override
     public E remove(int index) { return (E) list.remove(index); }
+    
+    @Override
     public int indexOf(Object o) { return list.indexOf(o); }
+    
+    @Override
     public int lastIndexOf(Object o) { return list.lastIndexOf(o); }
+    
+    @SuppressWarnings("unchecked")
+    @Override
     public ListIterator<E> listIterator() { return (ListIterator<E>) list.listIterator(); }
+    
+    @SuppressWarnings("unchecked")
+    @Override
     public ListIterator<E> listIterator(int index) { return (ListIterator<E>) list.listIterator(index); }
+    
+    @SuppressWarnings("unchecked")
+    @Override
     public List<E> subList(int fromIndex, int toIndex) { return (List<E>) list.subList(fromIndex, toIndex); }
 }

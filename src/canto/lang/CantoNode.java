@@ -205,15 +205,21 @@ abstract public class CantoNode implements Cloneable {
     }
 
     protected void setChild(int n, CantoNode child) {
-        if (children == null) {
-            children = new CantoNode[n + 1];
-        } else if (n >= children.length) {
-            CantoNode[] newChildren = new CantoNode[n + 1];
-            System.arraycopy(children, 0, newChildren, 0, children.length);
-            children = newChildren;
+        if (child == null) {
+            if (n >= children.length) {
+                return;
+            }
+        } else {
+            if (children == null) {
+                children = new CantoNode[n + 1];
+            } else if (n >= children.length) {
+                CantoNode[] newChildren = new CantoNode[n + 1];
+                System.arraycopy(children, 0, newChildren, 0, children.length);
+                children = newChildren;
+            }
+            child.setParent(this);
         }
         children[n] = child;
-        child.setParent(this);
     }
     
     void addChild(CantoNode child) {

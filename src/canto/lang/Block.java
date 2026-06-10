@@ -50,6 +50,10 @@ public class Block extends Construction {
         return constructions;
     }
 
+    public List<Definition> getDefinitions() {
+        return new EmptyList<Definition>();
+    }
+
     public Object generateData(Context context, Definition def) throws Redirection {
         return context.construct(constructions);
     }

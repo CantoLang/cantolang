@@ -121,6 +121,7 @@ public class Context {
         session = context.session;
 
         keepMap = context.keepMap;
+        globalKeep = context.globalKeep;
         if (!clearKeep) {
             rootScope = context.rootScope;
             // share the cache
@@ -679,7 +680,7 @@ public class Context {
         try {
             if (arg instanceof Definition) {
                 argDef = (Definition) arg;
-            } else if (arg != ConstructionList.MISSING_ARG) {
+            } else if (arg instanceof ConstructionList.MissingArg) {
                 argDef = param.getDefinitionFor(this, arg);
                 if (arg instanceof Instantiation && argDef != null) {
                     argInstance = (Instantiation) arg;
@@ -1100,7 +1101,7 @@ public class Context {
             }
         }
 
-        if (arg == null || arg == ConstructionList.MISSING_ARG) {
+        if (arg == null || arg instanceof ConstructionList.MissingArg) {
             return null;
 
         } else {

@@ -35,6 +35,11 @@ public class CantoBlock extends Block {
         return defs;
     }
 
+    @Override
+    public List<Definition> getDefinitions() {
+        return defs;
+    }
+
     public boolean isDynamic() {
         return true;
     }

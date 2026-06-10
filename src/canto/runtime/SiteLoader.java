@@ -113,8 +113,12 @@ public class SiteLoader {
         finishedLoaders = loaders.size();
 
         // resolve references in core and mark as closed to prevent further definitions from being added
-        core.resolve(null);
+        int unresolved = core.resolve(null);
         core.setClosed(true);
+        
+        if (unresolved > 0) {
+            LOG.warn("Unresolved references in core: " + unresolved);
+        }
         
     	String config = "config.canto";
     	Path configPath = Paths.get(config);

@@ -9,9 +9,11 @@
 package canto.lang;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import canto.runtime.Log;
 import canto.util.EmptyList;
@@ -363,6 +365,13 @@ abstract public class Definition extends CantoNode implements Name, Construction
      */
     public boolean equalsOrExtends(Definition def) {
         return equals(def);
+    }
+
+    /** Returns true if <code>def</code> is a subdefinition of this definition.  Anonymous
+     *  definitions cannot have subdefinitions, so return false.
+     */
+    public boolean isSubDefinition(Definition def) {
+        return false;
     }
 
     /** Returns true if <code>name</code> is the name of an ancestor of this
@@ -1119,5 +1128,262 @@ abstract public class Definition extends CantoNode implements Name, Construction
         }
         return sb.toString();
     }    
+
+
+    // methods defined by Canto definition
+    
+    public Definition def() {
+        return this;
+    }
+
+    /** Returns true if this definition equals or is a subdefinition of the
+     *  passed type.
+     */
+    public boolean is_a(String typeName) {
+        return getType().isTypeOf(typeName);
+    }
+
+    /** Returns true if this definition defines an array. */
+    public boolean is_array() {
+        return isArray();
+    }
+    
+    /** Returns true if this definition defines a table. */
+    public boolean is_table() {
+        return isTable();
+    }
+    
+    /** Returns true if this definition defines a collection. */
+    public boolean is_collection() {
+        return isCollection();
+    }
+    
+    /** Returns the fully qualified name of this definition. */
+    public String full_name() {
+        return getFullName();
+    }
+    
+    /** Returns the simple name of this definition. */
+    public String name() {
+        return getName();
+    }
+    
+    /** For subclasses that are cacheable, gets the cached value for this 
+     *  definition in the current context, if the definition is cacheable 
+     *  and a value is present in the cache, else constructs the definition 
+     *  with the passed arguments.  The base class is not cacheable, so 
+     *  always does the latter.
+     */
+    public Object get(Context context, ConstructionList args) throws Redirection {
+        return instantiate(args, null, context);
+    }
+    
+
+    /** For subclasses that are cacheable, gets the cached value for this 
+     *  definition in the current context, if the definition is cacheable 
+     *  and a value is present in the cache, else constructs the definition 
+     *  with no arguments.  The base class is not cacheable, so always does 
+     *  the latter.
+     */
+    public Object get(Context context) throws Redirection {
+        return instantiate(context);
+    }
+
+    /** Retrieves from cache or instantiates this definition as an array.  The default 
+     *  is to return an array containing a single object, which is the retrieved/instantiated
+     *  value of this definition.
+     */
+    public List<Object> get_array(Context context) throws Redirection {
+        return new SingleItemList<Object>(get(context));
+    }
+    
+    /** Retrieves from cache or instantiates this definition as a table.  The default 
+     *  is to return a table containing a single object, which is the retrieved/instantiated
+     *  value of this definition.
+     */
+    public Map<String, Object> get_table(Context context) throws Redirection {
+        Map<String, Object> map = new HashMap<String, Object>(1);
+        map.put(getName(), get(context));
+        return map;
+    }
+
+    /** Instantiates this definition as an array.  The default is to return an array
+     *  containing a single object, which is the instantiation of this definition.
+     */
+    public List<Object> instantiate_array(Context context) throws Redirection {
+        return new SingleItemList<Object>(instantiate(context));
+    }
+    
+    public List<Object> instantiate_array(canto_context context) throws Redirection {
+        return instantiate_array(context.getContext());
+    }
+    
+    /** Instantiates this definition as a table.  The default is to return a table
+     *  containing a single object, which is the instantiation of this definition.
+     */
+    public Map<String, Object> instantiate_table(Context context) throws Redirection {
+        Map<String, Object> map = new HashMap<String, Object>(1);
+        map.put(getName(), instantiate(context));
+        return map;
+    }
+
+    public Map<String, Object> instantiate_table(canto_context context) throws Redirection {
+        return instantiate_table(context.getContext());
+    }
+
+    /** Returns the child definitions belonging to this definition, in a
+     *  table keyed on name.
+     */
+    public Map<String, Definition> defs() {
+        Map<String, Definition> defMap = null;
+        CantoNode node = getContents();
+        if (node instanceof Definition) {
+            defMap = new HashMap<String, Definition>(1);
+            defMap.put(node.getName(), (Definition) node);
+        } else if (node instanceof List<?>) {
+            List<?> nodeList = (List<?>) node;
+            if (nodeList.size() > 0) {
+                defMap = new HashMap<String, Definition>(nodeList.size());
+                Iterator<?> it = nodeList.iterator();
+                while (it.hasNext()) {
+                    CantoNode child = (CantoNode) it.next();
+                    if (child instanceof Definition) {
+                        defMap.put(child.getName(), (Definition) child);
+                    }
+                }
+            }
+        } else if (node instanceof Block) {
+            List<Definition> defList = ((Block) node).getDefinitions();
+            if (defList.size() > 0) {
+                defMap = new HashMap<String, Definition>(defList.size());
+                Iterator<Definition> it = defList.iterator();
+                while (it.hasNext()) {
+                    Definition child = it.next();
+                    defMap.put(child.getName(), child);
+                }
+            }
+        }
+        return defMap;
+    }
+
+    /** Returns the definitions named in keep directives. **/
+    public Definition[] keep_defs(Context context) {
+        return null;        
+    }
+
+    /** Returns the nearest ancestor of the specified type. */
+    public Definition ancestor_of_type(String typeName) {
+        for (Definition def = getOwner(); def != null; def = def.getOwner()) { 
+            if (def.getType().isTypeOf(typeName)) {
+                return def;
+            }
+        }
+        return null;
+    }
+
+    /** Returns all the immediate child definitions that have the specified type. **/
+    public Definition[] children_of_type(String typeName) {
+        List<Definition> defList = new ArrayList<Definition>();
+        Map<String, Definition> visitedMap = new HashMap<String, Definition>();
+        addDescendantsOfType(typeName, defList, true, false, visitedMap);
+        int size = defList.size();
+        Definition[] defArray = new Definition[size];
+        defArray = defList.toArray(defArray);
+        return defArray;
+    }
+
+    /** Returns all the descendant definitions that have the specified type. **/
+    public Definition[] descendants_of_type(String typeName) {
+        List<Definition> defList = new ArrayList<Definition>();
+        Map<String, Definition> visitedMap = new HashMap<String, Definition>();
+        addDescendantsOfType(typeName, defList, true, true, visitedMap);
+        int size = defList.size();
+        Definition[] defArray = new Definition[size];
+        defArray = defList.toArray(defArray);
+        return defArray;
+    }
+
+    protected void addDescendantsOfType(String typeName, List<Definition> defs, boolean recurseSupers, boolean recurseChildren, Map<String, Definition> visited) {
+        if (visited.get(getFullName()) != null) {
+            return;
+        }
+        visited.put(getFullName(), this);
+        
+        boolean isCollection = isCollectionType(typeName);
+        
+        CantoNode node = getContents();
+        if (node instanceof Definition) {
+            Definition def = (Definition) node;
+            Type type = def.getType();
+            try {
+                if (type != null && type.isTypeOf(typeName) && type.isCollection() == isCollection) {
+                    defs.add(def);
+                }
+                
+                if (recurseChildren) {
+                    def.addDescendantsOfType(typeName, defs, recurseSupers, true, visited);
+                }
+            } catch (Exception e) {
+                LOG.error("Exception in addDescendantsOfType processing definition " + def.getName() + ": " + e);
+            }
+
+        } else if (node instanceof List<?>) {
+            List<?> nodeList = (List<?>) node;
+            Iterator<?> it = nodeList.iterator();
+            while (it.hasNext()) {
+                CantoNode child = (CantoNode) it.next();
+                if (child instanceof Definition) {
+                    Definition def = (Definition) child;
+                    Type type = def.getType();
+                    try {
+                        if (type != null && type.isTypeOf(typeName) && type.isCollection() == isCollection) {
+                            defs.add(def);
+                        }
+                        
+                        if (recurseChildren) {
+                            def.addDescendantsOfType(typeName, defs, recurseSupers, true, visited);
+                        }
+                    } catch (Exception e) {
+                        LOG.error("Exception in addDescendantsOfType processing definition " + def.getName() + ": " + e);
+                    }
+                }
+            }
+
+        } else if (node instanceof Block) {
+            List<Definition> defList = ((Block) node).getDefinitions();
+            Iterator<Definition> it = defList.iterator();
+            while (it.hasNext()) {
+                Definition def = it.next();
+                try {
+                    Type type = def.getType();
+                    if (type != null && type.isTypeOf(typeName) && type.isCollection() == isCollection) {
+                        defs.add(def);
+                    }
+                        
+                    if (recurseChildren) {
+                        def.addDescendantsOfType(typeName, defs, recurseSupers, true, visited);
+                    }
+                } catch (Exception e) {
+                    LOG.error("Exception in addDescendantsOfType processing definition " + def.getName() + ": " + e);
+                }
+            }
+        }
+        
+        // if the recurseSupers flag is true, and the supertype hasn't already been handled,
+        // call it
+        if (recurseSupers) {
+            Definition superDef = this.getSuperDefinition();
+            if (superDef != null && visited.get(superDef.getFullName()) == null) {
+                superDef.addDescendantsOfType(typeName, defs, recurseSupers, recurseChildren, visited);
+            }
+        }
+    }
+    
+    static private boolean isCollectionType(String typeName) {
+        // collections aren't handled yet
+        return false;
+    }
+    
+
 }
 

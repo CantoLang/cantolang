@@ -15,54 +15,46 @@ import java.util.*;
  */
 public class ConstructionList extends ListNode<Construction> {
 
-    /** Object inserted into argument lists on the stack to represent missing arguments. */
-    public final static Construction MISSING_ARG = new Construction() {
 
-        public boolean getBoolean(Context context)                   { return false; }
-        public String getText(Context context)                       { return null; }
-        public Object getData(Context context)                       { return null; }
-        public Object getData(Context context, Definition def)       { return null; }
-        public boolean isAbstract(Context context)                   { return false; }
-        public Type getType(Context context, boolean generate)       { return null; }
-        public String getDefinitionName()                            { return null; }
-        public Construction getUltimateConstruction(Context context) { return this; }
-        public String toString()                                     { return "(missing arg)"; }
-        public String getString(Context context)                     { return null; }
-        public byte getByte(Context context)                         { return 0; }
-        public char getChar(Context context)                         { return 0; }
-        public int getInt(Context context)                           { return 0; }
-        public long getLong(Context context)                         { return 0; }
-		public double getDouble(Context context)                     { return 0; }
-		public Value getValue(Context context)                       { return NullValue.NULL_VALUE; }
+    static class MissingArg extends Construction {
+        public MissingArg() {}
+
         @Override
-        public Object generateData(Context context, Definition def) {
-            return null;
-        }
-    };
+        public String getName() { return "-"; }
+
+        @Override
+        public Value getValue(Context context) { return NullValue.NULL_VALUE; }
+
+        @Override
+        public String toString() { return "(missing arg)"; }
+
+        @Override
+        public Object generateData(Context context, Definition def) { return null; }
+        
+    }
     
-    public final static Construction ANY_ARG = new Construction() {
-        public boolean getBoolean(Context context)                   { return false; }
-        public String getText(Context context)                       { return null; }
-        public Object getData(Context context)                       { return null; }
-        public Object getData(Context context, Definition def)       { return null; }
-        public boolean isAbstract(Context context)                   { return false; }
-        public Type getType(Context context, boolean generate)       { return null; }
-        public String getDefinitionName()                            { return "*"; }
-        public Construction getUltimateConstruction(Context context) { return this; }
-        public String toString()                                     { return "(any arg)"; }
-        public String getString(Context context)                     { return null; }
-        public byte getByte(Context context)                         { return 0; }
-        public char getChar(Context context)                         { return 0; }
-        public int getInt(Context context)                           { return 0; }
-        public long getLong(Context context)                         { return 0; }
-        public double getDouble(Context context)                     { return 0; }
-        public Value getValue(Context context)                       { return NullValue.NULL_VALUE; }
-        @Override
-        public Object generateData(Context context, Definition def) {
-            return null;
-        }
-    };
+    /** Object inserted into argument lists on the stack to represent missing arguments. */
+    public static Construction MISSING_ARG() { return new MissingArg(); }
+    
+    static class AnyArg extends Construction {
+        public AnyArg() {}
 
+        @Override
+        public String getName() { return "*"; }
+
+        @Override
+        public Value getValue(Context context) { return NullValue.NULL_VALUE; }
+
+        @Override
+        public String toString() { return "(any arg)"; }
+
+        @Override
+        public Object generateData(Context context, Definition def) { return null; }
+        
+    }
+
+    public static Construction ANY_ARG() { return new AnyArg(); }
+    
     private boolean dynamic = false;
     private boolean concurrent = false;
     private boolean array = false;

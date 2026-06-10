@@ -208,7 +208,7 @@ core {
 	 */ 
     dynamic replace(str, oldstr, newstr) = canto.runtime.Utils.replaceOccurrences(str, oldstr, newstr)
 
-    dynamic replace_all(str, strmap{}), (str, regex, replacement) = (strmap ?? canto.runtime.Utils.replaceAllOccurrences(str, strmap) : canto.runtime.Utiles.replaceAll(str, regex, replacement)) 
+    dynamic replace_all(str, strmap{}), (str, regex, replacement) = (strmap ?? canto.runtime.Utils.replaceAllOccurrences(str, strmap) : canto.runtime.Utils.replaceAll(str, regex, replacement)) 
 
     dynamic concat(str1, str2),(strs[]) = (strs ? canto.runtime.Utils.concat(strs) : canto.runtime.Utils.concat(str1, str2)) 
 
@@ -234,7 +234,7 @@ core {
 
     /------ File Utilities ------/
 
-    static path_separator = java.lang.File.pathSeparator
+    static path_separator = java.io.File.pathSeparator
 
     dynamic include_file(path) = canto.runtime.Utils.includeFile(path)
     dynamic include_url(path) = canto.runtime.Utils.includeURL(path)
@@ -270,7 +270,6 @@ core {
         dynamic boolean mkdirs [&]
     }
 
-    persistent_cache = canto.runtime.CantoFileCache(cache_path)
 
     dynamic string[] lines_from_file(filename) = canto.runtime.Utils.linesFromFile(filename)  
 
@@ -316,17 +315,17 @@ core {
     /------ Logging ------/
 
     /** sends a string to log file/console **/
-    dynamic log(str) = canto.runtime.CantoLogger.CANTOLOG.info(str)
+    dynamic log(str) = canto.runtime.Log.CANTOLOG.info(str)
 
     /** sends a string to log file/console if Canto is running in
      *  verbose mode.
      **/
-    dynamic vlog(str) = canto.runtime.CantoLogger.CANTOLOG.debug(str)
+    dynamic vlog(str) = canto.runtime.Log.CANTOLOG.debug(str)
     
     /** sends a string and a newline to the console, bypasses log file **/
     dynamic console_println(str) = java.lang.System.out.println(str)
     
     /** sends an error message to log file/console **/
-    dynamic err(str) = canto.runtime.CantoLogger.CANTOLOG.error(str)
+    dynamic err(str) = canto.runtime.Log.CANTOLOG.error(str)
     
 }

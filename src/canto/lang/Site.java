@@ -35,6 +35,7 @@ public class Site extends ComplexDefinition {
 
     public Site(String name) {
         super(new NameNode(name));
+        setAccess(Access.PUBLIC);
     }
 
     public Site(NameNode name) {

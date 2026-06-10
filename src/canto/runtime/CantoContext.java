@@ -112,18 +112,23 @@ public class CantoContext implements canto_context {
     }
 
     /** Constructs a Canto object of a particular name, passing in particular arguments.  **/
-    public Object construct(String name, List<Construction> args) throws Redirection {
+    public Object construct(String name, List<String> args) throws Redirection {
         if (!initialized) {
             init();
         }
-        NameNode nameNode = (name.indexOf('.') > 0 ? new ComplexName(name) : new NameNode(name));
-        Instantiation instance;
+        
+        boolean isComplex = (name.indexOf('.') > 0);
+        
         if (args != null) {
-            ConstructionList argList = (args instanceof ConstructionList ? (ConstructionList) args : new ConstructionList(args));
-            instance = new Instantiation(nameNode, argList, null, context.peek().def);
-        } else {
-            instance = new Instantiation(nameNode, context.peek().def);
+            name = name + "(" + String.join(",", args) + ")";
         }
+        
+        NameNode nameNode = new ComplexName(name);
+        if (!isComplex) {
+            nameNode = (NameNode) nameNode.getChild(0);
+        }
+        
+        Instantiation instance = new Instantiation(nameNode, context.peek().def);
         return instance.getData(context);
     }
     

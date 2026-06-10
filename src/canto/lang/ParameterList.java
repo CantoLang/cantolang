@@ -95,7 +95,7 @@ public class ParameterList extends ListNode<DefParameter> {
 
                 // see if the argument is a value that gets treated specially (e.g. null)
                 Object argObj = args.get(i);
-                if (argObj == ConstructionList.MISSING_ARG) {
+                if (argObj instanceof ConstructionList.MissingArg) {
                     score += Definition.ARG_MISSING;
                     continue;
                 } else if (argObj == null || argObj instanceof NullValue) {

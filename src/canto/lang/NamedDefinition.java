@@ -536,6 +536,9 @@ public class NamedDefinition extends Definition {
         ownerOfSub = hasSub;
     }
 
+    /** Returns true if <code>def</code> is a subdefinition of this definition.
+     */
+    @Override
     public boolean isSubDefinition(Definition def) {
         NamedDefinition subDef = null;
         try {
@@ -570,6 +573,7 @@ public class NamedDefinition extends Definition {
         return false;
     }
 
+    @Override
     public boolean isSuperType(String name) {
         Type st = getSuper();
         while (st != null) {

@@ -341,7 +341,7 @@ stepIterator
     ;
 
 redirect
-    : REDIRECT instantiation
+    : REDIRECT instantiation SEMICOLON?
     ;
 
 collectionSuffix
@@ -462,7 +462,11 @@ nameRange
     ;
 
 complexName
-    : identifier (DOT identifier)*
+    : complexNameComponent (DOT complexNameComponent)*
+    ;
+
+complexNameComponent
+    : identifier (args | dynamicArgs)? (index)*
     ;
 
 args

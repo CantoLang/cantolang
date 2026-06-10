@@ -20,9 +20,6 @@ public class RedirectStatement extends Construction {
 
     public RedirectStatement(CantoNode target) {
         super(target);
-        children = new CantoNode[1];
-        children[0] = target;
-        children[0].parent = this;
         setDynStat(false, false);
     }
 

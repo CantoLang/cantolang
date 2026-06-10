@@ -1090,7 +1090,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
 
             // don't count trailing MISSING_ARGs
             for (int i = numArgs - 1; i >= 0; i--) {
-                if (args.get(i) == ConstructionList.MISSING_ARG) {
+                if (args.get(i) instanceof ConstructionList.MissingArg) {
                     numArgs--;
                 } else {
                     break;
@@ -1116,7 +1116,7 @@ class ExternalConstruction extends Construction implements ValueGenerator {
     
             for (int i = 0; i < numArgs; i++) {
                 Object arg = args.get(i);
-                if (arg == ConstructionList.MISSING_ARG) {
+                if (arg instanceof ConstructionList.MissingArg) {
                     arg = null;
                 }
                 if (arg instanceof Instantiation && context.size() > 1) {
