@@ -299,27 +299,30 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
      */
     @SuppressWarnings("unchecked")
     public int resolve(ParameterList forParamDef) {
+        // walk children so that nested instantiations (e.g. arguments inside a
+        // call site's NameWithArgs) are resolved too. Then resolve this node.
+        int unresolved = super.resolve(forParamDef);
         if (kind != Kind.UNRESOLVED && kind != Kind.DYNAMICALLY_RESOLVED) {
             // already resolved
-            return 0;
+            return unresolved;
         }
         if (reference instanceof Definition && !(reference instanceof DefParameter)) {
             kind = Kind.STATICALLY_RESOLVED;
             LOG.debug("   ..." + ((Definition) reference).getName() + " is statically resolved");
-            return 0;
+            return unresolved;
         }
         Definition owner = getOwner();
         while (owner != null && !(owner instanceof NamedDefinition)) {
             owner = owner.getOwner();
         }
         if (owner == null) {
-            return 1;
+            return unresolved + 1;
         }
 
         NamedDefinition ndef = (NamedDefinition) owner;
         NameNode name = getReferenceName();
         if (name == null) {
-            return 0;
+            return unresolved;
         }
 
         String checkName = name.getName();
@@ -331,7 +334,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         if (name.isSpecial()) {
             LOG.debug("   ..." + checkName + " is a special name and is dynamically resolved");
             kind = Kind.DYNAMICALLY_RESOLVED;
-            return 0;
+            return unresolved;
         }
         
         // check for statement parameters, if any
@@ -345,14 +348,14 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                         isParamChild = true;
                         LOG.debug("   ..." + checkName + " refers to the child of a for statement parameter");
                         kind = Kind.FOR_PARAMETER_CHILD;
-                        return 0;
+                        return unresolved;
                     }
                 } else {
                     if (checkName.equals(forParamName.getName())) {
                         isParam = true;
                         LOG.debug("   ..." + checkName + " refers to a for statement parameter");
                         kind = Kind.FOR_PARAMETER;
-                        return 0;
+                        return unresolved;
                     }
                 }
             }
@@ -377,7 +380,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                 if (nd.equals(ndef)) {
                                     LOG.debug("   ..." + checkName + " refers to the child of a parameter");
                                     kind = Kind.PARAMETER_CHILD;
-                                    return 0;
+                                    return unresolved;
                                 } else {
                                     LOG.debug("   ..." + checkName + " refers to the child of a parameter in the container");
                                     kind = Kind.CONTAINER_PARAMETER_CHILD;
@@ -400,7 +403,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                                 if (nd.equals(ndef)) {
                                     LOG.debug("   ..." + checkName + " refers to a parameter");
                                     kind = Kind.PARAMETER;
-                                    return 0;
+                                    return unresolved;
                                 } else {
                                     LOG.debug("   ..." + checkName + " refers to a parameter in the container");
                                     kind = Kind.CONTAINER_PARAMETER;
@@ -420,13 +423,13 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         }
 
         if (kind != Kind.UNRESOLVED) {
-            return 0;
+            return unresolved;
 
         // formal parameters are dynamically resolved
         } else if (ndef.isFormalParam()) {
             LOG.debug("   ..." + checkName + " refers to a formal parameter");
             kind = Kind.DYNAMICALLY_RESOLVED;
-            return 0;
+            return unresolved;
         }
 
         Definition def = null;
@@ -509,10 +512,10 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 kind = Kind.EXPLICITLY_RESOLVED;
                 LOG.debug("   ..." + checkName + " is an explicit reference");
             } else {
-                return 1;
+                return unresolved + 1;
             }
         }
-        return 0;
+        return unresolved;
     }
 
     @Override
@@ -1905,7 +1908,11 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
     }
 
     public Object instantiate(Context context, Definition def) throws Redirection {
-        return instantiate(context, def, getArguments(), getIndexes());
+        // If def is already an ElementReference, its indexes have already been applied
+        // (e.g. from a cached resolution). Passing this.getIndexes() again would cause
+        // Context.initDef to combine them with the ER's own indexes, duplicating.
+        IndexList idx = (def instanceof ElementReference) ? null : getIndexes();
+        return instantiate(context, def, getArguments(), idx);
     }
 
     public Object instantiate(Context context, Definition def, ConstructionList args, IndexList indexes) throws Redirection {

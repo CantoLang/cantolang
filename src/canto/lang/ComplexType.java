@@ -159,14 +159,16 @@ public class ComplexType extends AbstractType {
                 return type.convert(val);
             }
         }
+        Definition def = getDefinition();
+        if (def == null) {
+            // type has no associated definition; nothing to convert against
+            return val;
+        }
         List<Construction> args = Context.newArrayList(1, Construction.class);
         args.add((Construction) val);
-        Definition def = getDefinition();
         Instantiation instance = new Instantiation(def, new ConstructionList(args), null);
         instance.setOwner(getOwner());
-        Value result = val;
-        result = instance.getValue(null);    // new Context(def.getSite()));
-        return result;
+        return instance.getValue(new Context(def.getSite()));
     }
 
    

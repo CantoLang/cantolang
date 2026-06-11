@@ -267,7 +267,7 @@ abstract public class BinaryOperator extends AbstractOperator {
             if (context == null) {
                 throw new NullPointerException("null context for operator");
             } else if (!context.equals(marker)) {
-                throw new IllegalStateException("context in illegal state for operator"); 
+                throw new IllegalStateException("context in illegal state for operator");
             }
             try {
                 // this is to avoid trying to generate later,

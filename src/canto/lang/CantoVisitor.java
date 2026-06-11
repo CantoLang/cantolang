@@ -799,9 +799,28 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         } else if (ctx.redirect() != null) {
             node = ctx.redirect().accept(this);
         } else {
-            node = ctx.expression().accept(this);
+            node = convertSpecialStatement(ctx.expression().accept(this));
         }
-        ctx.DOC_COMMENT().forEach(comment -> node.addDocComment(comment.getText()));
+        final CantoNode result = node;
+        ctx.DOC_COMMENT().forEach(comment -> result.addDocComment(comment.getText()));
+        return result;
+    }
+
+    /** If the node is a bare-name Instantiation of sub/super/next (no args, no
+     *  indexes, single name component), replace it with the corresponding
+     *  Statement so Context.construct's special handling fires. */
+    private static CantoNode convertSpecialStatement(CantoNode node) {
+        if (!(node instanceof Instantiation)) return node;
+        Instantiation inst = (Instantiation) node;
+        CantoNode ref = inst.getReference();
+        if (!(ref instanceof NameNode) || ref instanceof ComplexName) return node;
+        if (inst.getArguments() != null) return node;
+        IndexList idx = inst.getIndexes();
+        if (idx != null && !idx.isEmpty()) return node;
+        String name = ((NameNode) ref).getName();
+        if (Name.SUB.equals(name)) return new SubStatement();
+        if (Name.SUPER.equals(name)) return new SuperStatement();
+        if (Name.NEXT.equals(name)) return new NextStatement();
         return node;
     }
     

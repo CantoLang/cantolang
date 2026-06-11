@@ -591,7 +591,8 @@ public class CantoServer implements canto_server {
             synchronized (context) {
                 status = site.respond(pageName, requestParams, requestArg, sessionArg, context, out);
             }
-            response.setStatus(status);                
+            response.setStatus(status);
+            out.close();
             callback.succeeded();
 
         } catch (Redirection r) {

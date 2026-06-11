@@ -3382,6 +3382,22 @@ public class Context {
         return new ContextIterator();
     }
 
+    /** Returns true if obj is a ContextMarker capturing this same context state,
+     *  i.e. same root, same stateCount, same loopIndex. ContextMarker.equals only
+     *  compares marker-to-marker; without this override, callers like
+     *  BinaryOperator.DeferredValue that ask context.equals(marker) would fall
+     *  through to Object.equals (reference equality), always returning false. */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ContextMarker) {
+            ContextMarker marker = (ContextMarker) obj;
+            return (rootContext == marker.rootContext
+                    && stateCount == marker.stateCount
+                    && getLoopIndex() == marker.loopIndex);
+        }
+        return super.equals(obj);
+    }
+
     public boolean equalsOrPrecedes(Object obj) {
         if (obj instanceof Context) {
             Context context = (Context) obj;
