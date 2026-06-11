@@ -23,13 +23,11 @@ public class StaticBlock extends Block {
         super(children);
     }
 
-    public boolean isStatic() {
-        return true;
-    }
-
-    public boolean isDynamic() {
-        return false;
-    }
+    // intentionally not overriding isStatic/isDynamic from Block. Block iterates
+    // children to determine status; the previous override returned true/false
+    // unconditionally which made Construction.getData cache the first generateData
+    // result on Construction.staticData and return it for every subsequent call,
+    // breaking loop bodies that contained any substitution.
 
     public boolean isAbstract(Context context) {
         return false;
