@@ -239,7 +239,12 @@ abstract public class AbstractType extends NameNode implements Type {
 
     @Override
     public int resolve(ParameterList forParams) {
-        return resolve();
+        // walk children so that any nested instantiations inside type arguments
+        // (e.g. r and s in `basepage(r, s)`) get a chance to resolve. Without
+        // this, the args of typeWithArgs are never visited because Type doesn't
+        // live in the children array of NamedDefinition the way Block does.
+        int unresolved = super.resolve(forParams);
+        return unresolved + resolve();
     }
 
     /** Resolve references in this type and return the number that could not be resolved. Most
