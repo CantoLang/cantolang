@@ -78,6 +78,12 @@ class IndexedMethodConstruction extends MethodConstruction {
         try {
             Object data = super.generateData(context, def);
             IndexList indexes = ((IndexedMethodDefinition) getMethodDefinition()).getIndexes();
+            if (indexes == null) {
+                if (data instanceof Holder) {
+                    data = ((Holder) data).data;
+                }
+                return data;
+            }
             Iterator<Index> it = indexes.iterator();
             while (it.hasNext()) {
                 Object collection = data;
