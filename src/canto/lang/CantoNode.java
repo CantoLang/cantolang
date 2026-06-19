@@ -309,12 +309,13 @@ abstract public class CantoNode implements Cloneable {
         return (children == null) ? 0 : children.length;
     }
 
+    @Override
     public String toString() {
-        return "[CantoNode of type " + getClass().getName() + "]\n";
+        return toString("");
     }
 
     public String toString(String prefix) {
-        return prefix + toString();
+        return prefix + "[CantoNode of type " + getClass().getName() + "]\n";
     }
 
     /** Static utility method to retrieve the value of an arbitrary object. */

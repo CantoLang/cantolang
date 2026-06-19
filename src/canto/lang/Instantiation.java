@@ -112,6 +112,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
         // this instantiation is unowned
         super();
         setReference(reference);
+        setArguments(args);
         setIndexes(indexes);
     }
     
@@ -156,7 +157,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             reference = new PrimitiveValue(obj);
         }
         
-        setChild(0, reference);
+        if (!reference.isDefinition()) {
+            setChild(0, reference);
+        }
         
         if (reference instanceof ValueGenerator) {
             // value generators are inherently dynamic
@@ -191,7 +194,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             throw new IllegalArgumentException("Cannot set arguments on an instantiation with a NameNode reference; arguments must be set on the NameNode");
         }
         this.args = args;
-        setChild(1, args);
+        if (args != null) {
+            addChild(args);
+        }
     }
 
     /** Returns the list of arguments this instantiation has, if any. */
@@ -204,7 +209,9 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             throw new IllegalArgumentException("Cannot set indexes on an instantiation with a NameNode reference; indexes must be set on the NameNode");
         }
         this.indexes = indexes;
-        setChild(2, indexes);
+        if (indexes != null) {
+            addChild(indexes);
+        }
     }
 
     /** Returns the list of indexes this instantiation has, if any. */

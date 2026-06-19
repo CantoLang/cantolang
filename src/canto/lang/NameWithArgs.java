@@ -72,7 +72,7 @@ public class NameWithArgs extends NameNode {
         
     /** Returns true if there are indexes. */
     public boolean hasIndexes() {
-        return (getArguments() != null);
+        return (getIndexes() != null);
     }
 
     public IndexList getIndexes() {

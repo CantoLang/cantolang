@@ -1144,6 +1144,10 @@ public class Context {
         int numUnpushes = 0;
         boolean pushedOwner = false;
 
+if ("super".equals(argName.getName())) {
+    System.out.println("super found as arg");
+}
+
         Context resolutionContext = this;
         if (arg instanceof ResolvedInstance) {
             resolutionContext = ((ResolvedInstance) arg).getResolutionContext();
@@ -3937,6 +3941,20 @@ public class Context {
         return rootScope;
     }
 
+    @Override
+    public String toString() {
+        String newline = "\n";
+        String str = "context #" + hashCode() + " $" + stateCount + newline;
+        str = str + "    top> " + topScope.toString() + newline;
+        for (Scope scope = topScope.previous; scope != null; scope = scope.previous) {
+            str = str + "      -> " + scope.toString() + newline;
+        }
+        return str;
+    }
+    
+    
+    
+    
     class ContextIterator implements Iterator<Scope> {
         private Scope nextScope;
 
@@ -3991,5 +4009,15 @@ class ContextMarker {
     public int hashCode() {
         int n = (rootContext.getRootScope().hashCode() << 16) + stateCount;
         return n;
+    }
+    
+    @Override
+    public String toString() {
+        String str = "ContextMarker " + (rootContext != null ? ("#" + rootContext.hashCode()) : "null")
+                + ", stateCount=" + stateCount + ", loopIndex=" + loopIndex;
+        if (rootContext != null) {
+            str = str + "\n" + rootContext.toString();
+        }
+        return str;
     }
 }

@@ -616,7 +616,9 @@ public class CantoDomain implements canto_domain {
             @SuppressWarnings("rawtypes")
             ListNode[] paramsAndArgs = def.getMatch(argLists, argContext);
             ConstructionList args = (paramsAndArgs == null ? null : (ConstructionList) paramsAndArgs[1]);
-            return new Instantiation(def, args, null);
+            Instantiation instance = new Instantiation(def, args, null);
+            instance.setParent(site);
+            return instance;
         } else {
             return null;
         }

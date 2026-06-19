@@ -5003,7 +5003,7 @@ show_this_context {=
 
         topbar() [|
             <div align="center"><h2>Canto Test Suite: {= label; =}</h2></div>
-            <div align="right"><h3>{= today; =}</h3></div>
+            <div align="right"><h3>{ = today; = }</h3></div>
         |]
 
         form("start_session") test_session_form(session s) {

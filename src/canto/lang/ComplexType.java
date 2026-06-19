@@ -24,27 +24,43 @@ public class ComplexType extends AbstractType {
     private List<Dim> dims = null;
     private ConstructionList args = null;
 
-
+    private static List<CantoNode> extractNameNodes(String name) {
+        String[] parts = name.split("\\.");
+        List<CantoNode> nameNodes = Context.newArrayList(parts.length, CantoNode.class);
+        for (String part : parts) {
+            nameNodes.add(new NameNode(part));
+        }
+        return nameNodes;
+    }
+    
     public ComplexType() {
         super();
         setName(DefaultType.TYPE.getName());
+        setChild(0, new NameNode(DefaultType.TYPE.getName()));
     }
 
     public ComplexType(NameNode typename) {
         super();
-        setChild(0, typename);
-        setName(typename.getName());
+        String name = typename.getName();
+        setChildren(extractNameNodes(name));
+        setName(name);
         dims =  typename.getDims();
         args = typename.getArguments();
+        if (args != null) {
+            addChild(args);
+        }
     }
 
     public ComplexType(Definition def, String typename) {
         super();
-        setChild(0, new NameNode(typename));
+        setChildren(extractNameNodes(typename));
         setName(typename);
         setDefinition(def);
         dims = new EmptyList<Dim>();
         args = new ConstructionList(new EmptyList<Construction>());
+        if (args != null) {
+            addChild(args);
+        }
     }
 
     public ComplexType(Definition def, String typename, List<Dim> dims, ConstructionList args) {
@@ -52,12 +68,17 @@ public class ComplexType extends AbstractType {
         this.dims = (dims == null ? new EmptyList<Dim>() : dims);
         this.args = (args == null ? new ConstructionList(new EmptyList<Construction>()) : args);
 
-        setChild(0, new NameNode(typename));
+        setChildren(extractNameNodes(typename));
         setName(typename);
         setDefinition(def);
+
+        if (args != null) {
+            addChild(args);
+        }
     }
 
     public ComplexType(Type baseType, List<Dim> additionalDims, ConstructionList args) {
+        copyChildren((CantoNode) baseType);
         setName(baseType.getName());
         this.args = (args == null ? new ConstructionList(new EmptyList<Construction>()) : args);
         dims = baseType.getDims();
@@ -67,6 +88,9 @@ public class ComplexType extends AbstractType {
         } else if (additionalDims != null) {
             dims = Context.newArrayList(dims);
             dims.addAll(additionalDims);
+        }
+        if (args != null) {
+            addChild(args);
         }
     }
 
