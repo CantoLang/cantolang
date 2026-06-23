@@ -827,10 +827,6 @@ abstract public class Definition extends CantoNode implements Name, Construction
         return null;
     }
 
-    public boolean isExternal() {
-        return false;
-    }
-
     /** Returns true if this is a collection; the base class returns false by default. */
     public boolean isCollection() {
         return false;

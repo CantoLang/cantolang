@@ -200,6 +200,10 @@ abstract public class CantoNode implements Cloneable {
         }
     }
 
+    public boolean isExternal() {
+        return false;
+    }
+
     public boolean isEmpty() {
         return children == null || children.length == 0;
     }

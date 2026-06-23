@@ -1345,6 +1345,12 @@ class MethodDefinition extends ExternalDefinition {
         setContents(createConstruction());
     }
 
+    @Override
+    public void setContents(CantoNode contents) {
+        // overide to avoid setting the owner
+        this.contents = contents;
+    }
+
     protected ExternalConstruction createConstruction() {
         return new MethodConstruction(this);
     }

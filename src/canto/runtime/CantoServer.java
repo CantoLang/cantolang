@@ -533,7 +533,7 @@ public class CantoServer implements canto_server {
      * @throws IOException
      */
     private void continueResponse(final CantoSite site, final String contextPath, final Request request, final Response response, final Callback callback) throws IOException {
-        String pageName = site.getPageName(contextPath);
+        String pageName = getPageName(site, request);
         if (site.canRespond(pageName)) {
             try {
                 respond(site, pageName, request, response, callback);
@@ -631,7 +631,16 @@ public class CantoServer implements canto_server {
         }
     }
     
-    private static Construction createParamsArg(CantoSite site, Map<String, String> params) {
+    public static String getPageName(CantoSite site, Request request) {
+        // this works on Resin
+        String requestName = Request.getPathInContext(request);
+        if (requestName == null) {
+            requestName = "";
+        }
+        return site.getPageName(requestName);
+    }
+
+   private static Construction createParamsArg(CantoSite site, Map<String, String> params) {
         Definition parent = site.getMainOwner();
         CantoNode owner = (CantoNode) parent;
         ExternalDefinition def = new ExternalDefinition("params", owner, parent, null, Definition.Access.PUBLIC, Definition.Durability.IN_CONTEXT, params, null);

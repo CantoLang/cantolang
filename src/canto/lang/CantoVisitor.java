@@ -11,7 +11,6 @@ package canto.lang;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
