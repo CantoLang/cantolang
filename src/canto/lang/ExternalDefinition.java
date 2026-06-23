@@ -1332,7 +1332,13 @@ class MethodDefinition extends ExternalDefinition {
     private Method method;
 
     public MethodDefinition(ExternalDefinition owner, Method method, ConstructionList args) {
-        super(new NameWithArgs(method.getName(), args));
+        // Don't pass args into the NameWithArgs: doing so would re-parent
+        // the args ConstructionList into this MethodDefinition's name and
+        // cascade owner=this onto every arg Instantiation (e.g. the `super`
+        // in `format(super)`), severing the args from their lexical owner
+        // (e.g. `today`). The args live on ExternalDefinition.args via
+        // setArguments below, which doesn't reparent.
+        super(new NameNode(method.getName()));
         this.method = method;
 
         setOwner(owner);
