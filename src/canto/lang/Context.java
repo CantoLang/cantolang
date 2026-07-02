@@ -2123,6 +2123,10 @@ public class Context {
 
         while (superDef != null) {
             Type st = def.getSuper(this);
+            if (st == null) {
+                LOG.warn("DIAG pushSupers: def=" + def.getName() + "[" + def.getClass().getSimpleName() + "] has superDef=" + superDef.getName() + "[" + superDef.getClass().getSimpleName() + "] but getSuper()=null; breaking");
+                break;
+            }
             //if (superDef != topScope.superdef) {
                 ConstructionList args = st.getArguments(this);
                 ParameterList params = superDef.getParamsForArgs(args, this);

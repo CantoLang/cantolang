@@ -35,7 +35,7 @@ public class InstantiatedMap implements Map<String, Object> {
         Iterator<Object> it = vals.iterator();
         while (it.hasNext()) {
             Object obj = it.next();
-            if (obj instanceof ValueGenerator || obj instanceof ElementDefinition || obj instanceof ExternalDefinition) {
+            if (obj instanceof ValueGenerator || obj instanceof ElementDefinition || obj instanceof ExternalDefinition || obj instanceof AliasedDefinition) {
                 valMapNeeded = true;
                 break;
             }
@@ -123,9 +123,14 @@ public class InstantiatedMap implements Map<String, Object> {
         } else if (obj instanceof ElementDefinition) {
             obj = ((ElementDefinition) obj).getElement();
             putElement(key, obj);
-        } else if (obj instanceof ExternalDefinition) {
-            obj = ((ExternalDefinition) obj).getObject();
-            putElement(key, obj);
+        } else {
+            if (obj instanceof AliasedDefinition) {
+                obj = ((AliasedDefinition) obj).getAliasedDefinition(context);
+            }
+            if (obj instanceof ExternalDefinition) {
+                obj = ((ExternalDefinition) obj).getObject();
+                putElement(key, obj);
+            }
         }
         
         Object val = CantoNode.getObjectValue(context, obj);

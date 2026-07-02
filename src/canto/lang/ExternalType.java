@@ -20,7 +20,11 @@ public class ExternalType extends ComplexType {
     }
 
     public Class<?> getTypeClass(Context context) {
-        return ((ExternalDefinition) getDefinition()).getExternalClass(context);
+        Definition def = getDefinition();
+        if (def instanceof AliasedDefinition) {
+            def = ((AliasedDefinition) def).getAliasedDefinition(context);
+        }
+        return ((ExternalDefinition) def).getExternalClass(context);
     }
 }
 

@@ -41,6 +41,9 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     public CountDefinition(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(def instanceof CountDefinition ? def : new CountDefinition(def), context);
         setName(new NameNode(Name.COUNT));
+        if (def instanceof AliasedDefinition) {
+            def = ((AliasedDefinition) def).getAliasedDefinition(context);
+        }
         if (def instanceof ExternalDefinition) {
             def = ((ExternalDefinition) def).getDefForContext(context, args);
         }
@@ -62,10 +65,14 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     private int getCount() {
         int count = 0;
         if (ri == null) {
-            if (def instanceof CollectionDefinition) {
-                count = ((CollectionDefinition) def).getSize();
-            } else if (def instanceof ExternalDefinition) {
-                count = ((ExternalDefinition) def).getObjectSize();
+            Definition d = def;
+            if (d instanceof AliasedDefinition) {
+                d = ((AliasedDefinition) d).getAliasedDefinition(null);
+            }
+            if (d instanceof CollectionDefinition) {
+                count = ((CollectionDefinition) d).getSize();
+            } else if (d instanceof ExternalDefinition) {
+                count = ((ExternalDefinition) d).getObjectSize();
             } else {
                 count = 1;
             }

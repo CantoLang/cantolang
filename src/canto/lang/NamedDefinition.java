@@ -206,9 +206,6 @@ public class NamedDefinition extends Definition {
    
     @Override
     public void setOwner(Definition owner) {
-if (owner instanceof AliasedDefinition) {
- System.out.println("setOwner called with aliased owner " + owner.getFullName());        
-}
         super.setOwner(owner);
         if (keeps != null) {
             for (KeepNode keep : keeps) {

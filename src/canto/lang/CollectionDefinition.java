@@ -370,10 +370,15 @@ public class CollectionDefinition extends ComplexDefinition {
             return ((ElementDefinition) element).getElement();
         } else if (element instanceof Holder) {
             return ((Holder) element).data;
-        } else if (element instanceof ExternalDefinition) {
-            return ((ExternalDefinition) element).getObject();
         } else {
-            return element;
+            if (element instanceof AliasedDefinition) {
+                element = ((AliasedDefinition) element).getAliasedDefinition(null);
+            }
+            if (element instanceof ExternalDefinition) {
+                return ((ExternalDefinition) element).getObject();
+            } else {
+                return element;
+            }
         }
     }
 

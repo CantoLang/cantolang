@@ -1,5 +1,5 @@
 /* Canto Compiler and Runtime Engine
- * 
+ *
  * AliasedDefinition.java
  *
  * Copyright (c) 2018-2026 by cantolang.org
@@ -8,45 +8,47 @@
 
 package canto.lang;
 
+import java.util.LinkedList;
 import java.util.List;
 
 
 /**
-* An AliasedDefinition is a definition that references another definition.
-*/
+ * An AliasedDefinition is a lightweight wrapper around another Definition.
+ * All calls are delegated to the wrapped definition except calls that
+ * retrieve the definition's name, which return the alias's name instead.
+ *
+ * Structurally modeled on DefinitionFlavor: not an ExternalDefinition, not
+ * an owner of its own AST children. Its own inherited `name` field holds
+ * the alias; the wrapped definition is stored in `def`.
+ */
+public class AliasedDefinition extends ComplexDefinition {
 
-public class AliasedDefinition extends ExternalDefinition {
     Definition def;
-    String fullName;
 
     public AliasedDefinition(Definition def, NameNode alias) {
-        super(def.getNameNode(), def.getParent(), def.getOwner(), null, Definition.Access.SITE, Definition.Durability.IN_CONTEXT, def, null);
-        this.fullName = def.getFullName();
+        super(alias);
         this.def = def;
-        setName(alias);
-        Site site = def.getSite();
-        Definition definitionDef = site.getDefinition("definition");
-        if (definitionDef != null) {
-           Type definitionType = definitionDef.getType();
-
-           setType(TypeList.addTypes(def.getType(),definitionType));
-           
-           //setSuper(def.getType());
-           //setType(definitionType);
-
-           //Type st = def.getSuper();
-           //
-           //if (st == null) {
-           //    setSuper(definitionType);
-           //} else {
-           //    setSuper(TypeList.addTypes(st, definitionType));
-           //}
-        }
     }
 
-    /** Returns true, because this definition represents a special name, whose
-     *  meaning can change. 
-     */
+    /** Returns the wrapped definition. */
+    public Definition getAliasedDefinition(Context context) {
+        return def;
+    }
+
+    // Name-related: use the alias (stored via super(alias) in our own name field).
+    // - getName() and getNameNode() are inherited and return alias's name.
+    // - getFullName() delegates to the wrapped def; using the alias's own name
+    //   would produce a full name relative to whatever owner happens to be set
+    //   on this wrapper (which is fragile since the wrapper may be reparented
+    //   by setContents cascades).
+
+    @Override
+    public String getFullName() {
+        return def == null ? "" : def.getFullName();
+    }
+
+    // Aliases signal a name whose meaning may change in context.
+
     @Override
     public boolean isDynamic() {
         return true;
@@ -57,35 +59,117 @@ public class AliasedDefinition extends ExternalDefinition {
         return Durability.IN_CONTEXT;
     }
 
+    // Delegation — everything else goes to the wrapped definition.
+
     @Override
-    public String getFullName() {
-        return fullName;
+    public Definition getOwner() {
+        return def == null ? null : def.getOwner();
+    }
+
+    @Override
+    public Access getAccess() {
+        return def.getAccess();
+    }
+
+    @Override
+    public Type getType() {
+        return def.getType();
+    }
+
+    @Override
+    public Type getSuper() {
+        return def.getSuper();
+    }
+
+    @Override
+    public Type getSuper(Context context) {
+        return def.getSuper(context);
+    }
+
+    @Override
+    public NamedDefinition getSuperDefinition() {
+        return def.getSuperDefinition();
+    }
+
+    @Override
+    public NamedDefinition getSuperDefinition(Context context) {
+        return def.getSuperDefinition(context);
+    }
+
+    @Override
+    public boolean isSuperType(String name) {
+        return def.isSuperType(name);
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        return ((CantoNode) def).isPrimitive();
+    }
+
+    @Override
+    public boolean isAbstract(Context context) {
+        return def.isAbstract(context);
+    }
+
+    @Override
+    public boolean hasSub(Context context) {
+        return def.hasSub(context);
+    }
+
+    @Override
+    public boolean hasNext(Context context) {
+        return def.hasNext(context);
+    }
+
+    @Override
+    public LinkedList<Definition> getNextList(Context context) {
+        return def.getNextList(context);
+    }
+
+    @Override
+    public List<ParameterList> getParamLists() {
+        return def.getParamLists();
+    }
+
+    @Override
+    public List<Construction> getConstructions(Context context) {
+        return def.getConstructions(context);
+    }
+
+    @Override
+    public CantoNode getContents() {
+        return def.getContents();
+    }
+
+    @Override
+    public String getFullNameInContext(Context context) {
+        return def.getFullNameInContext(context);
+    }
+
+    @Override
+    public boolean isSubDefinition(Definition subDef) {
+        return def.isSubDefinition(subDef);
+    }
+
+    @Override
+    public Object getChildData(NameNode childName, Type type, Context context, ConstructionList args) throws Redirection {
+        return def.getChildData(childName, type, context, args);
+    }
+
+    @Override
+    public Definition getChildDefinition(NameNode name, Context context) {
+        return def.getChildDefinition(name, context);
+    }
+
+    @Override
+    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
+        return def.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
     @Override
     public Object instantiate(ConstructionList args, IndexList indexes, Context context) throws Redirection {
         return def.instantiate(args, indexes, context);
-    }
-
-        
-    @Override
-    public Object getChild(NameNode node, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context context, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
-        
-        Object data = def.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
-        if (data == null || data == UNDEFINED) {
-            data = super.getChild(node, args, indexes, parentArgs, context, generate, trySuper, parentObj, resolver);
-        }
-        return data; 
-    }
-    
-    public Definition getDefForContext(Context context, ConstructionList args) {
-//        if (def instanceof ExternalDefinition) {
-//            return ((ExternalDefinition) def).getDefForContext(context, args);
-//        } else {
-//            return def;
-//        }
-        return this;
     }
 
     @Override
@@ -101,48 +185,20 @@ public class AliasedDefinition extends ExternalDefinition {
         }
     }
 
-    public Definition getAliasedDefinition(Context context) {
-        return def;
-    }
-
-
-    @Override
-    public List<ParameterList> getParamLists() {
-        return def.getParamLists();
-    }
-    
-    /** Returns the type object for the aliased definition. */
-    //public Type getType() {
-    //    return def != null ? def.getType() : super.getType();
-    //}
-
     @Override
     public Site getSite() {
         if (def instanceof Site) {
             return (Site) def;
         } else {
-            return super.getSite();
+            return def.getSite();
         }
     }
-    
-//    DefinitionTable getDefinitionTable() {
-//        return def.getDefinitionTable();
-//    }
 
-    /** Create the type corresponding to this definition.  This is a copy of  
-     *  the createType function in NamedDefinition -- i.e., the super super
-     *  super definition of this one -- which effectively bypasses the
-     *  ExternalDefinition version of createType, which creates an ExternalType.
-     *  This way we get a regular, non-external type, which works better
-     *  for parameter list matching (see this_type_test.show_c).
-     **/
-    @Override
-    protected Type createType() {
-        NameNode nameNode = getNameNode();
-        ComplexType type = new ComplexType(this, nameNode.getName(), nameNode.getDims(), nameNode.getArguments());
-        type.setOwner(getOwner());
-        return type;
+    /** Kept for callers that previously received an AliasedDefinition through an
+     *  ExternalDefinition-typed variable and called getDefForContext. Returns
+     *  this (the aliased view).
+     */
+    public Definition getDefForContext(Context context, ConstructionList args) {
+        return this;
     }
-    
 }
-
