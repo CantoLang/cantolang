@@ -163,7 +163,9 @@ public class ExternalDefinition extends ComplexDefinition {
         if (complexOwner != null) {
             setDefinitionTable(complexOwner.getDefinitionTable());
         }
-        setParent(parent);
+        if (parent != null) {
+            setParent(parent);
+        }
         setObject(object);
         setArguments(args);
         if (object instanceof Value) {
@@ -183,13 +185,13 @@ public class ExternalDefinition extends ComplexDefinition {
         }
 
         CantoNode contents = null;
-        if (object instanceof CantoNode) {
-            contents = (CantoNode) object;
-        } else if (object instanceof Class<?>) {
-            contents = getConstructor();
-        } else {
-            contents = new PrimitiveValue(object, c);
-        }
+//        if (object instanceof CantoNode) {
+//            contents = (CantoNode) object;
+//        } else if (object instanceof Class<?>) {
+//            contents = getConstructor();
+//        } else {
+//            contents = new PrimitiveValue(object, c);
+//        }
         init(superType, name, contents);
     }
 

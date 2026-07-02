@@ -380,7 +380,7 @@ public class Site extends ComplexDefinition {
     public Definition getAdoptedDefinition(String ownerName, NameNode node) {
         Definition def = null;
         List<Name> adopts = getAdoptedSiteList();
-        if (adopts != null) {
+        if (adopts != null && adopts.size() > 0) {
             Core core = getCore();
             if (core != null) {
                 String name = node.getName();
@@ -402,9 +402,9 @@ public class Site extends ComplexDefinition {
             }
         }
         if (def == null) {
-            Site siteOwner = (Site) getOwner();
-            if (siteOwner != null) {
-                def = siteOwner.getAdoptedDefinition(ownerName, node);
+            Definition ownerDef = getOwner();
+            if (ownerDef != null && ownerDef instanceof Site) {
+                def = ((Site) ownerDef).getAdoptedDefinition(ownerName, node);
             }
         }
         return def;
@@ -450,9 +450,9 @@ public class Site extends ComplexDefinition {
             }
         }
         if (def == null) {
-            Site siteOwner = (Site) getOwner();
-            if (siteOwner != null) {
-                def = siteOwner.getExternalDefinition(owner, node, superType, context);
+            Definition ownerDef = getOwner();
+            if (ownerDef != null && ownerDef instanceof Site) {
+                def = ((Site) ownerDef).getExternalDefinition(owner, node, superType, context);
             }
         }
         return def;

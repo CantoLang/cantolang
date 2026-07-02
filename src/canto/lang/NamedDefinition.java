@@ -75,6 +75,7 @@ public class NamedDefinition extends Definition {
 
     public NamedDefinition(Definition def, Context context) {
         super(def, context);
+        init(def.getSuper(), def.getNameNode(), def.getContents());
         if (def instanceof NamedDefinition) {
             NamedDefinition ndef = (NamedDefinition) def;
             supertype = ndef.supertype;
@@ -205,6 +206,9 @@ public class NamedDefinition extends Definition {
    
     @Override
     public void setOwner(Definition owner) {
+if (owner instanceof AliasedDefinition) {
+ System.out.println("setOwner called with aliased owner " + owner.getFullName());        
+}
         super.setOwner(owner);
         if (keeps != null) {
             for (KeepNode keep : keeps) {

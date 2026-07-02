@@ -1144,10 +1144,6 @@ public class Context {
         int numUnpushes = 0;
         boolean pushedOwner = false;
 
-if ("super".equals(argName.getName())) {
-    System.out.println("super found as arg");
-}
-
         Context resolutionContext = this;
         if (arg instanceof ResolvedInstance) {
             resolutionContext = ((ResolvedInstance) arg).getResolutionContext();
@@ -2774,7 +2770,7 @@ if ("super".equals(argName.getName())) {
                 }
                 CantoNode contents = definition.getContents();
                 Definition constructedDef = null;
-                if (contents instanceof Construction) {
+                if (contents instanceof Construction && !(contents instanceof Block)) {
                     Type constructedType = ((Construction) contents).getType(this, true);
                     if (constructedType != null) {
                         constructedDef = constructedType.getDefinition();

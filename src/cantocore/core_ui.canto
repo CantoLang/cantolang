@@ -543,7 +543,7 @@ core {
 
 
     dynamic standard_control hidden(name, value) [|
-        <input type="hidden" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" />
+        <input type="hidden" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" />
     |]
 
 
@@ -551,7 +551,7 @@ core {
                                      (name, value, int cols, int rows),
                                      (name, value, req_id),
                                      (name, value) [|
-        <textarea id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" {= 
+        <textarea id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" {= 
             if (cols) [| cols="{= cols; =}" /]
             if (rows) [| rows="{= rows; =}" /] 
             with (req_id) [| onchange='requestComponent("{= req_id; =}", this.name, this.value)' |]
@@ -564,7 +564,7 @@ core {
                                      (name, value, int size, boolean disabled),
                                      (name, value, int size),
                                      (name, value) [|
-        <input type="text" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" {=
+        <input type="text" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" {=
             with (size) [| size="{= size; =}" |] with (maxlength) [/ maxlength="{= maxlength; =}" |]
             with (req_id) [/ onchange='requestComponent("{= req_id; =}", this.name, this.value)' |]
             if (disabled) [/ disabled |]
@@ -575,7 +575,7 @@ core {
     dynamic standard_control autosubmit_textedit(form_name, name, value, int size, int maxlength),
                                                 (form_name, name, value, int size),
                                                 (form_name, name, value) [|
-        <input type="text" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" {=
+        <input type="text" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" {=
             with (size) [| size="{= size; =}" |] with (maxlength) [/ maxlength="{= maxlength; =}" |]
         =} onchange="document.forms['{= form_name; =}'].submit()" />
     |]
@@ -585,7 +585,7 @@ core {
                                               (name, value, int size, int maxlength, onchange_script),
                                               (name, value, int size, onchange_script),
                                               (name, value, onchange_script) [|
-        <input type="text" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" {=
+        <input type="text" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" {=
             with (size) [| size="{= size; =}" |] with (maxlength) [/ maxlength="{= maxlength; =}" |]
         =} onchange='{= onchange_script; =}' oninput='{= onchange_script; =}'>
     |]
@@ -596,7 +596,7 @@ core {
                                              (name, value, req_id),
                                              (name, value, component req_component) {
    
-        [| <input type="text" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" |]
+        [| <input type="text" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" |]
         with (size) [| size="{= size; =}" |]
         with (req_id) [/ onchange="requestComponent('{= req_id; =}', this.name, this.value)" |]
         else with (req_component) [/ onchange="requestComponent('{= req_component.id; =}', this.name, this.value)" |]
@@ -606,7 +606,7 @@ core {
 
     dynamic standard_control passwordedit(name, value, int size, int maxlength),
                                          (name, value, int size) [|
-        <input type="password" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" {=
+        <input type="password" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" {=
             with (size) [| size="{= size; =}" |] with (maxlength) [| maxlength="{= maxlength; =}" |]
         =}>
     |]
@@ -615,7 +615,7 @@ core {
     dynamic standard_control autosubmit_passwordedit(form_name, name, value, int size, int maxlength),
                                                     (form_name, name, value, int size),
                                                     (form_name, name, value) [|
-        <input type="password" id="{= (id ? id : name); =}" class="{= owner.type; =}" name="{= name; =}" value="{= value; =}" {=
+        <input type="password" id="{= (id ? id : name); =}" class="{= type; =}" name="{= name; =}" value="{= value; =}" {=
             with (size) [| size="{= size; =}" |] with (maxlength) [/ maxlength="{= maxlength; =}" |]
         =} onchange="document.forms['{= form_name; =}'].submit()" />
     |]
@@ -627,7 +627,7 @@ core {
                                    (name, value, req_id),
                                    (name, value) {
 
-        [| <input name="{= name; =}" value="{= value; =}" id="{= name; =}_button" class="{= owner.type; =}" |]
+        [| <input name="{= name; =}" value="{= value; =}" id="{= name; =}_button" class="{= type; =}" |]
         with (onclick_script)     [/ type="button" onclick='{= onclick_script; =}' |]
         else with (req_id)        [/ type="button" onclick="refreshComponent('{= req_id; =}')" |]
         else with (req_component) [/ type="button" onclick="refreshComponent('{= req_component.id; =}')" |]
@@ -641,7 +641,7 @@ core {
                                            (name, value, component req_component, param, paramval),
                                            (name, value, element_id, component req_component, param, paramval) {
 
-        [| <input type="button" name="{= name; =}" value="{= value; =}" id="{= name; =}_button" class="{= owner.type; =}" |]
+        [| <input type="button" name="{= name; =}" value="{= value; =}" id="{= name; =}_button" class="{= type; =}" |]
         with (onclick_script) [/ onclick='{= onclick_script; =}' |]
         else with (element_id) [/ onclick="requestComponentByName('{= element_id; =}', '{= req_component.name; =}', '{= param; =}', '{= paramval; =}')" |]
         else with (req_id) [/ onclick="requestComponent('{= req_id; =}', '{= param; =}', '{= paramval; =}')" |]
@@ -653,7 +653,7 @@ core {
     dynamic standard_control query_button(name, value, element_id, component req_component, params[]),
                                          (name, value, element_id, req_id, params[]) {
 
-        [| <input type='button' name='{= name; =}' value='{= value; =}' id='{= name; =}_button' class=''{= owner.type; =}' onclick=' |]
+        [| <input type='button' name='{= name; =}' value='{= value; =}' id='{= name; =}_button' class=''{= type; =}' onclick=' |]
 
         with (req_component) [| queryComponentByName("{= element_id; =}", "{= req_component.name; =}", {= params; =}, null, null)'/> |]
         else                 [| queryComponentByName("{= element_id; =}", "{= req_id; =}", {= params; =}, null, null)'/> |]
@@ -695,7 +695,7 @@ core {
             |]
         }
 
-        [| <input type="submit" name="{= name;=}" value="{= value; =}" class="{= owner.type; =}" id="{= name; =}_button" {=
+        [| <input type="submit" name="{= name;=}" value="{= value; =}" class="{= type; =}" id="{= name; =}_button" {=
         with (req_id)             [| onclick='{= submit_script(req_id); =}' {= log("req_id " + req_id); =} |]
         else with (req_component) [| onclick='{= submit_script(req_component.id); =}' {= log("req_component.id " + req_component.id); =} |]
         =}/> |]
@@ -703,14 +703,14 @@ core {
 
 
     dynamic standard_control disabled_button(name, value) [|
-        <input type="submit" name="{= name; =}" value="{= value; =}" class="{= owner.type; =}" id="{= name; =}_button" disabled />
+        <input type="submit" name="{= name; =}" value="{= value; =}" class="{= type; =}" id="{= name; =}_button" disabled />
     |]
 
 
     dynamic standard_control checkbox(name, label, boolean checked),
                                      (name, label, boolean checked, value),
                                      (name, label, boolean checked, value, onclick_script)  [|
-        <input type="checkbox" name="{= name; =}" class="{= owner.type; =}" id="{= name; =}_checkbox" {=
+        <input type="checkbox" name="{= name; =}" class="{= type; =}" id="{= name; =}_checkbox" {=
             with (value) [| value="{= value; =}" |]
             if (checked) [/ checked |]
             with (onclick_script) [/ onclick='{= onclick_script; =}' |]
@@ -732,7 +732,7 @@ core {
                                      (name, option[] options, onchange_script),
                                      (name, option[] options, boolean disabled),
                                      (name, option[] options) [|
-        <select name="{= name; =}" class="{= owner.type; =}" id="{= (id ? id : name + "_dropdown"); =}"{=
+        <select name="{= name; =}" class="{= type; =}" id="{= (id ? id : name + "_dropdown"); =}"{=
             with (onchange_script) [/ onchange='{= onchange_script; =}' |] 
             if (disabled) [/ disabled |] 
             [| > |]

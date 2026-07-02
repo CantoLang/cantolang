@@ -765,7 +765,7 @@ core {
       /-------------- page attributes --------------/
       /---------------------------------------------/
 
-        dynamic page_name = owner.type
+        page_name = owner.type
 
         /------- scripting options -------/
         boolean ajax_enabled = false

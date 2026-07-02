@@ -57,7 +57,7 @@ public class AliasedDefinition extends ExternalDefinition {
 
     @Override
     public String getFullName() {
-        return owner.getFullName();
+        return owner == null ? "" : owner.getFullName();
     }
 
     /** Construct this definition with the specified arguments in the specified context. */

@@ -3,17 +3,30 @@
 
 site test {
 
+    dynamic command_param(request r) = r.params["command"];
+
     /------------------------------------------------------------------/
     /---                         Test cases                         ---/
     /------------------------------------------------------------------/
 
     /** All standard test cases **/
-    test_case[] all_tests = [ abstract_test, arithmetic_test ]
+    test_case[] all_tests = [ abstract_test, arithmetic_test, special_names_test ]
+
+    /** Global statistics table **/
+    global int global_stats{} = {}
+
+    /** Table for tabulating test results. **/
+    int results{} = {}
+    
+    /** Session data **/
+    int num_page_views(int n) = n    
+    
 
     /** Base class for test cases. **/
     base_test {
 
         name [?]
+        key [?]
         
         boolean need_exact_match = true
 
@@ -48,6 +61,7 @@ site test {
 
     public test_case arithmetic_test {
         name = "Arithmetic Test"
+        key = "arithmetic"
 
         expected = "ABCDE"
 
@@ -74,6 +88,7 @@ site test {
 
     public test_case abstract_test {
         name = "Abstract Definition Test"
+        key = "abstract"
         
         expected = "ABCDEF"
         
@@ -117,6 +132,217 @@ site test {
         with (test_nonabs) [| F |]
         else [| x |]
         
+    }
+
+    public test_case special_names_test {
+        name = "Special Names Test"
+        key = "special_names"
+        
+        expected = "ABCDEFGHIJKLMNO"
+        
+        z {
+            container.c;
+        }
+        
+        a {
+           
+           b {
+           
+               x {
+               
+                   y {
+                       c [| C |]
+
+                       z;
+                   }
+
+                   owner.owner;
+                   owner;
+                   y;                   
+                }          
+               
+                "B";
+            }
+           
+            "A";
+        }
+        
+        l = "L"
+        l_def = l.def
+        
+        mn_base {
+        
+            m [| x |]
+            n [| x |]
+            
+            show_m = owner.m;
+            show_n { 
+                owner.n;
+            }
+            show_m;
+        }
+        
+        mn_base mn {
+            m [| M |]
+            n [| N |]
+        }
+        
+        otype [/]
+        
+        otype oinstance {
+           if (super isa otype)       [| O |] else [| x |]
+        }
+                
+        a.b.x;
+       
+        if (owner isa definition)     [| D |] else [| x |]
+        if (container isa definition) [| E |] else [| x |]
+        if (this isa definition)      [| F |] else [| x |]
+        if (super isa definition)     [| G |] else [| x |]
+        if (sub isa definition)       [| H |] else [| x |]
+        if (site isa definition)      [| I |] else [| x |]
+        if (core isa definition)      [| J |] else [| x |]
+        if (def isa definition)       [| K |] else [| x |]
+        
+        l_def.instantiate;
+        
+        mn;
+        mn.show_n;
+        oinstance;
+    }
+
+    page(r, s) basepage(request r, session s) {
+        keep in global_stats: int global_page_views = global_stats["global_page_views"] + 1
+
+        title = [| Canto Test Suite: {= label; =} |]
+
+        color bgcolor = "#EEDDAA"
+
+        label [?]
+
+        boolean ajax_enabled = true
+
+        urlprefix [/]
+
+        dynamic menuitem(basepage bp) [|
+            <a href="{= urlprefix; bp.type; =}.html" title="{= bp.title; =}">{= bp.label; =}</a>
+        |]
+
+        menuitem[] menuitems = [ menuitem(index),
+                                 menuitem(standard)]
+
+        leftmenu [|
+                <table width=72 border=0 cellspacing=16 cellpadding=0>{=
+                    for m in menuitems [|
+                        <tr><td>{= m; =}</td></tr>
+                    |]
+                =}</table>
+        |]
+
+
+        topbar [|
+            <div align="center"><h2>Canto Test Suite: {= label; =}</h2></div>
+            <div align="right"><h3>{= today; =}</h3></div>
+        |]
+
+        run_tests(request r) {
+            test_run_form(r);
+        }
+
+        form("run") test_run_form(request r) {
+            [| <h3>Results</h3> |]
+            for test_case t in all_tests {
+                if (r.params[t.key]) {
+                    t;
+                    [| <br> |]
+                }  else [| test {= t.name; =} not selected.<br> |]
+            }
+            button("command", "Return");
+        }
+
+        test_list(command),(basepage[] test_pages) {
+            with (test_pages) {
+                if (test_pages.count > 0) {
+                    test_select_menu(test_pages);
+                }
+            } else {
+                test_select_form(command);
+            }
+        }
+
+        form("run") test_select_form(command) {
+            boolean checked = (command != "Unselect all")
+
+            [|
+               <p>This page lists standard format tests which may be run in batches.</p>
+               <p>Select tests to run:</p>
+            |]
+            for test_case t in all_tests {
+                if (t.expected) {
+                   checkbox(t.key, t.name, checked);
+                   br;
+                }
+            }
+            [| <p> |]
+            button("command", "Run tests");
+            button("command", "Select all");
+            button("command", "Unselect all");
+            [| </p> |]
+        }
+
+        content(request r, session s) {
+            if (command_param(r) == "Run tests") {
+                run_tests(r);
+            } else {
+                test_list(command_param(r));
+            }
+        }
+
+      /------------ Construction ------------/
+
+        topbar;
+        leftmenu;
+        content(r, s);
+    }
+
+
+    public basepage(r, s) index(request r, session s) {
+        label = "Home"
+        title = "Canto Test Suite"
+        int min_category = 0
+        int max_category = -1
+
+
+        content(request r, session s) {
+            
+            // we expect this to always be called with r and s parameters
+
+            if (!r) [|
+                <p><b><font color="#EE0000">No request {= if (!s) [| or session |] =} parameter in content!</font></b></p>
+            |] else if (!s) [|
+                <p><b><font color="#EE0000">No session parameter in content!</font></b></p>
+            |]
+               
+            [| <p>This web application is designed to test an implementation of the Canto
+               language. It provides access to two kinds of tests, standard and advanced.
+               Standard tests are non-interactive and report the test results in a simple,
+               standardized format, making it possible to automate their execution and the
+               compilation of their results.  Advanced tests, on the other hand, either
+               require user interaction or cannot report results in the standard format.</p>
+
+               <p>Select from the menu at left to view available tests.</p>
+            |]
+
+        }
+    }
+
+
+    public basepage(r, s) standard(request r, session s) {
+        label = "Standard Tests"
+    }
+
+    public basepage(r, s) run(request r, session s) {
+        label = (command_param(r) == "Run tests" ? "Test Results" : "Standard Tests")
     }
 
 

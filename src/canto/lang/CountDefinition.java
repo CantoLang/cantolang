@@ -39,7 +39,7 @@ public class CountDefinition extends NamedDefinition implements DynamicObject {
     }
 
     public CountDefinition(Definition def, Context context, ConstructionList args, IndexList indexes) {
-        super(PrimitiveType.INT.getDefinition(), context);
+        super(def instanceof CountDefinition ? def : new CountDefinition(def), context);
         setName(new NameNode(Name.COUNT));
         if (def instanceof ExternalDefinition) {
             def = ((ExternalDefinition) def).getDefForContext(context, args);

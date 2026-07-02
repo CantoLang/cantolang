@@ -1480,7 +1480,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
                 if (params == null) {
                     def = null;
                 } else {
-                    def = new DefinitionFlavor(def, context, params);
+                    def = new DefinitionFlavor(def, params);
                 }
 
             } else if (numParamLists == 1) {
@@ -1711,7 +1711,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
             
             if (def != null) {
                 // core needs an AliasedDefinition wrapper; otherwise, only if the name is different and the def is not already wrapped
-                if (def instanceof NamedDefinition && !(def instanceof AliasedDefinition) /* && !(Name.THIS.equals(name)) */  && ("core".equals(name) || !def.getName().equals(name))) {
+                if (def instanceof NamedDefinition && !(def instanceof AliasedDefinition) /* && !(Name.THIS.equals(name)) */  && ( /* "core".equals(name) || */ !def.getName().equals(name))) {
                     def = new AliasedDefinition((NamedDefinition) def, nameNode);
                 }
                 if (nameNode.getIndexes() != null) {

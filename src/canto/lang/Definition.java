@@ -131,7 +131,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
         staticData = new StaticData();
     }
     
-    public Definition(Definition def, Context context) {
+    public Definition(Definition def) {
         super();
         access = def.access;
         dur = def.dur;
@@ -141,7 +141,10 @@ abstract public class Definition extends CantoNode implements Name, Construction
         contents = def.contents;
         constructions = def.constructions;
         childDefs = def.childDefs;
+    }
 
+    public Definition(Definition def, Context context) {
+        this(def);
         if (context != null) {
             initContext = (Context) context.clone();
         }
@@ -685,7 +688,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
     protected Definition getDefinitionFlavor(Context context, ParameterList params) {
         List<ParameterList> paramLists = getParamLists();
         if (paramLists != null && paramLists.size() > 1) {
-            return new DefinitionFlavor(this, context, params);
+            return new DefinitionFlavor(this, params);
         } else {
             return this;
         }

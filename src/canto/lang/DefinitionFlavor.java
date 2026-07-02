@@ -19,9 +19,8 @@ public class DefinitionFlavor extends ComplexDefinition {
     public Definition def;
     public ParameterList params;
 
-    public DefinitionFlavor(Definition def, Context context, ParameterList params) {
-        // the context shouldn't be needed, pass null
-        super(def, null);
+    public DefinitionFlavor(Definition def, ParameterList params) {
+        super(def.getNameNode());
         this.def = def;
         this.params = params;
     }
@@ -168,7 +167,7 @@ public class DefinitionFlavor extends ComplexDefinition {
     
     /** Returns the context of this definition, or null if none. */
     public Definition getOwner() {
-        return def.getOwner();
+        return def != null ? def.getOwner() : null;
     }
 
     public Object getChild(NameNode name, ConstructionList args, IndexList indexes, ConstructionList parentArgs, Context argContext, boolean generate, boolean trySuper, Object parentObj, Definition resolver) throws Redirection {
