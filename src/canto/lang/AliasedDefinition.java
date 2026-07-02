@@ -17,9 +17,11 @@ import java.util.List;
 
 public class AliasedDefinition extends ExternalDefinition {
     Definition def;
+    String fullName;
 
     public AliasedDefinition(Definition def, NameNode alias) {
         super(def.getNameNode(), def.getParent(), def.getOwner(), null, Definition.Access.SITE, Definition.Durability.IN_CONTEXT, def, null);
+        this.fullName = def.getFullName();
         this.def = def;
         setName(alias);
         Site site = def.getSite();
@@ -57,7 +59,7 @@ public class AliasedDefinition extends ExternalDefinition {
 
     @Override
     public String getFullName() {
-        return owner == null ? "" : owner.getFullName();
+        return fullName;
     }
 
     /** Construct this definition with the specified arguments in the specified context. */
