@@ -185,13 +185,13 @@ public class ExternalDefinition extends ComplexDefinition {
         }
 
         CantoNode contents = null;
-//        if (object instanceof CantoNode) {
-//            contents = (CantoNode) object;
-//        } else if (object instanceof Class<?>) {
-//            contents = getConstructor();
-//        } else {
-//            contents = new PrimitiveValue(object, c);
-//        }
+        if (object instanceof CantoNode) {
+            contents = (CantoNode) object;
+        } else if (object instanceof Class<?>) {
+            contents = getConstructor();
+        } else {
+            contents = new PrimitiveValue(object, c);
+        }
         init(superType, name, contents);
     }
 
