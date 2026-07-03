@@ -87,7 +87,7 @@ abstract public class AbstractType extends NameNode implements Type {
                 return true;
             } else if (name.equals(def.getUltimateDefinition(context).getName())) {
                 return true;
-            } else if (def instanceof AliasedDefinition && name.equals(((AliasedDefinition) def).getAliasedDefinition(context).getName())) {
+            } else if (def instanceof AliasedDefinition && name.equals(((AliasedDefinition) def).getAliasedDefinition().getName())) {
                 return true;
             } else if (def.isSuperType(name)) {
                 return true;

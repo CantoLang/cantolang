@@ -125,7 +125,7 @@ public class InstantiatedMap implements Map<String, Object> {
             putElement(key, obj);
         } else {
             if (obj instanceof AliasedDefinition) {
-                obj = ((AliasedDefinition) obj).getAliasedDefinition(context);
+                obj = ((AliasedDefinition) obj).getAliasedDefinition();
             }
             if (obj instanceof ExternalDefinition) {
                 obj = ((ExternalDefinition) obj).getObject();

@@ -148,7 +148,7 @@ public class PrimitiveType extends AbstractType {
         } else {
             Definition def = type.getDefinition();
             if (def instanceof AliasedDefinition) {
-                def = ((AliasedDefinition) def).getAliasedDefinition(context);
+                def = ((AliasedDefinition) def).getAliasedDefinition();
             }
             if (def instanceof ExternalDefinition) {
                 typeClass = ((ExternalDefinition) def).getExternalClass(context);

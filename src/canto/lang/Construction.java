@@ -468,7 +468,7 @@ public abstract class Construction extends CantoNode implements ValueGenerator {
                             if (n > 1 && Name.THIS.equals(nameNode.getLastPart().getName())) {
                                 nameNode = nameNode.getPart(n - 2);
                             }
-                            return new CantoObjectWrapper(((AliasedDefinition) def).getAliasedDefinition(context), nameNode.getArguments(), nameNode.getIndexes(), context);
+                            return new CantoObjectWrapper(((AliasedDefinition) def).getAliasedDefinition(), nameNode.getArguments(), nameNode.getIndexes(), context);
                         }
                     }
                     

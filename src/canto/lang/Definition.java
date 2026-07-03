@@ -1382,6 +1382,11 @@ abstract public class Definition extends CantoNode implements Name, Construction
         // collections aren't handled yet
         return false;
     }
+
+    public Type getSuper(Context context, ParameterList params) {
+        // Probably should throw an exception
+        return null;
+    }
     
 
 }

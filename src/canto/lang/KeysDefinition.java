@@ -35,7 +35,7 @@ public class KeysDefinition extends CollectionDefinition {
     public KeysDefinition(Definition def, Context context, ConstructionList args, IndexList indexes) {
         super(new NameNode(Name.KEYS));
         if (def instanceof AliasedDefinition) {
-            def = ((AliasedDefinition) def).getAliasedDefinition(context);
+            def = ((AliasedDefinition) def).getAliasedDefinition();
         }
         if (def instanceof ExternalDefinition) {
         	try {

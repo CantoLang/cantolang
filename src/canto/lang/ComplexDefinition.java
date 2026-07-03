@@ -83,6 +83,7 @@ public class ComplexDefinition extends NamedDefinition {
         super.setDefinitionTable(table);
     } 
 
+    @Override
     DefinitionTable getDefinitionTable() {
         if (definitions == null) {
             return super.getDefinitionTable();

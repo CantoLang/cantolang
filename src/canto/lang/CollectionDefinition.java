@@ -372,7 +372,7 @@ public class CollectionDefinition extends ComplexDefinition {
             return ((Holder) element).data;
         } else {
             if (element instanceof AliasedDefinition) {
-                element = ((AliasedDefinition) element).getAliasedDefinition(null);
+                element = ((AliasedDefinition) element).getAliasedDefinition();
             }
             if (element instanceof ExternalDefinition) {
                 return ((ExternalDefinition) element).getObject();

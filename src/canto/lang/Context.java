@@ -1739,7 +1739,7 @@ public class Context {
     }
 
     public Object getDescendant(Definition parentDef, ConstructionList args, NameNode name, boolean generate, Object parentObj) throws Redirection {
-        Definition def = parentDef;
+        Definition def = parentDef instanceof AliasedDefinition ? ((AliasedDefinition) parentDef).getAliasedDefinition() : parentDef;
 
         // if this is a reference to a collection element, forward to its definition
         if (def instanceof ElementReference) {

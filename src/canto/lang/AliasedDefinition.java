@@ -31,7 +31,7 @@ public class AliasedDefinition extends ComplexDefinition {
     }
 
     /** Returns the wrapped definition. */
-    public Definition getAliasedDefinition(Context context) {
+    public Definition getAliasedDefinition() {
         return def;
     }
 
@@ -192,6 +192,11 @@ public class AliasedDefinition extends ComplexDefinition {
         } else {
             return def.getSite();
         }
+    }
+
+    @Override
+    DefinitionTable getDefinitionTable() {
+        return def.getDefinitionTable();
     }
 
     /** Kept for callers that previously received an AliasedDefinition through an
