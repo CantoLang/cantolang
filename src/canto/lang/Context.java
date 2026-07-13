@@ -9,7 +9,9 @@
 package canto.lang;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import canto.runtime.CantoObjectWrapper;
 import canto.runtime.CantoSession;
@@ -53,6 +55,14 @@ public class Context {
         return numClonedContexts;
     }
 
+    // used for resolving references to Definition methods
+    private static Set<String> DEFINITION_METHODS = Arrays.stream(canto_definition.class.getMethods()).map(Method::getName)
+            .collect(Collectors.toSet());
+
+    public static boolean isDefinitionMethod(String name) {
+        return DEFINITION_METHODS.contains(name);
+    }
+    
     // -------------------------------------------
     // Context properties
     // -------------------------------------------
@@ -95,7 +105,6 @@ public class Context {
         if (site != null) {
             try {
                 push(site, null, null, true);
-        
             } catch (Redirection r) {
                 LOG.error("Error creating context: " + r.getMessage());
                 throw r;
@@ -1917,7 +1926,21 @@ public class Context {
             //}
     
             if (childDef == null) {
-                return def.getChild(name, name.getArguments(), name.getIndexes(), args, this, generate, true, parentObj, null);
+                Object obj = def.getChild(name, name.getArguments(), name.getIndexes(), args, this, generate, true, parentObj, null);
+                // if the parent definition is an AliasedDefinition, check to see if the child
+                // is and external definition method.
+                if ((obj == null || obj == CantoNode.UNDEFINED) && parentDef instanceof AliasedDefinition && isDefinitionMethod(name.getName())) {
+                    ExternalDefinition extDef = new ExternalDefinition(def.getNameNode(), def.getParent(), def.getOwner(), null, Definition.Access.SITE, Definition.Durability.IN_CONTEXT, def, null);
+                    Site site = def.getSite();
+                    Definition definitionDef = site.getDefinition("definition");
+                    if (definitionDef != null && definitionDef != def) {
+                        Type definitionType = definitionDef.getType();
+                        extDef.setType(definitionType);
+                        parentObj = def;
+                        obj = extDef.getChild(name, name.getArguments(), name.getIndexes(), args, this, generate, false, parentObj, null);
+                    }
+                }
+                return obj;
             }
 
             // if parentObj is a CantoObjectWrapper and we are generating data, delegate to the object

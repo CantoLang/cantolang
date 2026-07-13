@@ -458,6 +458,14 @@ public class ExternalDefinition extends ComplexDefinition {
                             context.repush();
                         }
                     }
+                } else if (obj instanceof Construction) {
+                    paramType = ((Construction) obj).getType(context, false);
+                    if (paramType != null) {
+                        paramDef = paramType.getDefinition();
+                    } else {
+                        paramDef = null;
+                    }
+                    
                 } else {
                     paramDef = null;
                 }

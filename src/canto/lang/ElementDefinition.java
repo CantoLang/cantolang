@@ -379,7 +379,7 @@ System.err.println("***** ElementDefinition getBaseDefinition null due to null o
         // TODO Auto-generated method stub
         return false;
     }
-    
+
 }
 
 class SingleElementCount extends CountDefinition {

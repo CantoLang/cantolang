@@ -22,7 +22,7 @@ import canto.util.SingleItemList;
 /**
  * 
  */
-abstract public class Definition extends CantoNode implements Name, ConstructionContainer {
+abstract public class Definition extends CantoNode implements Name, ConstructionContainer, canto_definition {
     private static final Log LOG = Log.getLogger(Definition.class);
 
     // The modifier values are such that for groups of definitions, the lowest value
@@ -199,7 +199,11 @@ abstract public class Definition extends CantoNode implements Name, Construction
         List<Definition> defs = extractDefinitions(contents);
         childDefs = defs.toArray(new Definition[0]);
         children[children.length - 1] = contents;  // contents is always the last child
-        contents.setParent(this);
+        // don't modify the parent of the contents if it is a definition, since that would 
+        // disrupt the existing owner chain of the definition
+        if (contents != null && !(contents instanceof Definition)) {
+            contents.setParent(this);
+        }
     }
 
     public CantoNode getContents() {
@@ -566,7 +570,7 @@ abstract public class Definition extends CantoNode implements Name, Construction
                 } else {
                     String cName = childName.getName();
                     if (cName.equals("defs") || cName.equals("descendants_of_type") || cName.equals("full_name")) {
-                        ExternalDefinition externalDef = new ExternalDefinition("canto.lang.AnonymousDefinition", getParent(), getOwner(), type, getAccess(), Durability.DYNAMIC, this, null);
+                        ExternalDefinition externalDef = new ExternalDefinition("canto.lang.Definition", getParent(), getOwner(), type, getAccess(), Durability.DYNAMIC, this, null);
                         childDef = externalDef.getExternalChildDefinition(childName, context);
                     }
                 }

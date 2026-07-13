@@ -44,7 +44,6 @@ public class NamedDefinition extends Definition {
     }
 
     private NameNode name;
-    private boolean array;
     private Type type;
     private Type supertype;
     private List<Construction> resolvedConstructions = null;
@@ -80,7 +79,6 @@ public class NamedDefinition extends Definition {
             NamedDefinition ndef = (NamedDefinition) def;
             supertype = ndef.supertype;
             name = ndef.name;
-            array = ndef.array;
             type = ndef.type;
             resolvedConstructions = ndef.resolvedConstructions;
             identity = ndef.identity;
