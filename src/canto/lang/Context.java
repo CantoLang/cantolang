@@ -672,7 +672,7 @@ public class Context {
             }
         }
 
-        if (arg == null) {
+        if (arg == null || arg instanceof ConstructionList.MissingArg) {
             return null;
         }
 
@@ -689,7 +689,7 @@ public class Context {
         try {
             if (arg instanceof Definition) {
                 argDef = (Definition) arg;
-            } else if (arg instanceof ConstructionList.MissingArg) {
+            } else {
                 argDef = param.getDefinitionFor(this, arg);
                 if (arg instanceof Instantiation && argDef != null) {
                     argInstance = (Instantiation) arg;

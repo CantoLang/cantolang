@@ -1199,8 +1199,7 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
 
     @Override
     public CantoNode visitLiteralExpression(CantoParser.LiteralExpressionContext ctx) {
-        Expression expression = new ValueExpression(ctx.literal().accept(this));
-        return expression;
+        return ctx.literal().accept(this);
     }
 
     @Override
