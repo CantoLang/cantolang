@@ -632,8 +632,7 @@ public class Instantiation extends Construction implements ValueGenerator /*, Co
 
             String name = nameNode.getName();
             if (name != null && name.length() > 0) {
-              
-                if (def == null) { // && !(isParam || isParamChild)) {
+                if (def == null && !(isParam || isParamChild)) {
                     def = getDefinition(context);
                 }
                 ConstructionList args = getArguments();

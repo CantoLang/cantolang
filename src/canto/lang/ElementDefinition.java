@@ -38,36 +38,70 @@ public class ElementDefinition extends Definition {
         setElement(element);
     }
 
-    protected void setElement(Object element) {
-        if (element instanceof ElementDefinition) {
-            ElementDefinition def = (ElementDefinition) element;
-            setContents(def.getContents());
-            wrapped = def.wrapped;
-        } else if (element instanceof ResolvedInstance) {
-            setContents((CantoNode) element);
-        } else if (element instanceof Value) {
-            Value value = (Value) element;
-            Definition owner = getOwner();
-            if (owner != null && owner instanceof CollectionDefinition) {
-                Type ownerType = ((CollectionDefinition) owner).getElementType();
-                if (ownerType != null) {
-                    Class<?> collectionClass = ownerType.getTypeClass(null);
-                    Class<?> elementClass = value.getValueClass();
-                    if (collectionClass != null && elementClass != null && !collectionClass.isAssignableFrom(elementClass)) {
-                        element = new PrimitiveValue(element, collectionClass);
+//    protected void setElement(Object element) {
+//        if (element instanceof ElementDefinition) {
+//            ElementDefinition def = (ElementDefinition) element;
+//            setContents(def.getContents());
+//            wrapped = def.wrapped;
+//        } else if (element instanceof ResolvedInstance) {
+//            setContents((CantoNode) element);
+//        } else if (element instanceof Value) {
+//            Value value = (Value) element;
+//            Definition owner = getOwner();
+//            if (owner != null && owner instanceof CollectionDefinition) {
+//                Type ownerType = ((CollectionDefinition) owner).getElementType();
+//                if (ownerType != null) {
+//                    Class<?> collectionClass = ownerType.getTypeClass(null);
+//                    Class<?> elementClass = value.getValueClass();
+//                    if (collectionClass != null && elementClass != null && !collectionClass.isAssignableFrom(elementClass)) {
+//                        element = new PrimitiveValue(element, collectionClass);
+//                    }
+//                }
+//            }
+//            setContents((CantoNode) element);
+//            
+//        } else if (element instanceof Construction || element instanceof Definition) {
+//            setContents((CantoNode) element);
+//        } else {
+//            setContents(new PrimitiveValue(element));
+//            wrapped = true;
+//        }
+//    }
+
+    protected void setElement(Object obj) {
+        if (obj instanceof CantoNode) {
+            CantoNode element = (CantoNode) obj;
+            if (element instanceof ElementDefinition) {
+                ElementDefinition def = (ElementDefinition) element;
+                setContents(def.getContents());
+                wrapped = def.wrapped;
+            } else if (element instanceof Value) {
+                Value value = (Value) element;
+                Definition owner = getOwner();
+                if (owner != null && owner instanceof CollectionDefinition) {
+                    Type ownerType = ((CollectionDefinition) owner).getElementType();
+                    if (ownerType != null) {
+                        Class<?> collectionClass = ownerType.getTypeClass(null);
+                        Class<?> elementClass = value.getValueClass();
+                        if (collectionClass != null && elementClass != null && !collectionClass.isAssignableFrom(elementClass)) {
+                            element = new PrimitiveValue(element, collectionClass);
+                        }
                     }
                 }
+                setContents(element);
+                
+            } else {
+                setContents(element);
+                element.setParent(this);
             }
-            setContents((CantoNode) element);
-            
-        } else if (element instanceof Construction || element instanceof Definition) {
-            setContents((CantoNode) element);
         } else {
-            setContents(new PrimitiveValue(element));
+            setContents(new PrimitiveValue(obj));
             wrapped = true;
         }
     }
-
+    
+    
+    
     public Context getResolutionContext() {
         CantoNode contents = getContents();
         if (contents instanceof ResolvedInstance) {

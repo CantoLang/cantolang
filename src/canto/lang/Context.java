@@ -126,6 +126,9 @@ public class Context {
         stateFactory = new StateFactory(context.stateFactory);
         size = context.size;
         
+        definingDef = context.definingDef;
+        instantiatedDef = context.instantiatedDef;
+        
         // copy the session
         session = context.session;
 
