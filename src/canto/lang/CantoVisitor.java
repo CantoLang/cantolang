@@ -379,7 +379,14 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
         }
         Type superType = (typeCtx == null ? null : (Type) typeCtx.accept(this));
         
-        CantoNode contents = ctx.expression().accept(this);
+        ParseTree contentsCtx = ctx.expression();
+        if (contentsCtx == null) {
+            contentsCtx = ctx.textBlock();
+            if (contentsCtx == null) {
+                contentsCtx = ctx.literalBlock();
+            }
+        }
+        CantoNode contents = contentsCtx.accept(this);
         return new NamedDefinition(superType, name, contents);
     }
 
@@ -1264,14 +1271,6 @@ public class CantoVisitor extends CantoParserBaseVisitor<CantoNode> {
                 return new PrimitiveValue(0.0f);
             }
 
-        } else if (ctx.textBlock() != null) {
-            return ctx.textBlock().accept(this);
-
-        } else if (ctx.literalBlock() != null) {
-            // a literal block contains a single StaticText child with the literal value 
-            Block block = (Block) ctx.literalBlock().accept(this);
-            return block.children[0];
-       
         } else if (ctx.BOOL_LITERAL() != null) {
             boolean value = data.equals("true");
             return new PrimitiveValue(value);

@@ -271,6 +271,7 @@ public class CantoVisitorTest {
     @ParameterizedTest
     @DisplayName("Visitor should build various block definitions")
     @ValueSource(strings = {
+            "d11 { if (x) [| two |] [| blocks |] }",
             "d(aa[]) { aa[0]; }",
             "d1 { int x = 5  x; }",
             "d2 {= float x = 5.0  x;  =}",

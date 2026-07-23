@@ -6,9 +6,14 @@ site test {
     dynamic command_param(request r) = r.params["command"];
 
     public page(r, s) bug_test(request r, session s) {
-        command_param(r);
-        br;
-        r.params["command"];
+        onreset [/]
+        bub = " yeah "
+
+        [| Test /]
+        if (onreset) [| Ha |]
+        [| ha |]
+        bub;
+        [/ a test |]
     }
 
     /------------------------------------------------------------------/

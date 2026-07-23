@@ -258,7 +258,7 @@ tableBlock
     ;
     
 namedElementDefinition
-    : defName ASSIGN expression SEMICOLON?
+    : defName ASSIGN (textBlock | literalBlock | expression SEMICOLON?)
     ;
 
 blockDefinition
@@ -487,8 +487,6 @@ literal
     | BOOL_LITERAL
     | STRING_LITERAL
     | NULL_LITERAL
-    | textBlock
-    | literalBlock
     ;
     
 integerLiteral
